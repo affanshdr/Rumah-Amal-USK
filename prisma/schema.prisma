@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  password  String
+  role      String   @default("admin")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Zakat {
+  id               String   @id @default(cuid())
+  tipePembayar     String   @default("masyarakat") @map("tipe_pembayar")
+  jenisZakat       String   @map("jenis_zakat")
+  sumberDana       String?  @map("sumber_dana")
+  jenisPerusahaan  String?  @map("jenis_perusahaan")
+  jumlahZakat      Float    @map("jumlah_zakat")
+  nama             String
+  nip              String?
+  email            String?
+  alamat           String?
+  noHp             String?  @map("no_hp")
+  isHambaAllah     Boolean  @default(false) @map("is_hamba_allah")
+  bersediaDihubungi Boolean @default(false) @map("bersedia_dihubungi")
+  pesan            String?
+  buktiPembayaran  String?  @map("bukti_pembayaran")
+  setujuTerms      Boolean  @default(false) @map("setuju_terms")
+  status           String   @default("pending")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("zakats")
+}
+
+model Infaq {
+  id                String   @id @default(cuid())
+  tipePembayar      String   @default("masyarakat") @map("tipe_pembayar")
+  jenisInfaq        String   @map("jenis_infaq")
+  jumlahInfaq       Float    @map("jumlah_infaq")
+  nama              String
+  nip               String?
+  email             String?
+  alamat            String?
+  noHp              String?  @map("no_hp")
+  isHambaAllah      Boolean  @default(false) @map("is_hamba_allah")
+  bersediaDihubungi Boolean  @default(false) @map("bersedia_dihubungi")
+  pesan             String?
+  buktiPembayaran   String?  @map("bukti_pembayaran")
+  setujuTerms       Boolean  @default(false) @map("setuju_terms")
+  status            String   @default("pending")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("infaqs")
+}

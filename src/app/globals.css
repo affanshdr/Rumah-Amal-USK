@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  }
+}
