@@ -1,9 +1,9 @@
 import { KalkulatorPayload, KalkulatorResult, JenisZakat } from '@/types';
 
-// Nisab dalam Rupiah (2.5% dari 85 gram emas, harga emas ~Rp 1.200.000/gram)
-const NISAB_MAAL = 85 * 1_200_000; // Rp 102.000.000
+// Nisab dalam Rupiah (2.5% dari 94 gram emas, harga emas ~Rp 1.200.000/gram)
+const NISAB_MAAL = 94 * 1_200_000;
 const HARGA_EMAS_PER_GRAM = 1_200_000;
-const NISAB_EMAS_GRAM = 85;
+const NISAB_EMAS_GRAM = 94;
 
 // Nisab profesi berdasarkan SK DPS BMA No. 02/2024
 const NISAB_PROFESI_BULAN = 10_500_000;

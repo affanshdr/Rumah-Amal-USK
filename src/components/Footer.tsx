@@ -28,7 +28,7 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="bg-[#0a2e1f] text-white">
+      <footer className="bg-[#002B14] text-white">
         {/* Main Footer Grid */}
         <div className="max-w-[1340px] mx-auto px-6 sm:px-8 lg:px-12 py-12 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
 
@@ -169,11 +169,11 @@ export default function Footer() {
         </div>
 
         {/* ===== Copyright Bar ===== */}
-        <div className="border-t border-white/10 bg-[#062015] py-4 relative z-20">
+        <div className="border-t border-white/10 bg-[#fff] py-4 relative z-20">
           <div className="max-w-[1340px] mx-auto px-6 flex items-center justify-center">
-            <p className="text-[13px] text-gray-200 text-center">
+            <p className="text-[13px] text-[#002B14] text-center">
               Copyright &copy; 2025{" "}
-              <span className="font-bold text-white">Rumah Amal USK</span>
+              <span className="font-bold text-[#002B14]">Rumah Amal USK</span>
               . All Rights Reserved
             </p>
           </div>
@@ -188,13 +188,13 @@ export default function Footer() {
           </svg>
           <select
             aria-label="Pilih Bahasa"
-            className="bg-[#0a2e1f]/90 hover:bg-[#0a2e1f] backdrop-blur-md text-white text-xs font-semibold pl-9 pr-8 py-2 rounded-lg border border-white/20 shadow-lg focus:outline-none focus:border-[#ffc800] appearance-none cursor-pointer transition-all"
+            className="bg-[#002B14]/90 hover:bg-[#002B14] backdrop-blur-md text-white text-xs font-semibold pl-9 pr-8 py-2 rounded-lg border border-white/20 shadow-lg focus:outline-none focus:border-[#ffc800] appearance-none cursor-pointer transition-all"
             defaultValue="id"
           >
-            <option value="id" className="bg-[#0a2e1f] text-white">Pilih Bahasa</option>
-            <option value="id-val" className="bg-[#0a2e1f] text-white">Bahasa Indonesia</option>
-            <option value="en" className="bg-[#0a2e1f] text-white">English</option>
-            <option value="ar" className="bg-[#0a2e1f] text-white">العربية</option>
+            <option value="id" className="bg-[#002B14] text-white">Pilih Bahasa</option>
+            <option value="id-val" className="bg-[#002B14] text-white">Bahasa Indonesia</option>
+            <option value="en" className="bg-[#002B14] text-white">English</option>
+            <option value="ar" className="bg-[#002B14] text-white">العربية</option>
           </select>
           <svg className="w-3.5 h-3.5 text-gray-300 absolute right-3 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

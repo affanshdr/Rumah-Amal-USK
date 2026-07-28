@@ -97,7 +97,7 @@ export default function KalkulatorPage() {
             <ul className="list-disc list-inside space-y-1 text-gray-700 font-medium">
               <li>Qanun Aceh No. 10/2018 tentang Baitul Mal</li>
               <li>SK DPS BMA No. 02/2024: Nisab Zakat Profesi 2,5% dari Penghasilan Min. Rp 10.500.000 / bulan</li>
-              <li>Nisab Zakat Maal & Emas setara 85 gram Emas murni (~Rp 102.000.000)</li>
+              <li>Nisab Zakat setara 94 gram Emas murni</li>
             </ul>
           </div>
 
