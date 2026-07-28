@@ -1,65 +1,189 @@
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 
 export default function Home() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const slides = [
+    {
+      badge: "PENGUMUMAN",
+      title: "HASIL SELEKSI ADMISTRASI BPRA–UKT SEMESTER GANJIL 2026/2027",
+      image: "/student.png",
+    },
+    {
+      badge: "KAMPANYE DONASI",
+      title: "PROGRAM BEASISWA BAITUL MAL MASJID JAMIK USK 2026",
+      image: "/student.png",
+    },
+  ];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="min-h-screen bg-gray-50/50 pb-24 relative overflow-x-hidden">
+      
+      {/* Hero Section Container */}
+      <section className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        
+        {/* Main Green Banner */}
+        <div className="relative bg-[#0b6330] rounded-[24px] md:rounded-[32px] overflow-hidden min-h-[440px] md:min-h-[480px] flex items-center shadow-md">
+          
+          {/* Left Arrow Button */}
+          <button
+            onClick={prevSlide}
+            aria-label="Previous slide"
+            className="absolute left-3 md:left-6 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Right Arrow Button */}
+          <button
+            onClick={nextSlide}
+            aria-label="Next slide"
+            className="absolute right-3 md:right-6 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs"
           >
-            Documentation
-          </a>
+            <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          {/* Banner Inner Content Grid */}
+          <div className="w-full grid grid-cols-1 md:grid-cols-12 items-center px-6 md:px-14 py-8 md:py-0 gap-6">
+            
+            {/* Student Image Column */}
+            <div className="md:col-span-5 flex justify-center md:justify-start relative h-[280px] md:h-[460px] w-full items-end">
+              <Image
+                src={slides[currentSlide].image}
+                alt="Student USK"
+                fill
+                priority
+                className="object-contain object-bottom drop-shadow-2xl scale-105"
+              />
+            </div>
+
+            {/* Banner Text Content Column */}
+            <div className="md:col-span-7 flex flex-col justify-center items-start text-left z-10 pl-0 md:pl-4">
+              
+              {/* Yellow Announcement Badge */}
+              <div className="mb-4 md:mb-6">
+                <span className="bg-[#ffc800] text-[#111111] font-extrabold text-sm md:text-lg px-7 py-2.5 rounded-full inline-block tracking-wider shadow-xs">
+                  {slides[currentSlide].badge}
+                </span>
+              </div>
+
+              {/* Big Bold Headline */}
+              <h1 className="text-white font-black text-2xl sm:text-3xl md:text-4xl lg:text-[40px] leading-tight md:leading-[1.18] tracking-tight max-w-2xl">
+                {slides[currentSlide].title}
+              </h1>
+
+            </div>
+
+          </div>
+
         </div>
-      </main>
-    </div>
+
+        {/* Yellow Background Bar & Overlapping 3 Action Cards */}
+        <div className="relative z-20 px-2 sm:px-4 -mt-16 md:-mt-20">
+          
+          {/* Full-width Bright Yellow Bar */}
+          <div className="bg-[#ffc800] h-20 md:h-24 w-full shadow-xs mb-[-48px] md:mb-[-56px] relative z-0" />
+
+          {/* 3 Action Cards Container */}
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-7 max-w-[1240px] mx-auto pt-4">
+            
+            {/* CARD 1: INFAK */}
+            <div className="bg-[#f6f8fa] rounded-[22px] md:rounded-[26px] p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[220px] transition-transform duration-200 hover:-translate-y-1">
+              <div>
+                <h3 className="text-xl md:text-[22px] font-black text-[#2d2d2d] mb-3 tracking-wider">
+                  INFAK
+                </h3>
+                <p className="text-xs md:text-[13px] text-[#555555] leading-relaxed max-w-[280px] mx-auto font-medium">
+                  Bersyukur atas rizki, berbagi kebahagian dengan sesama muslim.
+                </p>
+              </div>
+
+              <div className="mt-6 w-full flex justify-center">
+                <Link
+                  href="#infak"
+                  className="w-36 md:w-40 py-2.5 px-4 rounded-full border border-[#197814] text-[#197814] font-bold text-sm bg-transparent hover:bg-[#197814] hover:text-white transition-all duration-200 shadow-2xs inline-block text-center"
+                >
+                  Infak
+                </Link>
+              </div>
+            </div>
+
+            {/* CARD 2: ZAKAT */}
+            <div className="bg-[#f6f8fa] rounded-[22px] md:rounded-[26px] p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[220px] transition-transform duration-200 hover:-translate-y-1">
+              <div>
+                <h3 className="text-xl md:text-[22px] font-black text-[#2d2d2d] mb-3 tracking-wider">
+                  ZAKAT
+                </h3>
+                <p className="text-xs md:text-[13px] text-[#555555] leading-relaxed max-w-[280px] mx-auto font-medium">
+                  Menyempurnakan rukun islam, mensucikan harta dan mententramkan jiwa.
+                </p>
+              </div>
+
+              <div className="mt-6 w-full flex justify-center">
+                <Link
+                  href="#zakat"
+                  className="w-36 md:w-40 py-2.5 px-4 rounded-full bg-[#197814] text-white font-bold text-sm hover:bg-[#135d0f] transition-all duration-200 shadow-md inline-block text-center"
+                >
+                  Zakat
+                </Link>
+              </div>
+            </div>
+
+            {/* CARD 3: PROGRAM */}
+            <div className="bg-[#f6f8fa] rounded-[22px] md:rounded-[26px] p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[220px] transition-transform duration-200 hover:-translate-y-1">
+              <div>
+                <h3 className="text-xl md:text-[22px] font-black text-[#2d2d2d] mb-3 tracking-wider">
+                  PROGRAM
+                </h3>
+                <p className="text-xs md:text-[13px] text-[#555555] leading-relaxed max-w-[280px] mx-auto font-medium">
+                  Rumah amal masjid jamik USK menyediakan beberapa program donasi.
+                </p>
+              </div>
+
+              <div className="mt-6 w-full flex justify-center">
+                <Link
+                  href="#program"
+                  className="w-36 md:w-40 py-2.5 px-4 rounded-full border border-[#197814] text-[#197814] font-bold text-sm bg-transparent hover:bg-[#197814] hover:text-white transition-all duration-200 shadow-2xs inline-block text-center"
+                >
+                  Program
+                </Link>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* Floating Language Button at Bottom Left */}
+      <div className="fixed bottom-5 left-5 z-40">
+        <button
+          className="bg-[#0b6330] hover:bg-[#084b24] text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 cursor-pointer transition-all border border-white/20"
+        >
+          <span>Pilih Bahasa</span>
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
+
+    </main>
   );
 }
