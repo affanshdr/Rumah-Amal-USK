@@ -172,17 +172,89 @@ export default function Home() {
 
       </section>
 
-      {/* Floating Language Button at Bottom Left */}
-      <div className="fixed bottom-5 left-5 z-40">
-        <button
-          className="bg-[#0b6330] hover:bg-[#084b24] text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 cursor-pointer transition-all border border-white/20"
-        >
-          <span>Pilih Bahasa</span>
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-      </div>
+      {/* ===== PROFIL SECTION ===== */}
+      <section id="profil" className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
+
+        {/* Section Heading */}
+        <div className="flex flex-col items-center mb-12">
+          <h2 className="text-[22px] md:text-[26px] font-black text-gray-800 tracking-[0.18em] uppercase">
+            Profil
+          </h2>
+          <div className="mt-2.5 w-14 h-[3.5px] bg-[#ffc800] rounded-full" />
+        </div>
+
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-stretch">
+
+          {/* Left: Mosque Image (Stretches to perfectly match right column height) */}
+          <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100/80 group min-h-[320px] md:min-h-full relative flex">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/profil/mesjid-jamik.png"
+              alt="Masjid Jamik Universitas Syiah Kuala"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          </div>
+
+          {/* Right: Text Content (Organized with flex justify-between to align top & bottom) */}
+          <div className="flex flex-col justify-between gap-6 py-1">
+
+            {/* Upper Content: Title, Paragraph & Link */}
+            <div>
+              {/* Title */}
+              <h3 className="text-[17px] md:text-[19px] font-black text-[#0b6330] tracking-wide uppercase mb-3 leading-snug">
+                Rumah Amal Masjid Jamik USK
+              </h3>
+
+              {/* Description */}
+              <p className="text-[13.5px] md:text-[14px] text-gray-600 leading-relaxed mb-4">
+                Kami menyediakan sistem dan layanan yang memudahkan para muzakki atau donatur dalam
+                menunaikan zakat, infaq, shadaqah, maupun wakaf dengan sebaik-baiknya. Menjadikan masjid
+                sebagai pusat pemberdayaan ekonomi umat, Mendayagunakan dana zakat, infaq shadaqah
+                maupun wakaf melalui program-program yang terasa manfaatnya, Mengangkat martabat
+                mustahik, dan membahagiakan muzakki dan donatur.
+              </p>
+
+              {/* Selengkapnya Link */}
+              <Link
+                href="/profil"
+                className="text-[#c49a00] hover:text-[#a07d00] font-semibold text-[13.5px] underline underline-offset-2 transition-colors inline-block"
+              >
+                Selengkapnya
+              </Link>
+            </div>
+
+            {/* BSI Bank Info Card with Hover Enlarge Effect */}
+            <div className="bg-white rounded-2xl p-5 md:p-6 shadow-md border border-gray-100 flex items-center gap-5 md:gap-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl cursor-pointer group">
+              {/* BSI Logo */}
+              <div className="shrink-0 w-24 md:w-28 flex justify-center items-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/profil/BSI.png"
+                  alt="Bank Syariah Indonesia"
+                  className="w-full h-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+
+              {/* Bank Details */}
+              <div className="flex flex-col gap-1 text-[13.5px] md:text-[14px] text-gray-800">
+                <span className="font-bold">
+                  Bank Syariah Indonesia (<span className="text-[#0b6330]">BSI</span>)
+                </span>
+                <span className="font-bold">
+                  No. Rekening: <span className="text-[#0b6330]">7099400409</span>
+                </span>
+                <span className="font-bold">
+                  A.N. <span className="text-[#0b6330]">Rumah Amal Masjid Jamik USK</span>
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+
 
     </main>
   );
