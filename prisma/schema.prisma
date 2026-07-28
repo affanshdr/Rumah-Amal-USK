@@ -1,0 +1,9 @@
+// Prisma schema for Supabase
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
