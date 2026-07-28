@@ -25,9 +25,8 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`border-b sticky top-0 z-50 transition-colors duration-200 ${
-          mobileMenuOpen ? "bg-[#383d42] border-transparent" : "bg-white border-gray-200"
-        }`}
+        className={`border-b sticky top-0 z-50 transition-colors duration-200 ${mobileMenuOpen ? "bg-[#383d42] border-transparent" : "bg-white border-gray-200"
+          }`}
       >
         <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-[68px]">
@@ -40,13 +39,12 @@ export default function Navbar() {
                 width={200}
                 height={50}
                 priority
-                className={`h-10 sm:h-11 w-auto object-contain transition-all ${
-                  mobileMenuOpen ? "brightness-0 invert" : ""
-                }`}
+                className={`h-10 sm:h-11 w-auto object-contain transition-all ${mobileMenuOpen ? "brightness-0 invert" : ""
+                  }`}
               />
             </Link>
 
-            {/* Desktop Navigation - Fills middle space & spreads all items evenly */}
+            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center justify-between flex-1 mx-6 xl:mx-12 text-[13.5px] font-semibold">
               {navLinks.map((link) => {
                 const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
@@ -65,9 +63,8 @@ export default function Navbar() {
                       >
                         <span>{link.label}</span>
                         <svg
-                          className={`w-3.5 h-3.5 mt-0.5 transition-transform duration-200 ${
-                            programDropdownOpen ? "rotate-180 text-[#0b6330]" : "text-gray-400"
-                          }`}
+                          className={`w-3.5 h-3.5 mt-0.5 transition-transform duration-200 ${programDropdownOpen ? "rotate-180 text-[#0b6330]" : "text-gray-400"
+                            }`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -78,11 +75,10 @@ export default function Navbar() {
                       </button>
 
                       <div
-                        className={`absolute top-full left-0 mt-1.5 w-44 bg-white rounded-xl shadow-2xl border border-gray-100/80 py-1.5 z-50 transition-all duration-250 ease-out transform ${
-                          programDropdownOpen
-                            ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
-                            : "opacity-0 translate-y-2.5 scale-95 pointer-events-none"
-                        }`}
+                        className={`absolute top-full left-0 mt-1.5 w-44 bg-white rounded-xl shadow-2xl border border-gray-100/80 py-1.5 z-50 transition-all duration-250 ease-out transform ${programDropdownOpen
+                          ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
+                          : "opacity-0 translate-y-2.5 scale-95 pointer-events-none"
+                          }`}
                       >
                         <Link
                           href="#program"
@@ -105,38 +101,34 @@ export default function Navbar() {
                   <Link
                     key={link.label}
                     href={link.href}
-                    className={`group relative px-2.5 py-1.5 transition-colors duration-200 ${
-                      isActive ? "text-[#0b6330] font-bold" : "text-gray-600 hover:text-[#0b6330]"
-                    }`}
+                    className={`group relative px-2.5 py-1.5 transition-colors duration-200 ${isActive ? "text-[#0b6330] font-bold" : "text-gray-600 hover:text-[#0b6330]"
+                      }`}
                   >
                     {link.label}
                     <span
-                      className={`absolute bottom-0 left-0 h-[2.5px] bg-[#0b6330] transition-all duration-300 ease-out ${
-                        isActive ? "w-full" : "w-0 group-hover:w-full"
-                      }`}
+                      className={`absolute bottom-0 left-0 h-[2.5px] bg-[#0b6330] transition-all duration-300 ease-out ${isActive ? "w-full" : "w-0 group-hover:w-full"
+                        }`}
                     />
                   </Link>
                 );
               })}
             </nav>
 
-            {/* Right Group: Kalkulator Zakat Button (Desktop) & Mobile Toggle */}
+            {/* Right Group: Pembayaran Zakat Button & Mobile Toggle */}
             <div className="flex items-center gap-4 shrink-0">
-              {/* Kalkulator Zakat Button (Desktop Only) */}
               <Link
-                href="#kalkulator"
+                href="/zakat"
                 className="hidden lg:inline-flex items-center justify-center bg-[#ffc800] hover:bg-[#e8b500] text-[#1a1a1a] font-extrabold text-[13px] px-5 py-2.5 rounded-lg transition-all duration-200"
               >
-                Kalkulator Zakat
+                Pembayaran Zakat
               </Link>
 
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-label="Toggle mobile menu"
-                className={`flex lg:hidden p-2 rounded-lg transition-colors cursor-pointer ${
-                  mobileMenuOpen ? "text-white hover:bg-white/10" : "text-gray-700 hover:text-[#0b6330]"
-                }`}
+                className={`flex lg:hidden p-2 rounded-lg transition-colors cursor-pointer ${mobileMenuOpen ? "text-white hover:bg-white/10" : "text-gray-700 hover:text-[#0b6330]"
+                  }`}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {mobileMenuOpen ? (
@@ -155,7 +147,7 @@ export default function Navbar() {
         {mobileMenuOpen && (
           <div className="lg:hidden fixed inset-x-0 top-[68px] bottom-0 bg-[#383d42]/90 backdrop-blur-xs z-50 overflow-y-auto px-4 py-4 sm:px-6">
             <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-lg mx-auto flex flex-col gap-2 border border-gray-100">
-              
+
               {/* Beranda */}
               <Link
                 href="/"
@@ -174,7 +166,7 @@ export default function Navbar() {
                 Profil
               </Link>
 
-              {/* Program (with Circular Arrow Badge) */}
+              {/* Program */}
               <div>
                 <div
                   onClick={() => setMobileProgramOpen(!mobileProgramOpen)}
@@ -183,9 +175,8 @@ export default function Navbar() {
                   <span>Program</span>
                   <div className="w-8 h-8 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700">
                     <svg
-                      className={`w-4 h-4 transition-transform duration-200 ${
-                        mobileProgramOpen ? "rotate-180" : ""
-                      }`}
+                      className={`w-4 h-4 transition-transform duration-200 ${mobileProgramOpen ? "rotate-180" : ""
+                        }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -260,13 +251,13 @@ export default function Navbar() {
                 Galeri
               </Link>
 
-              {/* Kalkulator Zakat (Full Width Yellow Button) */}
+              {/* Pembayaran Zakat */}
               <Link
-                href="#kalkulator"
+                href="/zakat"
                 onClick={() => setMobileMenuOpen(false)}
                 className="bg-[#ffc800] hover:bg-[#e8b500] text-[#111111] font-bold text-[16px] text-left px-5 py-3.5 rounded-xl shadow-xs transition-all block mt-2"
               >
-                Kalkulator Zakat
+                Pembayaran Zakat
               </Link>
 
             </div>

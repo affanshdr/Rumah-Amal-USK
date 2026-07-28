@@ -116,7 +116,7 @@ export default function Home() {
 
               <div className="mt-6 w-full flex justify-center">
                 <Link
-                  href="#infak"
+                  href="/infaq"
                   className="w-36 md:w-40 py-2.5 px-4 rounded-full border border-[#197814] text-[#197814] font-bold text-sm bg-transparent hover:bg-[#197814] hover:text-white transition-all duration-200 shadow-2xs inline-block text-center cursor-pointer"
                 >
                   Infak
@@ -137,7 +137,7 @@ export default function Home() {
 
               <div className="mt-6 w-full flex justify-center">
                 <Link
-                  href="#zakat"
+                  href="/zakat"
                   className="w-36 md:w-40 py-2.5 px-4 rounded-full border border-[#197814] text-[#197814] font-bold text-sm bg-transparent hover:bg-[#197814] hover:text-white transition-all duration-200 shadow-2xs inline-block text-center cursor-pointer"
                 >
                   Zakat
@@ -186,7 +186,7 @@ export default function Home() {
         {/* Content Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-stretch">
 
-          {/* Left: Mosque Image (Stretches to perfectly match right column height) */}
+          {/* Left: Mosque Image */}
           <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100/80 group min-h-[320px] md:min-h-full relative flex w-full">
             <Image
               src="/profil/mesjid-jamik.png"
@@ -197,17 +197,15 @@ export default function Home() {
             />
           </div>
 
-          {/* Right: Text Content (Organized with flex justify-between to align top & bottom) */}
+          {/* Right: Text Content */}
           <div className="flex flex-col justify-between gap-6 py-1">
 
             {/* Upper Content: Title, Paragraph & Link */}
             <div>
-              {/* Title */}
               <h3 className="text-[17px] md:text-[19px] font-black text-[#0b6330] tracking-wide uppercase mb-3 leading-snug">
                 Rumah Amal Masjid Jamik USK
               </h3>
 
-              {/* Description */}
               <p className="text-[13.5px] md:text-[14px] text-gray-600 leading-relaxed mb-4">
                 Kami menyediakan sistem dan layanan yang memudahkan para muzakki atau donatur dalam
                 menunaikan zakat, infaq, shadaqah, maupun wakaf dengan sebaik-baiknya. Menjadikan masjid
@@ -216,7 +214,6 @@ export default function Home() {
                 mustahik, dan membahagiakan muzakki dan donatur.
               </p>
 
-              {/* Selengkapnya Link */}
               <Link
                 href="/profil"
                 className="text-[#c49a00] hover:text-[#a07d00] font-semibold text-[13.5px] underline underline-offset-2 transition-colors inline-block"
@@ -225,9 +222,8 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* BSI Bank Info Card with Hover Enlarge Effect */}
+            {/* BSI Bank Info Card */}
             <div className="bg-white rounded-2xl p-5 md:p-6 shadow-md border border-gray-100 flex items-center gap-5 md:gap-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl cursor-pointer group">
-              {/* BSI Logo */}
               <div className="shrink-0 w-24 md:w-28 relative h-12 md:h-14 flex justify-center items-center">
                 <Image
                   src="/profil/BSI.png"
@@ -238,7 +234,6 @@ export default function Home() {
                 />
               </div>
 
-              {/* Bank Details */}
               <div className="flex flex-col gap-1 text-[13.5px] md:text-[14px] text-gray-800">
                 <span className="font-bold">
                   Bank Syariah Indonesia (<span className="text-[#0b6330]">BSI</span>)
@@ -255,8 +250,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-
 
     </main>
   );

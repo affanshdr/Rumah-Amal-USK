@@ -16,7 +16,6 @@ export default function Footer() {
       }
     };
 
-    // Check scroll position on mount
     handleScroll();
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -29,7 +28,7 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="bg-[#0a2e1f] text-white">
+      <footer className="bg-[#002B14] text-white">
         {/* Main Footer Grid */}
         <div className="max-w-[1340px] mx-auto px-6 sm:px-8 lg:px-12 py-12 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
 
@@ -157,7 +156,7 @@ export default function Footer() {
           {/* ===== Column 3: Google Maps ===== */}
           <div className="w-full h-[220px] rounded-2xl overflow-hidden shadow-lg border border-white/10">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3971.979685362947!2d95.36654637588365!3d5.570775933486337!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3040375a02e6f477%3A0x9a8fb9a7213d2f9b!2sRumah%20Amal%20Masjid%20Jamik%20USK!5e0!3m2!1sid!2sid!4v1710000000000!5m2!1sid!2sid"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3970.9730513155114!2d95.3687263739873!3d5.571002233500729!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x304037d79398cc65%3A0x164fb653d9c4a1f7!2sRumah%20Amal%20Masjid%20Jamik%20USK!5e0!3m2!1sid!2sid!4v1785217075034!5m2!1sid!2sid"
               width="100%"
               height="100%"
               style={{ border: 0 }}
@@ -167,22 +166,21 @@ export default function Footer() {
               title="Lokasi Rumah Amal Masjid Jamik USK"
             />
           </div>
-
         </div>
 
         {/* ===== Copyright Bar ===== */}
-        <div className="border-t border-white/10 bg-[#062015] py-4 relative z-20">
+        <div className="border-t border-white/10 bg-[#fff] py-4 relative z-20">
           <div className="max-w-[1340px] mx-auto px-6 flex items-center justify-center">
-            <p className="text-[13px] text-gray-200 text-center">
+            <p className="text-[13px] text-[#002B14] text-center">
               Copyright &copy; 2025{" "}
-              <span className="font-bold text-white">Rumah Amal USK</span>
+              <span className="font-bold text-[#002B14]">Rumah Amal USK</span>
               . All Rights Reserved
             </p>
           </div>
         </div>
       </footer>
 
-      {/* Floating Tombol Pilih Bahasa (Pojok Kiri Bawah di samping widget "N") */}
+      {/* Floating Tombol Pilih Bahasa */}
       <div className="fixed bottom-5 left-16 z-40 flex items-center">
         <div className="relative flex items-center">
           <svg className="w-4 h-4 text-gray-300 absolute left-3 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,13 +188,13 @@ export default function Footer() {
           </svg>
           <select
             aria-label="Pilih Bahasa"
-            className="bg-[#0a2e1f]/90 hover:bg-[#0a2e1f] backdrop-blur-md text-white text-xs font-semibold pl-9 pr-8 py-2 rounded-lg border border-white/20 shadow-lg focus:outline-none focus:border-[#ffc800] appearance-none cursor-pointer transition-all"
+            className="bg-[#002B14]/90 hover:bg-[#002B14] backdrop-blur-md text-white text-xs font-semibold pl-9 pr-8 py-2 rounded-lg border border-white/20 shadow-lg focus:outline-none focus:border-[#ffc800] appearance-none cursor-pointer transition-all"
             defaultValue="id"
           >
-            <option value="id" className="bg-[#0a2e1f] text-white">Pilih Bahasa</option>
-            <option value="id-val" className="bg-[#0a2e1f] text-white">Bahasa Indonesia</option>
-            <option value="en" className="bg-[#0a2e1f] text-white">English</option>
-            <option value="ar" className="bg-[#0a2e1f] text-white">العربية</option>
+            <option value="id" className="bg-[#002B14] text-white">Pilih Bahasa</option>
+            <option value="id-val" className="bg-[#002B14] text-white">Bahasa Indonesia</option>
+            <option value="en" className="bg-[#002B14] text-white">English</option>
+            <option value="ar" className="bg-[#002B14] text-white">العربية</option>
           </select>
           <svg className="w-3.5 h-3.5 text-gray-300 absolute right-3 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -208,11 +206,10 @@ export default function Footer() {
       <button
         onClick={scrollToTop}
         aria-label="Scroll to top"
-        className={`fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full bg-[#ffc800] hover:bg-[#e8b500] text-[#111] flex items-center justify-center shadow-xl transition-all duration-300 cursor-pointer ${
-          showTopBtn
-            ? "opacity-100 scale-100 translate-y-0"
-            : "opacity-0 scale-75 translate-y-4 pointer-events-none"
-        }`}
+        className={`fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full bg-[#ffc800] hover:bg-[#e8b500] text-[#111] flex items-center justify-center shadow-xl transition-all duration-300 cursor-pointer ${showTopBtn
+          ? "opacity-100 scale-100 translate-y-0"
+          : "opacity-0 scale-75 translate-y-4 pointer-events-none"
+          }`}
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
@@ -221,5 +218,3 @@ export default function Footer() {
     </>
   );
 }
-
-
