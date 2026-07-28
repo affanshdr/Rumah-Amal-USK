@@ -187,12 +187,13 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-stretch">
 
           {/* Left: Mosque Image (Stretches to perfectly match right column height) */}
-          <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100/80 group min-h-[320px] md:min-h-full relative flex">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+          <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-100/80 group min-h-[320px] md:min-h-full relative flex w-full">
+            <Image
               src="/profil/mesjid-jamik.png"
               alt="Masjid Jamik Universitas Syiah Kuala"
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
           </div>
 
@@ -227,12 +228,13 @@ export default function Home() {
             {/* BSI Bank Info Card with Hover Enlarge Effect */}
             <div className="bg-white rounded-2xl p-5 md:p-6 shadow-md border border-gray-100 flex items-center gap-5 md:gap-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl cursor-pointer group">
               {/* BSI Logo */}
-              <div className="shrink-0 w-24 md:w-28 flex justify-center items-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <div className="shrink-0 w-24 md:w-28 relative h-12 md:h-14 flex justify-center items-center">
+                <Image
                   src="/profil/BSI.png"
                   alt="Bank Syariah Indonesia"
-                  className="w-full h-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                  fill
+                  sizes="120px"
+                  className="object-contain transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
 
