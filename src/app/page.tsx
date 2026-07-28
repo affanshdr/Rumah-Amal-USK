@@ -104,7 +104,7 @@ export default function Home() {
           <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-7 max-w-[1240px] mx-auto pt-4">
             
             {/* CARD 1: INFAK */}
-            <div className="bg-[#f6f8fa] rounded-[22px] md:rounded-[26px] p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[220px] transition-transform duration-200 hover:-translate-y-1">
+            <div className="bg-[#f6f8fa] rounded-[22px] md:rounded-[26px] p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[220px] transition-transform duration-200 hover:-translate-y-1 group">
               <div>
                 <h3 className="text-xl md:text-[22px] font-black text-[#2d2d2d] mb-3 tracking-wider">
                   INFAK
@@ -117,7 +117,7 @@ export default function Home() {
               <div className="mt-6 w-full flex justify-center">
                 <Link
                   href="#infak"
-                  className="w-36 md:w-40 py-2.5 px-4 rounded-full border border-[#197814] text-[#197814] font-bold text-sm bg-transparent hover:bg-[#197814] hover:text-white transition-all duration-200 shadow-2xs inline-block text-center"
+                  className="w-36 md:w-40 py-2.5 px-4 rounded-full border border-[#197814] text-[#197814] font-bold text-sm bg-transparent hover:bg-[#197814] hover:text-white transition-all duration-200 shadow-2xs inline-block text-center cursor-pointer"
                 >
                   Infak
                 </Link>
@@ -125,7 +125,7 @@ export default function Home() {
             </div>
 
             {/* CARD 2: ZAKAT */}
-            <div className="bg-[#f6f8fa] rounded-[22px] md:rounded-[26px] p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[220px] transition-transform duration-200 hover:-translate-y-1">
+            <div className="bg-[#f6f8fa] rounded-[22px] md:rounded-[26px] p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[220px] transition-transform duration-200 hover:-translate-y-1 group">
               <div>
                 <h3 className="text-xl md:text-[22px] font-black text-[#2d2d2d] mb-3 tracking-wider">
                   ZAKAT
@@ -138,7 +138,7 @@ export default function Home() {
               <div className="mt-6 w-full flex justify-center">
                 <Link
                   href="#zakat"
-                  className="w-36 md:w-40 py-2.5 px-4 rounded-full bg-[#197814] text-white font-bold text-sm hover:bg-[#135d0f] transition-all duration-200 shadow-md inline-block text-center"
+                  className="w-36 md:w-40 py-2.5 px-4 rounded-full border border-[#197814] text-[#197814] font-bold text-sm bg-transparent hover:bg-[#197814] hover:text-white transition-all duration-200 shadow-2xs inline-block text-center cursor-pointer"
                 >
                   Zakat
                 </Link>
@@ -146,7 +146,7 @@ export default function Home() {
             </div>
 
             {/* CARD 3: PROGRAM */}
-            <div className="bg-[#f6f8fa] rounded-[22px] md:rounded-[26px] p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[220px] transition-transform duration-200 hover:-translate-y-1">
+            <div className="bg-[#f6f8fa] rounded-[22px] md:rounded-[26px] p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[220px] transition-transform duration-200 hover:-translate-y-1 group">
               <div>
                 <h3 className="text-xl md:text-[22px] font-black text-[#2d2d2d] mb-3 tracking-wider">
                   PROGRAM
@@ -159,7 +159,7 @@ export default function Home() {
               <div className="mt-6 w-full flex justify-center">
                 <Link
                   href="#program"
-                  className="w-36 md:w-40 py-2.5 px-4 rounded-full border border-[#197814] text-[#197814] font-bold text-sm bg-transparent hover:bg-[#197814] hover:text-white transition-all duration-200 shadow-2xs inline-block text-center"
+                  className="w-36 md:w-40 py-2.5 px-4 rounded-full border border-[#197814] text-[#197814] font-bold text-sm bg-transparent hover:bg-[#197814] hover:text-white transition-all duration-200 shadow-2xs inline-block text-center cursor-pointer"
                 >
                   Program
                 </Link>

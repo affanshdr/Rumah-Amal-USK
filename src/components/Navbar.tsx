@@ -8,105 +8,109 @@ export default function Navbar() {
   const [programDropdownOpen, setProgramDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const navLinks = [
+    { href: "/", label: "Beranda", active: true },
+    { href: "#profil", label: "Profil" },
+    { href: "#program", label: "Program", hasDropdown: true },
+    { href: "#berita", label: "Berita" },
+    { href: "#pengumuman", label: "Pengumuman" },
+    { href: "#newsletter", label: "Newsletter" },
+    { href: "#dokumen", label: "Dokumen" },
+    { href: "#galeri", label: "Galeri" },
+  ];
+
   return (
-    <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-xs">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          
+        <div className="flex items-center justify-between h-[68px]">
+
           {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-3 shrink-0">
+          <Link href="/" className="flex items-center shrink-0">
             <Image
               src="/logo/rumah-amal.png"
               alt="Rumah Amal Masjid Jamik USK"
-              width={220}
-              height={55}
+              width={200}
+              height={50}
               priority
-              className="h-12 w-auto object-contain"
+              className="h-11 w-auto object-contain"
             />
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold text-gray-700">
-            {/* Beranda (Active) */}
-            <Link
-              href="/"
-              className="relative text-[#0f6d38] font-bold py-2 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2.5px] after:bg-[#0f6d38] after:rounded-full"
-            >
-              Beranda
-            </Link>
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-0.5 text-[13.5px] font-semibold">
 
-            <Link href="#profil" className="hover:text-[#0f6d38] transition-colors py-2">
-              Profil
-            </Link>
+            {navLinks.map((link) => {
+              if (link.hasDropdown) {
+                return (
+                  <div
+                    key={link.label}
+                    className="relative"
+                    onMouseEnter={() => setProgramDropdownOpen(true)}
+                    onMouseLeave={() => setProgramDropdownOpen(false)}
+                  >
+                    <button
+                      onClick={() => setProgramDropdownOpen(!programDropdownOpen)}
+                      className="group relative flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:text-[#0b6330] transition-colors duration-200 cursor-pointer"
+                    >
+                      <span>{link.label}</span>
+                      <svg
+                        className={`w-3.5 h-3.5 mt-0.5 transition-transform duration-200 ${
+                          programDropdownOpen ? "rotate-180 text-[#0b6330]" : "text-gray-400"
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                      <span className="absolute bottom-0 left-0 h-[2.5px] bg-[#0b6330] w-0 group-hover:w-full transition-all duration-300 ease-out" />
+                    </button>
 
-            {/* Program Dropdown */}
-            <div
-              className="relative"
-              onMouseEnter={() => setProgramDropdownOpen(true)}
-              onMouseLeave={() => setProgramDropdownOpen(false)}
-            >
-              <button
-                onClick={() => setProgramDropdownOpen(!programDropdownOpen)}
-                className="flex items-center gap-1 hover:text-[#0f6d38] transition-colors py-2 cursor-pointer"
-              >
-                <span>Program</span>
-                <svg
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    programDropdownOpen ? "rotate-180 text-[#0f6d38]" : "text-gray-500"
+                    {programDropdownOpen && (
+                      <div className="absolute top-full left-0 mt-1 w-44 bg-white rounded-xl shadow-2xl border border-gray-100/80 py-1.5 z-50">
+                        <Link
+                          href="#program"
+                          className="block px-4 py-2.5 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
+                        >
+                          Program
+                        </Link>
+                        <Link
+                          href="#kampanye"
+                          className="block px-4 py-2.5 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
+                        >
+                          Kampanye
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className={`group relative px-3 py-1.5 transition-colors duration-200 ${
+                    link.active ? "text-[#0b6330]" : "text-gray-600 hover:text-[#0b6330]"
                   }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+                  {link.label}
+                  <span
+                    className={`absolute bottom-0 left-0 h-[2.5px] bg-[#0b6330] transition-all duration-300 ease-out ${
+                      link.active ? "w-full" : "w-0 group-hover:w-full"
+                    }`}
+                  />
+                </Link>
+              );
+            })}
 
-              {/* Dropdown Menu */}
-              {programDropdownOpen && (
-                <div className="absolute left-0 mt-0 w-44 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                  <Link
-                    href="#program"
-                    className="block px-4 py-2.5 text-xs text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0f6d38] transition-colors"
-                  >
-                    Program
-                  </Link>
-                  <Link
-                    href="#kampanye"
-                    className="block px-4 py-2.5 text-xs text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0f6d38] transition-colors"
-                  >
-                    Kampanye
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            <Link href="#berita" className="hover:text-[#0f6d38] transition-colors py-2">
-              Berita
-            </Link>
-
-            <Link href="#pengumuman" className="hover:text-[#0f6d38] transition-colors py-2">
-              Pengumuman
-            </Link>
-
-            <Link href="#newsletter" className="hover:text-[#0f6d38] transition-colors py-2">
-              Newsletter
-            </Link>
-
-            <Link href="#dokumen" className="hover:text-[#0f6d38] transition-colors py-2">
-              Dokumen
-            </Link>
-
-            <Link href="#galeri" className="hover:text-[#0f6d38] transition-colors py-2">
-              Galeri
-            </Link>
           </nav>
 
-          {/* Action Button */}
-          <div className="hidden lg:flex items-center gap-3">
+          {/* Kalkulator Zakat Button */}
+          <div className="hidden lg:flex items-center">
             <Link
               href="#kalkulator"
-              className="bg-[#f5b800] hover:bg-[#e5aa00] text-[#0f6d38] font-bold text-xs px-5 py-3 rounded-lg shadow-sm hover:shadow transition-all duration-200"
+              className="bg-[#ffc800] hover:bg-[#e8b500] text-[#1a1a1a] font-extrabold text-[13px] px-5 py-2.5 rounded-lg transition-all duration-200"
             >
               Kalkulator Zakat
             </Link>
@@ -116,7 +120,7 @@ export default function Navbar() {
           <div className="flex lg:hidden items-center">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-gray-700 hover:text-[#0f6d38] p-2 rounded-lg"
+              className="text-gray-600 hover:text-[#0b6330] p-2 rounded-lg"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {mobileMenuOpen ? (
@@ -132,19 +136,31 @@ export default function Navbar() {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-gray-100 flex flex-col gap-3 font-semibold text-sm">
-            <Link href="/" className="text-[#0f6d38] font-bold py-1">Beranda</Link>
-            <Link href="#profil" className="text-gray-700 py-1">Profil</Link>
-            <Link href="#program" className="text-gray-700 py-1">Program</Link>
-            <Link href="#kampanye" className="text-gray-700 pl-4 py-1 text-xs">└ Kampanye</Link>
-            <Link href="#berita" className="text-gray-700 py-1">Berita</Link>
-            <Link href="#pengumuman" className="text-gray-700 py-1">Pengumuman</Link>
-            <Link href="#newsletter" className="text-gray-700 py-1">Newsletter</Link>
-            <Link href="#dokumen" className="text-gray-700 py-1">Dokumen</Link>
-            <Link href="#galeri" className="text-gray-700 py-1">Galeri</Link>
+          <div className="lg:hidden py-4 border-t border-gray-100 flex flex-col gap-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`py-2.5 px-2 text-sm font-semibold rounded-lg ${
+                  link.active
+                    ? "text-[#0b6330] bg-green-50"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-[#0b6330]"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <Link
+              href="#program"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-2.5 px-2 text-sm font-semibold rounded-lg text-gray-600 hover:bg-gray-50 hover:text-[#0b6330]"
+            >
+              Program
+            </Link>
             <Link
               href="#kalkulator"
-              className="bg-[#f5b800] text-[#0f6d38] font-bold text-xs text-center py-3 rounded-lg mt-2"
+              className="mt-2 bg-[#ffc800] hover:bg-[#e8b500] text-[#1a1a1a] font-extrabold text-sm text-center py-3 rounded-lg transition-all"
             >
               Kalkulator Zakat
             </Link>
