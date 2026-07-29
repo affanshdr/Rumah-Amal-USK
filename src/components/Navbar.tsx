@@ -3,13 +3,27 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [programDropdownOpen, setProgramDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileProgramOpen, setMobileProgramOpen] = useState(false);
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setProgramDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const navLinks = [
     { href: "/", label: "Beranda" },
@@ -53,12 +67,16 @@ export default function Navbar() {
                   return (
                     <div
                       key={link.label}
+                      ref={dropdownRef}
                       className="relative"
                       onMouseEnter={() => setProgramDropdownOpen(true)}
-                      onMouseLeave={() => setProgramDropdownOpen(false)}
                     >
                       <button
-                        onClick={() => setProgramDropdownOpen(!programDropdownOpen)}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setProgramDropdownOpen((prev) => !prev);
+                        }}
                         className="group relative flex items-center gap-1 px-2.5 py-1.5 text-gray-600 hover:text-[#0b6330] transition-colors duration-200 cursor-pointer"
                       >
                         <span>{link.label}</span>
