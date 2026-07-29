@@ -19,7 +19,7 @@ export default function Navbar() {
     { href: "#pengumuman", label: "Pengumuman" },
     { href: "#newsletter", label: "Newsletter" },
     { href: "#dokumen", label: "Dokumen" },
-    { href: "#galeri", label: "Galeri" },
+    { href: "/galeri", label: "Galeri" },
   ];
 
   return (
@@ -244,7 +244,7 @@ export default function Navbar() {
 
               {/* Galeri */}
               <Link
-                href="#galeri"
+                href="/galeri"
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-2.5 text-[17px] font-bold text-[#0b6330] transition-colors mb-1"
               >
