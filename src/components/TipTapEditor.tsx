@@ -56,7 +56,7 @@ export const DownloadButtonNode = Node.create({
             attrs: options,
           });
         },
-    };
+    } as any;
   },
 });
 
