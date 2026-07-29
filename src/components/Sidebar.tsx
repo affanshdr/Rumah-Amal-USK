@@ -9,8 +9,8 @@ export default function Sidebar() {
   const menuItems = [
     { href: "/zakat", label: "Zakat" },
     { href: "/infaq", label: "Infaq" },
-    { href: "/riwayat", label: "Cek Riwayat Zakat" },
-    { href: "/kalkulator", label: "Kalkulasi Zakat" },
+    { href: "/riwayat", label: "Cek Riwayat Pembayaran" },
+    { href: "/kalkulator", label: "Kalkulator Zakat" },
   ];
 
   return (

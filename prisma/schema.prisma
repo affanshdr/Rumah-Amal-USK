@@ -65,3 +65,11 @@ model Infaq {
 
   @@map("infaqs")
 }
+
+model Gallery{
+  id                String   @id @default(uuid())
+  imageUrl          String   @map("image_url")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  @@map("galleries")
+}

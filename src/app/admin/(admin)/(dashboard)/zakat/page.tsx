@@ -58,7 +58,6 @@ export default function AdminZakatPage() {
                     <thead>
                         <tr className="border-b text-xs text-gray-500 uppercase bg-gray-50">
                             <th className="py-3 px-4">Nama</th>
-                            <th className="py-3 px-4">Tipe</th>
                             <th className="py-3 px-4">Jenis</th>
                             <th className="py-3 px-4">Jumlah</th>
                             <th className="py-3 px-4">Bukti</th>
@@ -70,34 +69,45 @@ export default function AdminZakatPage() {
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan={7} className="text-center py-6 text-gray-400 text-xs">Memuat data...</td></tr>
-                        ) : data.map((item) => (
-                            <tr key={item.id} className="border-b">
-                                <td className="py-3 px-4">
-                                    {item.nama}
-                                    {item.nip && <><br /><span className="text-xs text-gray-400">NIP: {item.nip}</span></>}
-                                </td>
-                                <td className="py-3 px-4 capitalize">{item.tipePembayar}</td>
-                                <td className="py-3 px-4 capitalize">{item.jenisZakat}</td>
-                                <td className="py-3 px-4">{formatRupiah(item.jumlahZakat)}</td>
-                                <td className="py-3 px-4">
-                                    {item.buktiPembayaran ? (
-                                        <a href={`/uploads/${item.buktiPembayaran}`} target="_blank" className="text-[#000] underline text-xs">Lihat</a>
-                                    ) : <span className="text-xs text-gray-400">-</span>}
-                                </td>
-                                <td className="py-3 px-4">{item.tanggal}</td>
-                                <td className="py-3 px-4">{item.pesan}</td>
-                                <td className="py-3 px-4"><span className={statusBadge(item.status)}>{item.status}</span></td>
-                                <td className="py-3 px-4 space-x-2">
-                                    {item.status === 'pending' && (
-                                        <>
-                                            <button onClick={() => handleAction(item.id, 'approve')} className="text-xs text-green-700 font-bold hover:underline">Approve</button>
-                                            <button onClick={() => handleAction(item.id, 'reject')} className="text-xs text-red-700 font-bold hover:underline">Reject</button>
-                                        </>
-                                    )}
+                            <tr>
+                                <td colSpan={9} className="text-center py-6 text-gray-400 text-xs">
+                                    Memuat data...
                                 </td>
                             </tr>
-                        ))}
+                        ) : data.length === 0 ? (
+                            <tr>
+                                <td colSpan={9} className="text-center py-10 text-gray-400 text-xs">
+                                    Belum ada data pembayaran infaq.
+                                </td>
+                            </tr>
+                        ) : (
+                            data.map((item) => (
+                                <tr key={item.id} className="border-b">
+                                    <td className="py-3 px-4">
+                                        {item.nama}
+                                        {item.nip && <><br /><span className="text-xs text-gray-400">NIP: {item.nip}</span></>}
+                                    </td>
+                                    <td className="py-3 px-4 capitalize">{item.jenisZakat}</td>
+                                    <td className="py-3 px-4">{formatRupiah(item.jumlahZakat)}</td>
+                                    <td className="py-3 px-4">
+                                        {item.buktiPembayaran ? (
+                                            <a href={item.buktiPembayaran} target="_blank" className="text-[#000] underline text-xs">Lihat</a>
+                                        ) : <span className="text-xs text-gray-400">-</span>}
+                                    </td>
+                                    <td className="py-3 px-4">{item.tanggal}</td>
+                                    <td className="py-3 px-4">{item.pesan}</td>
+                                    <td className="py-3 px-4"><span className={statusBadge(item.status)}>{item.status}</span></td>
+                                    <td className="py-3 px-4 space-x-2">
+                                        {item.status === 'pending' && (
+                                            <>
+                                                <button onClick={() => handleAction(item.id, 'approve')} className="text-xs text-green-700 font-bold hover:underline">Approve</button>
+                                                <button onClick={() => handleAction(item.id, 'reject')} className="text-xs text-red-700 font-bold hover:underline">Reject</button>
+                                            </>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
