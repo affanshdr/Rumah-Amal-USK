@@ -75,23 +75,27 @@ export default function Navbar() {
                       </button>
 
                       <div
-                        className={`absolute top-full left-0 mt-1.5 w-44 bg-white rounded-xl shadow-2xl border border-gray-100/80 py-1.5 z-50 transition-all duration-250 ease-out transform ${programDropdownOpen
+                        className={`absolute top-full left-0 w-44 pt-1.5 z-50 transition-all duration-200 ease-out transform ${programDropdownOpen
                           ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
-                          : "opacity-0 translate-y-2.5 scale-95 pointer-events-none"
+                          : "opacity-0 translate-y-2 scale-95 pointer-events-none"
                           }`}
                       >
-                        <Link
-                          href="#program"
-                          className="block px-4 py-2.5 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
-                        >
-                          Program
-                        </Link>
-                        <Link
-                          href="#kampanye"
-                          className="block px-4 py-2.5 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
-                        >
-                          Kampanye
-                        </Link>
+                        <div className="bg-white rounded-xl shadow-2xl border border-gray-100/80 py-1.5">
+                          <Link
+                            href="#program"
+                            onClick={() => setProgramDropdownOpen(false)}
+                            className="block px-4 py-2.5 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
+                          >
+                            Program
+                          </Link>
+                          <Link
+                            href="#kampanye"
+                            onClick={() => setProgramDropdownOpen(false)}
+                            className="block px-4 py-2.5 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
+                          >
+                            Kampanye
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   );
