@@ -10,6 +10,8 @@ type ZakatItem = {
     jenisZakat: string;
     jumlahZakat: string;
     buktiPembayaran: string | null;
+    tanggal: string;
+    pesan: string;
     status: string;
 };
 
@@ -49,7 +51,7 @@ export default function AdminZakatPage() {
 
     return (
         <div>
-            <h1 className="text-xl font-bold text-uskGreen mb-6">Data Pembayaran Zakat</h1>
+            <h1 className="text-xl font-bold text-[#000] mb-6">Data Pembayaran Zakat</h1>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
                 <table className="w-full text-sm text-left">
@@ -60,6 +62,8 @@ export default function AdminZakatPage() {
                             <th className="py-3 px-4">Jenis</th>
                             <th className="py-3 px-4">Jumlah</th>
                             <th className="py-3 px-4">Bukti</th>
+                            <th className="py-3 px-4">Tanggal</th>
+                            <th className="py-3 px-4">Pesan</th>
                             <th className="py-3 px-4">Status</th>
                             <th className="py-3 px-4">Aksi</th>
                         </tr>
@@ -78,9 +82,11 @@ export default function AdminZakatPage() {
                                 <td className="py-3 px-4">{formatRupiah(item.jumlahZakat)}</td>
                                 <td className="py-3 px-4">
                                     {item.buktiPembayaran ? (
-                                        <a href={`/uploads/${item.buktiPembayaran}`} target="_blank" className="text-uskGreen underline text-xs">Lihat</a>
+                                        <a href={`/uploads/${item.buktiPembayaran}`} target="_blank" className="text-[#000] underline text-xs">Lihat</a>
                                     ) : <span className="text-xs text-gray-400">-</span>}
                                 </td>
+                                <td className="py-3 px-4">{item.tanggal}</td>
+                                <td className="py-3 px-4">{item.pesan}</td>
                                 <td className="py-3 px-4"><span className={statusBadge(item.status)}>{item.status}</span></td>
                                 <td className="py-3 px-4 space-x-2">
                                     {item.status === 'pending' && (
