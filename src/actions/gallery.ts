@@ -22,7 +22,7 @@ export async function uploadGalleryImages(formData: FormData): Promise<UploadRes
             const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
             const { error } = await supabase.storage
-                .from('gallery')
+                .from('Gallery')
                 .upload(fileName, file, { cacheControl: '3600', upsert: false });
 
             if (error) {
@@ -30,7 +30,7 @@ export async function uploadGalleryImages(formData: FormData): Promise<UploadRes
                 continue;
             }
 
-            const { data } = supabase.storage.from('gallery').getPublicUrl(fileName);
+            const { data } = supabase.storage.from('Gallery').getPublicUrl(fileName);
 
             const created = await prisma.gallery.create({
                 data: { imageUrl: data.publicUrl },
@@ -47,16 +47,16 @@ export async function uploadGalleryImages(formData: FormData): Promise<UploadRes
 }
 
 export async function deleteGalleryImage(id: string, imageUrl: string) {
-    // Coba hapus file fisik dari Supabase Storage juga (bukan cuma record DB)
     try {
         const url = new URL(imageUrl);
-        const path = url.pathname.split('/gallery/')[1];
+        const rawPath = url.pathname;
+        const splitKey = rawPath.includes('/Gallery/') ? '/Gallery/' : '/gallery/';
+        const path = rawPath.split(splitKey)[1];
+
         if (path) {
-            await supabase.storage.from('gallery').remove([path]);
+            await supabase.storage.from('Gallery').remove([path]);
         }
     } catch {
-        // Kalau gagal hapus file fisik, tetap lanjut hapus record DB
-        // supaya tidak ada data "nyangkut" di database
     }
 
     await prisma.gallery.delete({ where: { id } });

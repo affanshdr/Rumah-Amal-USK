@@ -67,9 +67,19 @@ model Infaq {
 }
 
 model Gallery{
-  id                String   @id @default(uuid())
-  imageUrl          String   @map("image_url")
-  createdAt         DateTime @default(now()) @map("created_at")
+  id        String   @id @default(uuid())
+  imageUrl  String   @map("image_url")
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@map("galleries")
+}
+
+model Newsletter {
+  id        String   @id @default(cuid())
+  judul     String
+  imageUrl  String   @map("image_url")
+  tanggal   DateTime @map("tanggal")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("newsletters")
 }

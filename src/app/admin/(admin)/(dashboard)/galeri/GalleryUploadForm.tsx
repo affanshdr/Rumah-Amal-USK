@@ -85,7 +85,7 @@ export default function GalleryUploadForm() {
                     onChange={(e) => e.target.files && addFiles(e.target.files)}
                 />
                 <i className="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mb-3"></i>
-                <p className="text-sm font-semibold text-gray-700">Klik atau seret foto ke sini</p>
+                <p className="text-sm font-semibold text-gray-700">Klik atau seret foto ke sini untuk menambahkan</p>
                 <p className="text-xs text-gray-400 mt-1">Mendukung JPG, PNG, WEBP — bisa pilih banyak sekaligus</p>
             </div>
 

@@ -8,6 +8,7 @@ import {
   faHandHoldingHeart, 
   faGift, 
   faImages, 
+  faNewspaper,
   faRightFromBracket 
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -19,6 +20,7 @@ export default function AdminSidebar({ adminName }: { adminName: string }) {
     { href: '/admin/zakat', label: 'Data Zakat', icon: faHandHoldingHeart },
     { href: '/admin/infaq', label: 'Data Infaq', icon: faGift },
     { href: '/admin/galeri', label: 'Galeri', icon: faImages },
+    { href: '/admin/newsletter', label: 'Newsletter', icon: faNewspaper },
   ];
 
   return (

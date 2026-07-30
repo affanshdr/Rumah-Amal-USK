@@ -6,18 +6,10 @@ export const metadata: Metadata = {
     description: "Panel admin Rumah Amal Masjid Jamik USK",
 };
 
-export default function AdminLayout({
+export default function AdminAuthLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    return (
-        <html lang="id">
-            <body className="antialiased">
-                <div className="flex min-h-screen bg-gray-100">
-                    <main className="flex-1 p-6 sm:p-8">{children}</main>
-                </div>
-            </body>
-        </html>
-    );
+    return <>{children}</>;
 }
