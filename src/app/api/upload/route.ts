@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       url: urlData.publicUrl,
+      storagePath: `${BUCKET_NAME}/${fileName}`, // bucket/filename untuk cleanup
       originalName: file.name,
       fileType: file.type,
       size: file.size,

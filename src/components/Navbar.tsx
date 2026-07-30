@@ -68,7 +68,7 @@ export default function Navbar() {
                     <div
                       key={link.label}
                       ref={dropdownRef}
-                      className="relative py-2"
+                      className="relative"
                       onMouseEnter={() => setProgramDropdownOpen(true)}
                       onMouseLeave={() => setProgramDropdownOpen(false)}
                     >
@@ -78,7 +78,7 @@ export default function Navbar() {
                           e.stopPropagation();
                           setProgramDropdownOpen((prev) => !prev);
                         }}
-                        className="group relative flex items-center gap-1 px-3 py-2 text-gray-600 hover:text-[#0b6330] transition-colors duration-200 cursor-pointer"
+                        className="group relative flex items-center gap-1 px-2.5 py-1.5 text-gray-600 hover:text-[#0b6330] transition-colors duration-200 cursor-pointer"
                       >
                         <span>{link.label}</span>
                         <svg
@@ -93,25 +93,25 @@ export default function Navbar() {
                         <span className="absolute bottom-0 left-0 h-[2.5px] bg-[#0b6330] w-0 group-hover:w-full transition-all duration-300 ease-out" />
                       </button>
 
-                      {/* Dropdown Menu Container with large padding & invisible top bridge */}
+                      {/* Dropdown Menu Container with invisible top hover bridge */}
                       <div
-                        className={`absolute top-full left-0 w-48 pt-3 z-50 transition-all duration-200 ease-out transform before:content-[''] before:absolute before:-top-4 before:inset-x-0 before:h-4 ${programDropdownOpen
+                        className={`absolute top-full left-0 w-44 pt-1.5 z-50 transition-all duration-200 ease-out transform before:content-[''] before:absolute before:-top-4 before:inset-x-0 before:h-4 ${programDropdownOpen
                           ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
                           : "opacity-0 translate-y-2 scale-95 pointer-events-none"
                           }`}
                       >
-                        <div className="bg-white rounded-xl shadow-2xl border border-gray-100/80 py-2">
+                        <div className="bg-white rounded-xl shadow-2xl border border-gray-100/80 py-1.5">
                           <Link
                             href="#program"
                             onClick={() => setProgramDropdownOpen(false)}
-                            className="block px-5 py-3 text-[14px] text-gray-700 font-semibold hover:bg-emerald-50/70 hover:text-[#0b6330] transition-colors"
+                            className="block px-4 py-2 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
                           >
                             Program
                           </Link>
                           <Link
                             href="#kampanye"
                             onClick={() => setProgramDropdownOpen(false)}
-                            className="block px-5 py-3 text-[14px] text-gray-700 font-semibold hover:bg-emerald-50/70 hover:text-[#0b6330] transition-colors"
+                            className="block px-4 py-2 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
                           >
                             Kampanye
                           </Link>

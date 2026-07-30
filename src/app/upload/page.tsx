@@ -70,6 +70,56 @@ export default function UploadIndexPage() {
             </div>
             <span style={{ marginLeft: 'auto', color: '#9ca3af', fontSize: '1.1rem' }}>→</span>
           </Link>
+
+          <Link href="/upload/mitra" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            background: 'white',
+            border: '1.5px solid #e5e7eb',
+            borderRadius: '12px',
+            padding: '1rem 1.25rem',
+            textDecoration: 'none',
+            color: 'inherit',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+            transition: 'border-color 0.2s, box-shadow 0.2s',
+          }}>
+            <span style={{ fontSize: '2rem' }}>🤝</span>
+            <div style={{ textAlign: 'left' }}>
+              <p style={{ fontWeight: 700, color: '#111827', margin: 0, fontSize: '0.95rem' }}>
+                Upload Mitra
+              </p>
+              <p style={{ color: '#6b7280', margin: 0, fontSize: '0.8rem' }}>
+                Tambah logo/gambar & nama mitra resmi
+              </p>
+            </div>
+            <span style={{ marginLeft: 'auto', color: '#9ca3af', fontSize: '1.1rem' }}>→</span>
+          </Link>
+
+          <Link href="/admin/announcements/new" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            background: 'white',
+            border: '1.5px solid #e5e7eb',
+            borderRadius: '12px',
+            padding: '1rem 1.25rem',
+            textDecoration: 'none',
+            color: 'inherit',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+            transition: 'border-color 0.2s, box-shadow 0.2s',
+          }}>
+            <span style={{ fontSize: '2rem' }}>📢</span>
+            <div style={{ textAlign: 'left' }}>
+              <p style={{ fontWeight: 700, color: '#111827', margin: 0, fontSize: '0.95rem' }}>
+                Upload / Buat Pengumuman
+              </p>
+              <p style={{ color: '#6b7280', margin: 0, fontSize: '0.8rem' }}>
+                Editor TipTap untuk membuat pengumuman & upload cover
+              </p>
+            </div>
+            <span style={{ marginLeft: 'auto', color: '#9ca3af', fontSize: '1.1rem' }}>→</span>
+          </Link>
         </div>
 
         <p style={{ marginTop: '2rem', fontSize: '0.75rem', color: '#d1d5db' }}>

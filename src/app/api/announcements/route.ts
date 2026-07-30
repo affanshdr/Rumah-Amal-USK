@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
         coverImageUrl: coverImageUrl || null,
         content,
         published: true,
-        publishedAt: new Date(),
+        publishedAt: body.publishedAt ? new Date(body.publishedAt) : new Date(),
         tags: {
           connectOrCreate: tagConnect,
         },

@@ -2,10 +2,50 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import MitraSection from "@/components/MitraSection";
+
+interface NewsletterItem {
+  id: string;
+  judul: string;
+  imageUrl: string;
+  tanggal: string;
+}
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [newsletters, setNewsletters] = useState<NewsletterItem[]>([]);
+  const [loadingNewsletters, setLoadingNewsletters] = useState(true);
+
+  useEffect(() => {
+    async function loadNewsletters() {
+      try {
+        const res = await fetch('/api/newsletter?limit=3');
+        if (res.ok) {
+          const data = await res.json();
+          setNewsletters(data.items || []);
+        }
+      } catch (err) {
+        console.error('Error fetching home newsletters:', err);
+      } finally {
+        setLoadingNewsletters(false);
+      }
+    }
+    loadNewsletters();
+  }, []);
+
+  const formatDate = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  };
 
   const slides = [
     {
@@ -250,6 +290,83 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ===== NEWSLETTER SECTION ===== */}
+      <section id="newsletter" className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        
+        {/* Section Heading */}
+        <div className="flex flex-col items-center mb-12">
+          <h2 className="text-[22px] md:text-[26px] font-black text-gray-800 tracking-[0.18em] uppercase">
+            Newsletter
+          </h2>
+          <div className="mt-2.5 w-14 h-[3.5px] bg-[#ffc800] rounded-full" />
+        </div>
+
+        {/* Content */}
+        {loadingNewsletters ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 animate-pulse mb-8">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs">
+                <div className="bg-gray-200 rounded-xl aspect-[3/4] w-full mb-4" />
+                <div className="bg-gray-200 h-5 w-3/4 rounded-sm mb-3" />
+                <div className="bg-gray-200 h-4 w-1/2 rounded-sm" />
+              </div>
+            ))}
+          </div>
+        ) : newsletters.length === 0 ? (
+          <div className="text-center py-12 text-gray-500 bg-white rounded-2xl border border-dashed border-gray-200 mb-8">
+            <p className="text-base font-semibold">Belum ada newsletter yang tersedia</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {newsletters.map((item) => (
+              <Link
+                key={item.id}
+                href={`/newsletter/${item.id}`}
+                className="group bg-white rounded-2xl border border-gray-100 shadow-2xs hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer flex flex-col p-4 block"
+              >
+                <div className="relative aspect-[3/4] w-full bg-gray-50 rounded-xl overflow-hidden mb-5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={item.imageUrl}
+                    alt={`Newsletter ${item.judul}`}
+                    className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300 flex items-center justify-center">
+                    <span className="opacity-0 group-hover:opacity-100 bg-white/90 text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow-xs transition-opacity duration-300">
+                      📖 Baca Newsletter
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-auto px-1">
+                  <h3 className="font-extrabold text-[#111827] text-base tracking-tight mb-2 uppercase leading-snug">
+                    NEWSLETTER: {item.judul}
+                  </h3>
+                  <p className="text-xs text-gray-500 font-medium">
+                    {formatDate(item.tanggal)}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Button Selengkapnya */}
+        <div className="mt-12 flex justify-center">
+          <Link
+            href="/newsletter"
+            className="bg-[#0b6330] hover:bg-[#084823] text-white font-extrabold text-sm px-10 py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 inline-flex items-center justify-center cursor-pointer tracking-wide"
+          >
+            Selengkapnya
+          </Link>
+        </div>
+
+      </section>
+
+      {/* ===== MITRA SECTION ===== */}
+      <MitraSection />
 
     </main>
   );
