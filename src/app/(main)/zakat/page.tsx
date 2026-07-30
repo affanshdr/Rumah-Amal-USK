@@ -124,7 +124,7 @@ function ZakatFormContent() {
                   className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white"
                 >
                   <option value="">-- Pilih Sumber Dana --</option>
-                  <option value="remon">Remunerasi</option>
+                  <option value="remunerasi">Remunerasi</option>
                   <option value="serdos">Sertifikasi Dosen (Serdos)</option>
                   <option value="penghasilan_bulanan">Penghasilan Bulanan</option>
                   <option value="sertifikasi_profesor">Sertifikasi Profesor</option>
