@@ -12,26 +12,44 @@ interface NewsletterItem {
   tanggal: string;
 }
 
+interface AnnouncementSlide {
+  id: string;
+  title: string;
+  slug: string;
+  category: string | null;
+  coverImageUrl: string | null;
+}
+
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [newsletters, setNewsletters] = useState<NewsletterItem[]>([]);
   const [loadingNewsletters, setLoadingNewsletters] = useState(true);
+  const [announcements, setAnnouncements] = useState<AnnouncementSlide[]>([]);
 
   useEffect(() => {
-    async function loadNewsletters() {
+    async function loadData() {
       try {
-        const res = await fetch('/api/newsletter?limit=3');
-        if (res.ok) {
-          const data = await res.json();
+        const [newsRes, annRes] = await Promise.all([
+          fetch('/api/newsletter?limit=3'),
+          fetch('/api/announcements')
+        ]);
+
+        if (newsRes.ok) {
+          const data = await newsRes.json();
           setNewsletters(data.items || []);
         }
+
+        if (annRes.ok) {
+          const data = await annRes.json();
+          setAnnouncements(data.announcements || []);
+        }
       } catch (err) {
-        console.error('Error fetching home newsletters:', err);
+        console.error('Error fetching home data:', err);
       } finally {
         setLoadingNewsletters(false);
       }
     }
-    loadNewsletters();
+    loadData();
   }, []);
 
   const formatDate = (dateStr: string) => {
@@ -47,35 +65,45 @@ export default function Home() {
     }
   };
 
-  const slides = [
-    {
-      badge: "PENGUMUMAN",
-      title: "HASIL SELEKSI ADMISTRASI BPRA–UKT SEMESTER GANJIL 2026/2027",
-      image: "/student.png",
-    },
-    {
-      badge: "KAMPANYE DONASI",
-      title: "PROGRAM BEASISWA BAITUL MAL MASJID JAMIK USK 2026",
-      image: "/student.png",
-    },
-  ];
+  const activeSlides = announcements.length > 0
+    ? announcements.map((item) => ({
+        id: item.id,
+        badge: item.category && item.category !== 'Umum' && item.category !== 'UMUM' ? item.category.toUpperCase() : 'PENGUMUMAN',
+        title: item.title,
+        coverImageUrl: item.coverImageUrl,
+        slug: item.slug,
+      }))
+    : [
+        {
+          id: 'default-1',
+          badge: 'PENGUMUMAN',
+          title: 'HASIL SELEKSI ADMINISTRASI BPRA–UKT SEMESTER GANJIL 2026/2027',
+          coverImageUrl: null,
+          slug: '',
+        },
+      ];
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  const nextSlide = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCurrentSlide((prev) => (prev + 1) % activeSlides.length);
   };
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  const prevSlide = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setCurrentSlide((prev) => (prev - 1 + activeSlides.length) % activeSlides.length);
   };
+
+  const currentItem = activeSlides[currentSlide] || activeSlides[0];
+  const slideHref = currentItem.slug ? `/pengumuman/${currentItem.slug}` : '/pengumuman';
 
   return (
     <main className="min-h-screen bg-gray-50/50 pb-24 relative overflow-x-hidden">
       
-      {/* Hero Section Container */}
-      <section className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      {/* Hero Section - Full 100vw Banner */}
+      <section className="w-full pt-5">
         
-        {/* Main Green Banner */}
-        <div className="relative bg-[#0b6330] rounded-[24px] md:rounded-[32px] overflow-hidden min-h-[440px] md:min-h-[480px] flex items-center shadow-md">
+        {/* Main Green Banner - Full Viewport Width */}
+        <div className="relative bg-[#0b6330] overflow-hidden h-[340px] sm:h-[420px] md:h-[480px] w-full flex items-center shadow-md group mx-auto" style={{ maxWidth: '100vw' }}>
           
           {/* Left Arrow Button */}
           <button
@@ -99,49 +127,51 @@ export default function Home() {
             </svg>
           </button>
 
-          {/* Banner Inner Content Grid */}
-          <div className="w-full grid grid-cols-1 md:grid-cols-12 items-center px-6 md:px-14 py-8 md:py-0 gap-6">
-            
-            {/* Student Image Column */}
-            <div className="md:col-span-5 flex justify-center md:justify-start relative h-[280px] md:h-[460px] w-full items-end">
-              <Image
-                src={slides[currentSlide].image}
-                alt="Student USK"
-                fill
-                priority
-                className="object-contain object-bottom drop-shadow-2xl scale-105"
+          {/* Banner Clickable Container (Pure Image 100% Full Container) */}
+          <Link
+            href={slideHref}
+            className="w-full h-full relative block cursor-pointer"
+          >
+            {currentItem.coverImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={currentItem.coverImageUrl}
+                alt={currentItem.title}
+                className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-300"
               />
-            </div>
-
-            {/* Banner Text Content Column */}
-            <div className="md:col-span-7 flex flex-col justify-center items-start text-left z-10 pl-0 md:pl-4">
-              
-              {/* Yellow Announcement Badge */}
-              <div className="mb-4 md:mb-6">
-                <span className="bg-[#ffc800] text-[#111111] font-extrabold text-sm md:text-lg px-7 py-2.5 rounded-full inline-block tracking-wider shadow-xs">
-                  {slides[currentSlide].badge}
-                </span>
+            ) : (
+              /* Fallback jika tidak ada cover image */
+              <div className="w-full h-full grid grid-cols-1 md:grid-cols-12 items-center px-6 md:px-14 py-8 md:py-0 gap-6">
+                <div className="md:col-span-5 flex justify-center md:justify-start relative h-[280px] md:h-[460px] w-full items-end">
+                  <Image
+                    src="/student.png"
+                    alt="Student USK"
+                    fill
+                    priority
+                    className="object-contain object-bottom drop-shadow-2xl scale-105"
+                  />
+                </div>
+                <div className="md:col-span-7 flex flex-col justify-center items-start text-left z-10 pl-0 md:pl-4">
+                  <div className="mb-4 md:mb-6">
+                    <span className="bg-[#ffc800] text-[#111111] font-extrabold text-sm md:text-lg px-7 py-2.5 rounded-full inline-block tracking-wider shadow-xs">
+                      {currentItem.badge}
+                    </span>
+                  </div>
+                  <h1 className="text-white font-black text-2xl sm:text-3xl md:text-4xl lg:text-[40px] leading-tight md:leading-[1.18] tracking-tight max-w-2xl group-hover:underline underline-offset-4 decoration-2">
+                    {currentItem.title}
+                  </h1>
+                </div>
               </div>
-
-              {/* Big Bold Headline */}
-              <h1 className="text-white font-black text-2xl sm:text-3xl md:text-4xl lg:text-[40px] leading-tight md:leading-[1.18] tracking-tight max-w-2xl">
-                {slides[currentSlide].title}
-              </h1>
-
-            </div>
-
-          </div>
+            )}
+          </Link>
 
         </div>
 
-        {/* Yellow Background Bar & Overlapping 3 Action Cards */}
-        <div className="relative z-20 px-2 sm:px-4 -mt-16 md:-mt-20">
-          
-          {/* Full-width Bright Yellow Bar */}
-          <div className="bg-[#ffc800] h-20 md:h-24 w-full shadow-xs mb-[-48px] md:mb-[-56px] relative z-0" />
+        {/* 3 Action Cards */}
+        <div className="relative z-20 px-4 sm:px-6 lg:px-8 -mt-10 md:-mt-12 max-w-[1340px] mx-auto">
 
           {/* 3 Action Cards Container */}
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-7 max-w-[1240px] mx-auto pt-4">
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-7 max-w-[1240px] mx-auto">
             
             {/* CARD 1: INFAK */}
             <div className="bg-[#f6f8fa] rounded-[22px] md:rounded-[26px] p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[220px] transition-transform duration-200 hover:-translate-y-1 group">

@@ -1,6 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const slug = searchParams.get('slug');
+    const id = searchParams.get('id');
+
+    if (slug) {
+      const announcement = await prisma.announcement.findUnique({
+        where: { slug },
+        include: { tags: true },
+      });
+      if (!announcement) {
+        return NextResponse.json({ error: 'Pengumuman tidak ditemukan' }, { status: 404 });
+      }
+      return NextResponse.json({ announcement });
+    }
+
+    if (id) {
+      const announcement = await prisma.announcement.findUnique({
+        where: { id },
+        include: { tags: true },
+      });
+      if (!announcement) {
+        return NextResponse.json({ error: 'Pengumuman tidak ditemukan' }, { status: 404 });
+      }
+      return NextResponse.json({ announcement });
+    }
+
+    const announcements = await prisma.announcement.findMany({
+      where: { published: true },
+      orderBy: { publishedAt: 'desc' },
+      include: { tags: true },
+    });
+
+    return NextResponse.json({ announcements });
+  } catch (error) {
+    console.error('[GET /api/announcements]', error);
+    return NextResponse.json(
+      { error: `Internal Server Error: ${(error as Error).message}` },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

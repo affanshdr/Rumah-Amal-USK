@@ -11,7 +11,7 @@ import { Placeholder } from '@tiptap/extension-placeholder';
 import { Node, mergeAttributes } from '@tiptap/core';
 import { useRef, useState, useCallback } from 'react';
 
-// ─── Custom Download Button Node ────────────────────────────────────────────
+// ─── Custom Download Button Node (untuk upload PDF ke storage) ───────────────
 export const DownloadButtonNode = Node.create({
   name: 'downloadButton',
   group: 'block',
@@ -65,6 +65,66 @@ export const DownloadButtonNode = Node.create({
   addCommands() {
     return {
       setDownloadButton:
+        (options: { url: string; label?: string }) =>
+        ({ commands }: any) =>
+          commands.insertContent({ type: this.name, attrs: options }),
+    } as any;
+  },
+});
+
+// ─── Custom Link Button Node (untuk URL eksternal / Google Drive) ─────────────
+export const LinkButtonNode = Node.create({
+  name: 'linkButton',
+  group: 'block',
+  atom: true,
+
+  addAttributes() {
+    return {
+      url: { default: null },
+      label: { default: '🔗 LINK DOWNLOAD BERKAS' },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: 'a[data-type="link-button"]' }];
+  },
+
+  renderHTML({ HTMLAttributes, node }) {
+    return [
+      'div',
+      { class: 'my-4' },
+      [
+        'a',
+        mergeAttributes(
+          {
+            'data-type': 'link-button',
+            href: node.attrs.url,
+            target: '_blank',
+            rel: 'noopener noreferrer',
+            style: [
+              'display:inline-flex',
+              'align-items:center',
+              'gap:8px',
+              'background:#0b6330',
+              'color:#fff',
+              'padding:11px 22px',
+              'border-radius:8px',
+              'font-weight:700',
+              'text-decoration:none',
+              'font-size:14px',
+              'box-shadow:0 2px 8px rgba(11,99,48,.25)',
+            ].join(';'),
+          },
+          HTMLAttributes
+        ),
+        node.attrs.label || '🔗 LINK DOWNLOAD BERKAS',
+      ],
+    ];
+  },
+
+  addCommands() {
+    return {
+      setLinkButton:
         (options: { url: string; label?: string }) =>
         ({ commands }: any) =>
           commands.insertContent({ type: this.name, attrs: options }),
@@ -127,6 +187,10 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
   const [uploadLabel, setUploadLabel] = useState('');
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
+  // State untuk dialog tombol link (URL eksternal)
+  const [btnLinkDialogOpen, setBtnLinkDialogOpen] = useState(false);
+  const [btnLinkUrl, setBtnLinkUrl] = useState('');
+  const [btnLinkLabel, setBtnLinkLabel] = useState('');
 
   const editor = useEditor({
     extensions: [
@@ -148,6 +212,7 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
       }),
       Placeholder.configure({ placeholder: 'Tulis isi pengumuman di sini…' }),
       DownloadButtonNode,
+      LinkButtonNode,
     ],
     content,
     immediatelyRender: false,
@@ -361,6 +426,21 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
           Tombol PDF
         </button>
 
+        {/* Insert Link Button (URL eksternal / Google Drive) */}
+        <button
+          type="button"
+          title="Sisipkan Tombol Link Eksternal (Google Drive, dll)"
+          onClick={() => {
+            setBtnLinkUrl('');
+            setBtnLinkLabel('🔗 LINK DOWNLOAD BERKAS');
+            setBtnLinkDialogOpen(true);
+          }}
+          className="flex items-center gap-1.5 h-8 px-2.5 text-[12px] font-semibold text-violet-800 bg-violet-50 border border-violet-300 rounded-md hover:bg-violet-100 transition-colors cursor-pointer shrink-0"
+        >
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+          Tombol Link
+        </button>
+
         {/* Upload indicator */}
         {uploading && (
           <span className="ml-2 text-[11px] text-amber-600 font-semibold animate-pulse">
@@ -369,7 +449,7 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
         )}
       </div>
 
-      {/* ── Link Dialog ───────────────────────────────────────────── */}
+      {/* ── Link Dialog (teks inline) ──────────────────────────────── */}
       {linkDialogOpen && (
         <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border-b border-blue-200">
           <span className="text-xs font-bold text-blue-700 shrink-0">URL Link:</span>
@@ -388,6 +468,69 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
           <button type="button" onClick={() => setLinkDialogOpen(false)} className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-300 cursor-pointer">
             Batal
           </button>
+        </div>
+      )}
+
+      {/* ── Link Button Dialog (tombol hijau eksternal) ────────────── */}
+      {btnLinkDialogOpen && (
+        <div className="flex flex-col gap-2 px-3 py-3 bg-violet-50 border-b border-violet-200">
+          <span className="text-xs font-bold text-violet-800">🔗 Sisipkan Tombol Link Eksternal</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-violet-700 shrink-0 w-14">Label:</span>
+            <input
+              type="text"
+              autoFocus
+              value={btnLinkLabel}
+              onChange={(e) => setBtnLinkLabel(e.target.value)}
+              placeholder="Contoh: LINK DOWNLOAD BERKAS"
+              className="flex-1 text-sm px-2.5 py-1.5 border border-violet-300 rounded-lg focus:outline-none focus:border-violet-500 bg-white"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-violet-700 shrink-0 w-14">URL:</span>
+            <input
+              type="url"
+              value={btnLinkUrl}
+              onChange={(e) => setBtnLinkUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  if (!btnLinkUrl.trim()) return;
+                  (editor!.commands as any).setLinkButton({
+                    url: btnLinkUrl.trim().startsWith('http') ? btnLinkUrl.trim() : `https://${btnLinkUrl.trim()}`,
+                    label: btnLinkLabel.trim() || '🔗 LINK DOWNLOAD BERKAS',
+                  });
+                  setBtnLinkDialogOpen(false);
+                }
+                if (e.key === 'Escape') setBtnLinkDialogOpen(false);
+              }}
+              placeholder="https://drive.google.com/..."
+              className="flex-1 text-sm px-2.5 py-1.5 border border-violet-300 rounded-lg focus:outline-none focus:border-violet-500 bg-white"
+            />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button
+              type="button"
+              onClick={() => {
+                if (!btnLinkUrl.trim()) return;
+                (editor!.commands as any).setLinkButton({
+                  url: btnLinkUrl.trim().startsWith('http') ? btnLinkUrl.trim() : `https://${btnLinkUrl.trim()}`,
+                  label: btnLinkLabel.trim() || '🔗 LINK DOWNLOAD BERKAS',
+                });
+                setBtnLinkDialogOpen(false);
+              }}
+              className="px-4 py-1.5 bg-violet-700 text-white text-xs font-bold rounded-lg hover:bg-violet-800 cursor-pointer disabled:opacity-50"
+              disabled={!btnLinkUrl.trim()}
+            >
+              Sisipkan Tombol
+            </button>
+            <button
+              type="button"
+              onClick={() => setBtnLinkDialogOpen(false)}
+              className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-300 cursor-pointer"
+            >
+              Batal
+            </button>
+          </div>
         </div>
       )}
 

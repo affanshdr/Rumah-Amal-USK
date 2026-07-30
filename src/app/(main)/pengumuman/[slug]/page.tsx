@@ -1,0 +1,476 @@
+'use client';
+
+import { useEffect, useState, useCallback, use } from 'react';
+import Link from 'next/link';
+
+interface Tag {
+  id: string;
+  name: string;
+}
+
+interface CommentReply {
+  id: string;
+  name: string | null;
+  content: string;
+  createdAt: string;
+}
+
+interface CommentItem {
+  id: string;
+  name: string | null;
+  content: string;
+  createdAt: string;
+  replies?: CommentReply[];
+}
+
+interface AnnouncementDetail {
+  id: string;
+  title: string;
+  slug: string;
+  category: string | null;
+  coverImageUrl: string | null;
+  content: string;
+  viewsCount: number;
+  publishedAt: string;
+  tags?: Tag[];
+}
+
+export default function PublicAnnouncementDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = use(params);
+
+  const [announcement, setAnnouncement] = useState<AnnouncementDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [comments, setComments] = useState<CommentItem[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+
+  // Form State Komentar Utama
+  const [commentName, setCommentName] = useState('');
+  const [commentContent, setCommentContent] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
+
+  const [recentAnnouncements, setRecentAnnouncements] = useState<AnnouncementDetail[]>([]);
+  const [sidebarQuery, setSidebarQuery] = useState('');
+
+  // Fetch Announcement & Recent Announcements
+  const fetchAnnouncement = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [detailRes, listRes] = await Promise.all([
+        fetch(`/api/announcements?slug=${encodeURIComponent(slug)}`),
+        fetch(`/api/announcements`)
+      ]);
+
+      if (detailRes.ok) {
+        const data = await detailRes.json();
+        setAnnouncement(data.announcement);
+
+        if (data.announcement?.id) {
+          // Increment view count
+          fetch(`/api/announcements/${data.announcement.id}/views`, { method: 'POST' }).catch(() => {});
+          // Fetch Comments
+          fetchComments(data.announcement.id);
+        }
+      }
+
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        setRecentAnnouncements((listData.announcements || []).slice(0, 5));
+      }
+    } catch (err) {
+      console.error('Error loading announcement:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [slug]);
+
+  // Fetch Comments
+  const fetchComments = async (announcementId: string) => {
+    setLoadingComments(true);
+    try {
+      const res = await fetch(`/api/announcements/${announcementId}/comments`);
+      if (res.ok) {
+        const data = await res.json();
+        setComments(data.comments || []);
+      }
+    } catch (err) {
+      console.error('Error loading comments:', err);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnnouncement();
+  }, [fetchAnnouncement]);
+
+  // Submit Main Comment
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentContent.trim() || !announcement) return;
+
+    setSubmittingComment(true);
+    try {
+      const res = await fetch(`/api/announcements/${announcement.id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: commentName.trim() || 'Anonim',
+          content: commentContent.trim(),
+        }),
+      });
+
+      const isJson = res.headers.get('content-type')?.includes('application/json');
+      if (res.ok && isJson) {
+        setCommentContent('');
+        setCommentName('');
+        fetchComments(announcement.id);
+      } else {
+        const errorData = isJson ? await res.json() : null;
+        alert(`Gagal mengirim komentar: ${errorData?.error || 'Server Error (' + res.status + ')'}`);
+      }
+    } catch (err) {
+      alert(`Error: ${(err as Error).message}`);
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const formatRelativeTime = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      if (diffDays === 0) return 'Hari ini';
+      if (diffDays === 1) return 'Kemarin';
+      if (diffDays < 30) return `${diffDays} hari yang lalu`;
+      const diffMonths = Math.floor(diffDays / 30);
+      return `${diffMonths} bulan yang lalu`;
+    } catch {
+      return formatDate(dateStr);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 font-sans">
+        <div className="max-w-4xl mx-auto animate-pulse">
+          <div className="h-4 bg-gray-200 w-1/4 rounded mb-6" />
+          <div className="h-8 bg-gray-200 w-3/4 rounded mb-4" />
+          <div className="h-64 bg-gray-100 rounded-2xl mb-8" />
+          <div className="space-y-3">
+            <div className="h-4 bg-gray-200 w-full rounded" />
+            <div className="h-4 bg-gray-200 w-5/6 rounded" />
+            <div className="h-4 bg-gray-200 w-4/6 rounded" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!announcement) {
+    return (
+      <div className="min-h-screen bg-white py-16 px-4 text-center font-sans">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Pengumuman Tidak Ditemukan</h2>
+        <p className="text-gray-500 mb-6">Pengumuman yang Anda cari tidak tersedia atau telah dihapus.</p>
+        <Link href="/" className="px-5 py-2.5 bg-[#0b6330] text-white font-bold rounded-xl text-sm">
+          Kembali ke Beranda
+        </Link>
+      </div>
+    );
+  }
+
+  const handleSidebarSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (sidebarQuery.trim()) {
+      window.location.href = `/pengumuman?q=${encodeURIComponent(sidebarQuery.trim())}`;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc]/50 py-8 px-4 sm:px-6 lg:px-8 font-sans text-gray-800">
+      <div className="max-w-[1340px] mx-auto">
+
+        {/* Breadcrumb (Sesuai Web Asli) */}
+        <nav className="text-xs font-semibold mb-6 flex flex-wrap items-center gap-1.5 text-gray-600 leading-relaxed">
+          <Link href="/" className="hover:text-[#0b6330] transition-colors">
+            Beranda
+          </Link>
+          <span className="text-gray-400 font-bold">/</span>
+          <Link href="/pengumuman" className="hover:text-[#0b6330] transition-colors">
+            Pengumuman
+          </Link>
+          <span className="text-gray-400 font-bold">/</span>
+          <span className="text-[#0b6330] font-extrabold uppercase line-clamp-1">{announcement.title}</span>
+        </nav>
+
+        {/* Layout 2 Kolom (Kiri: Artikel Utama, Kanan: Sidebar Pencarian & Postingan Terkini) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+          {/* ===== KAMPUS/ARTIKEL UTAMA (Kiri - 8 Kolom) ===== */}
+          <div className="lg:col-span-8 bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100/90">
+
+            {/* Judul Besar (Uppercase tebal khas web asli) */}
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 leading-snug mb-6 uppercase">
+              {announcement.title}
+            </h1>
+
+            {/* Gambar Sampul/Banner Artikel */}
+            {announcement.coverImageUrl && (
+              <div className="mb-6 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={announcement.coverImageUrl}
+                  alt={announcement.title}
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+            )}
+
+            {/* Isi Konten Artikel */}
+            <div className="prose max-w-none text-gray-800 mb-8">
+              <style>{`
+                .public-article-content p { margin-bottom: 1.25rem; line-height: 1.8; font-size: 1.05rem; }
+                .public-article-content h1 { font-size: 1.75rem; font-weight: 800; margin-top: 1.75rem; margin-bottom: 0.75rem; }
+                .public-article-content h2 { font-size: 1.4rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.6rem; }
+                .public-article-content h3 { font-size: 1.15rem; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.5rem; }
+                .public-article-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.25rem; }
+                .public-article-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1.25rem; }
+                .public-article-content li { margin-bottom: 0.35rem; }
+                .public-article-content blockquote { border-left: 4px solid #d1d5db; padding-left: 1rem; color: #6b7280; font-style: italic; margin: 1.25rem 0; }
+                .public-article-content a { color: #2563eb; text-decoration: underline; }
+                .public-article-content img { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1.25rem 0; }
+              `}</style>
+              <div
+                className="public-article-content"
+                dangerouslySetInnerHTML={{ __html: announcement.content }}
+              />
+            </div>
+
+            {/* Informasi Views, Tags & Bagikan */}
+            <div className="pt-6 border-t border-gray-200 mb-8">
+              <div className="flex items-center gap-6 text-gray-600 text-sm font-semibold mb-4">
+                <div className="flex items-center gap-2" title="Jumlah Pembaca / Views">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  </svg>
+                  <span className="text-gray-800 font-extrabold text-base">{announcement.viewsCount}</span>
+                </div>
+
+                <div className="flex items-center gap-2" title="Tags">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  {announcement.tags && announcement.tags.length > 0 ? (
+                    <div className="flex gap-1.5">
+                      {announcement.tags.map((tag) => (
+                        <span key={tag.id} className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
+                          #{tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400 font-normal">Umum</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Bagikan:</span>
+                <button
+                  onClick={() => {
+                    if (navigator.clipboard) {
+                      navigator.clipboard.writeText(window.location.href);
+                      alert('Link pengumuman berhasil disalin!');
+                    }
+                  }}
+                  className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1 rounded-md border border-gray-200 transition-colors cursor-pointer"
+                >
+                  📋 Salin Link
+                </button>
+              </div>
+            </div>
+
+            {/* Seksi Komentar */}
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <h3 className="text-xl font-extrabold text-gray-900 mb-6">
+                Komentar ({comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0)})
+              </h3>
+
+              {/* Form Input Komentar Utama */}
+              <div className="bg-gray-50/70 border border-gray-200 rounded-2xl p-5 shadow-2xs mb-8">
+                <form onSubmit={handleCommentSubmit} className="space-y-4">
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Nama (optional)"
+                      value={commentName}
+                      onChange={(e) => setCommentName(e.target.value)}
+                      className="w-full sm:w-80 px-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#0b6330] bg-white"
+                    />
+                  </div>
+                  <div>
+                    <textarea
+                      rows={3}
+                      placeholder="Tulis komentar Anda..."
+                      value={commentContent}
+                      onChange={(e) => setCommentContent(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#0b6330] bg-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <button
+                      type="submit"
+                      disabled={submittingComment}
+                      className="px-6 py-2.5 bg-[#0b6330] hover:bg-[#074722] text-white font-bold text-sm rounded-xl transition-colors cursor-pointer disabled:opacity-50 shadow-2xs"
+                    >
+                      {submittingComment ? 'Sending…' : 'Kirim Komentar'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* List Komentar */}
+              {loadingComments ? (
+                <div className="text-sm text-gray-400 py-4 animate-pulse">Memuat komentar…</div>
+              ) : comments.length === 0 ? (
+                <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-sm">
+                  Belum ada komentar. Jadilah yang pertama memberikan komentar!
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {comments.map((comment) => (
+                    <div key={comment.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-2xs">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="font-extrabold text-gray-900 text-sm">
+                          {comment.name || 'Anonim'}
+                        </span>
+                        <span className="text-xs text-gray-400 font-medium">
+                          {formatRelativeTime(comment.createdAt)}
+                        </span>
+                      </div>
+
+                      <p className="text-sm text-gray-700 leading-relaxed mb-3 whitespace-pre-line">
+                        {comment.content}
+                      </p>
+
+                      {/* Child Replies (Balasan dari Admin) */}
+                      {comment.replies && comment.replies.length > 0 && (
+                        <div className="mt-4 pl-4 border-l-2 border-[#0b6330] space-y-3">
+                          {comment.replies.map((reply) => (
+                            <div key={reply.id} className="bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-100/80">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="font-extrabold text-[#0b6330] text-xs">
+                                  {reply.name || 'Admin Rumah Amal USK'}
+                                </span>
+                                <span className="text-[10px] bg-[#0b6330] text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                                  Admin
+                                </span>
+                                <span className="text-[11px] text-gray-400 font-medium ml-auto">
+                                  {formatRelativeTime(reply.createdAt)}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-800 leading-relaxed whitespace-pre-line">
+                                {reply.content}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          {/* ===== SIDEBAR KANAN (4 Kolom - Pencarian & Postingan Terkini) ===== */}
+          <div className="lg:col-span-4 bg-white rounded-2xl p-6 shadow-sm border border-gray-100/90 space-y-8 sticky top-24">
+
+            {/* Box 1: Pencarian (Tombol Kuning Khas Web Asli) */}
+            <div>
+              <h3 className="font-extrabold text-base text-gray-900 mb-4 tracking-tight">Pencarian</h3>
+              <form onSubmit={handleSidebarSearchSubmit} className="flex">
+                <input
+                  type="text"
+                  placeholder="Cari pengumuman berdasarkan judul...."
+                  value={sidebarQuery}
+                  onChange={(e) => setSidebarQuery(e.target.value)}
+                  className="flex-1 px-3.5 py-2.5 border border-gray-300 rounded-l-lg text-xs focus:outline-none focus:border-[#0b6330] bg-white text-gray-700 shadow-2xs"
+                />
+                <button
+                  type="submit"
+                  aria-label="Cari"
+                  className="bg-[#ffc800] hover:bg-[#e8b500] text-white px-4 py-2.5 rounded-r-lg flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-2xs"
+                >
+                  <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M10.5 3.75a6.75 6.75 0 100 13.5 6.75 6.75 0 000-13.5zM2.25 10.5a8.25 8.25 0 1114.59 5.28l4.69 4.69a.75.75 0 11-1.06 1.06l-4.69-4.69A8.25 8.25 0 012.25 10.5z" />
+                  </svg>
+                </button>
+              </form>
+            </div>
+
+            {/* Box 2: Postingan Terkini (Gambar Mini & Judul) */}
+            <div>
+              <h3 className="font-extrabold text-base text-gray-900 mb-4 tracking-tight">Postingan Terkini</h3>
+              <div className="space-y-4">
+                {recentAnnouncements.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/pengumuman/${item.slug}`}
+                    className="flex gap-3 group items-center"
+                  >
+                    <div className="w-20 h-14 bg-gray-50 rounded-lg overflow-hidden shrink-0 border border-gray-100/80">
+                      {item.coverImageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.coverImageUrl}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-emerald-800 text-white text-xs">
+                          📢
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-xs font-bold text-gray-800 group-hover:text-[#0b6330] line-clamp-2 leading-snug transition-colors uppercase">
+                        {item.title}
+                      </h4>
+                      <p className="text-[11px] text-gray-400 font-medium mt-1">
+                        {formatDate(item.publishedAt)}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  );
+}

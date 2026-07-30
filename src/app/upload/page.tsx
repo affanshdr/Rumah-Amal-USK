@@ -96,7 +96,7 @@ export default function UploadIndexPage() {
             <span style={{ marginLeft: 'auto', color: '#9ca3af', fontSize: '1.1rem' }}>→</span>
           </Link>
 
-          <Link href="/admin/announcements/new" style={{
+          <Link href="/upload/pengumuman" style={{
             display: 'flex',
             alignItems: 'center',
             gap: '1rem',

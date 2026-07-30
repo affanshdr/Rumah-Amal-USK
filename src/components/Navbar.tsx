@@ -30,7 +30,7 @@ export default function Navbar() {
     { href: "/profil", label: "Profil" },
     { href: "#program", label: "Program", hasDropdown: true },
     { href: "#berita", label: "Berita" },
-    { href: "#pengumuman", label: "Pengumuman" },
+    { href: "/pengumuman", label: "Pengumuman" },
     { href: "/newsletter", label: "Newsletter" },
     { href: "#dokumen", label: "Dokumen" },
     { href: "/galeri", label: "Galeri" },
@@ -144,7 +144,7 @@ export default function Navbar() {
                 href="/zakat"
                 className="hidden lg:inline-flex items-center justify-center bg-[#ffc800] hover:bg-[#e8b500] text-[#1a1a1a] font-extrabold text-[13px] px-5 py-2.5 rounded-lg transition-all duration-200"
               >
-                Pembayaran Zakat
+                Kalkulator Zakat
               </Link>
 
               {/* Mobile Menu Button */}
@@ -241,7 +241,7 @@ export default function Navbar() {
 
               {/* Pengumuman */}
               <Link
-                href="#pengumuman"
+                href="/pengumuman"
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-2.5 text-[17px] font-bold text-[#0b6330] transition-colors"
               >
@@ -281,7 +281,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="bg-[#ffc800] hover:bg-[#e8b500] text-[#111111] font-bold text-[16px] text-left px-5 py-3.5 rounded-xl shadow-xs transition-all block mt-2"
               >
-                Pembayaran Zakat
+                Kalkulator Zakat
               </Link>
 
             </div>
