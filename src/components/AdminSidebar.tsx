@@ -22,6 +22,8 @@ export default function AdminSidebar({ adminName }: { adminName: string }) {
     { href: '/admin/dashboard', label: 'Dashboard', icon: faChartLine },
     { href: '/admin/zakat', label: 'Data Zakat', icon: faHandHoldingHeart },
     { href: '/admin/infaq', label: 'Data Infaq', icon: faGift },
+    { href: '/admin/donasi', label: 'Data Donasi', icon: faGift },
+    { href: '/admin/kampanye', label: 'Kampanye', icon: faNewspaper },
     { href: '/admin/galeri', label: 'Galeri', icon: faImages },
     { href: '/admin/newsletter', label: 'Newsletter', icon: faNewspaper },
   ];
