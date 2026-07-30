@@ -22,7 +22,7 @@ export async function uploadGalleryImages(formData: FormData): Promise<UploadRes
             const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
             const { error } = await supabase.storage
-                .from('Gallery')
+                .from('Galeri')
                 .upload(fileName, file, { cacheControl: '3600', upsert: false });
 
             if (error) {
@@ -30,7 +30,7 @@ export async function uploadGalleryImages(formData: FormData): Promise<UploadRes
                 continue;
             }
 
-            const { data } = supabase.storage.from('Gallery').getPublicUrl(fileName);
+            const { data } = supabase.storage.from('Galeri').getPublicUrl(fileName);
 
             const created = await prisma.gallery.create({
                 data: { imageUrl: data.publicUrl },
@@ -50,11 +50,11 @@ export async function deleteGalleryImage(id: string, imageUrl: string) {
     try {
         const url = new URL(imageUrl);
         const rawPath = url.pathname;
-        const splitKey = rawPath.includes('/Gallery/') ? '/Gallery/' : '/gallery/';
+        const splitKey = rawPath.includes('/Galeri/') ? '/Galeri/' : '/galeri/';
         const path = rawPath.split(splitKey)[1];
 
         if (path) {
-            await supabase.storage.from('Gallery').remove([path]);
+            await supabase.storage.from('Galeri').remove([path]);
         }
     } catch {
     }

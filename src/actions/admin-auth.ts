@@ -17,13 +17,20 @@ export async function loginAdmin(prevState: string | null, formData: FormData) {
             password,
             redirectTo: '/admin/dashboard',
         });
-        return null;
-    } catch (error) {
+    } catch (error: any) {
+        // Next.js redirect throw error khusus dengan nama 'NEXT_REDIRECT'
+        if (error?.message === 'NEXT_REDIRECT' || error?.digest?.startsWith('NEXT_REDIRECT')) {
+            throw error; // Harus dilempar ulang agar redirect berhasil
+        }
+
         if (error instanceof AuthError) {
             return 'Email atau password salah.';
         }
-        throw error; // redirect internal NextAuth, harus dilempar ulang
+
+        // Kembalikan error lain agar tampil di web untuk debugging
+        return `Error sistem: ${error?.message || 'Terjadi kesalahan'}`;
     }
+    return null;
 }
 
 export async function logoutAdmin() {
