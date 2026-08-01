@@ -11,9 +11,25 @@ interface DocumentResult {
   createdAt: string;
 }
 
+interface SizeInfo {
+  originalSizeMB: number;
+  compressedSizeMB: number;
+  savedPercent: number;
+  wasOptimized: boolean;
+  optimizationError?: string;
+}
+
 const MAX_WIDTH = 1600;
 const QUALITY = 0.99;
 const RESIZE_THRESHOLD = 1_000_000;
+
+// Batas ukuran file PDF
+const PDF_WARN_MB = 30; // Tampilkan warning jika lebih dari ini
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
 
 function resizeImage(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -64,9 +80,15 @@ export default function DokumenUploadPage() {
   // Common State
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [sizeWarning, setSizeWarning] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [uploadedList, setUploadedList] = useState<DocumentResult[]>([]);
   const [isDraggingPdf, setIsDraggingPdf] = useState(false);
+  const [lastSizeInfo, setLastSizeInfo] = useState<SizeInfo | null>(null);
+
+  // Mode upload: 'file' = upload langsung, 'drive' = paste link Google Drive
+  const [uploadMode, setUploadMode] = useState<'file' | 'drive'>('file');
+  const [driveUrl, setDriveUrl] = useState('');
 
   useEffect(() => {
     fetchExistingDocuments();
@@ -95,8 +117,19 @@ export default function DokumenUploadPage() {
       setError('File dokumen harus berformat PDF (.pdf)');
       return;
     }
+
+    const sizeMB = file.size / (1024 * 1024);
+
+    // Warning soft limit
+    if (sizeMB > PDF_WARN_MB) {
+      setSizeWarning(`⚠️ File cukup besar (${sizeMB.toFixed(1)} MB). Upload mungkin membutuhkan waktu lebih lama.`);
+    } else {
+      setSizeWarning('');
+    }
+
     setPdfFile(file);
     setError('');
+    setLastSizeInfo(null);
   };
 
   const handleGlobalCoverChange = async (file: File) => {
@@ -152,27 +185,56 @@ export default function DokumenUploadPage() {
       setError('Judul dokumen wajib diisi.');
       return;
     }
-    if (!pdfFile) {
+
+    if (uploadMode === 'file' && !pdfFile) {
       setError('File PDF wajib diupload.');
       return;
+    }
+
+    if (uploadMode === 'drive') {
+      const trimmed = driveUrl.trim();
+      if (!trimmed) {
+        setError('Link Google Drive wajib diisi.');
+        return;
+      }
+      // Validasi format URL dasar
+      if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+        setError('Link harus dimulai dengan http:// atau https://');
+        return;
+      }
     }
 
     setUploading(true);
     setError('');
     setSuccessMsg('');
+    setLastSizeInfo(null);
 
     try {
-      const formData = new FormData();
-      formData.append('judul', judul.trim());
-      formData.append('pdf', pdfFile);
+      let res: Response;
 
-      const res = await fetch('/api/documents/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      if (uploadMode === 'file') {
+        // Mode file: upload via multipart form
+        const formData = new FormData();
+        formData.append('judul', judul.trim());
+        formData.append('pdf', pdfFile!);
+        res = await fetch('/api/documents/upload', {
+          method: 'POST',
+          body: formData,
+        });
+      } else {
+        // Mode drive: kirim JSON dengan pdfUrl langsung
+        res = await fetch('/api/documents/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            judul: judul.trim(),
+            pdfUrl: driveUrl.trim(),
+          }),
+        });
+      }
 
       const resText = await res.text();
-      let data: { success?: boolean; document?: DocumentResult; error?: string };
+      let data: { success?: boolean; document?: DocumentResult; error?: string; sizeInfo?: SizeInfo };
       try {
         data = JSON.parse(resText);
       } catch {
@@ -194,9 +256,15 @@ export default function DokumenUploadPage() {
         }
       }
 
+      if (data.sizeInfo) {
+        setLastSizeInfo(data.sizeInfo);
+      }
+
       setSuccessMsg(`✅ Dokumen "${judul.trim()}" berhasil ditambahkan!`);
       setJudul('');
       setPdfFile(null);
+      setDriveUrl('');
+      setSizeWarning('');
     } catch (err) {
       setError(`Koneksi gagal: ${(err as Error).message}`);
     } finally {
@@ -284,56 +352,149 @@ export default function DokumenUploadPage() {
             />
           </div>
 
-          {/* File PDF Upload */}
-          <div className="field">
-            <label>File Dokumen (PDF) <span className="req">*</span></label>
-            <div
-              className={`drop-zone pdf-zone ${isDraggingPdf ? 'dragging' : ''} ${pdfFile ? 'has-pdf' : ''}`}
-              onDragOver={(e) => { e.preventDefault(); setIsDraggingPdf(true); }}
-              onDragLeave={() => setIsDraggingPdf(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setIsDraggingPdf(false);
-                if (e.dataTransfer.files[0]) handlePdfSelect(e.dataTransfer.files[0]);
+          {/* Toggle Mode Upload */}
+          <div className="mode-toggle-group">
+            <button
+              type="button"
+              className={`mode-btn ${uploadMode === 'file' ? 'mode-btn--active' : ''}`}
+              onClick={() => {
+                setUploadMode('file');
+                setError('');
+                setSizeWarning('');
+                setDriveUrl('');
               }}
-              onClick={() => pdfInputRef.current?.click()}
             >
-              <input
-                ref={pdfInputRef}
-                type="file"
-                accept="application/pdf,.pdf"
-                style={{ display: 'none' }}
-                onChange={(e) => e.target.files?.[0] && handlePdfSelect(e.target.files[0])}
-              />
-              {pdfFile ? (
-                <div className="pdf-selected-info">
-                  <div className="pdf-badge-icon">📕</div>
-                  <div>
-                    <p className="pdf-filename">{pdfFile.name}</p>
-                    <p className="pdf-filesize">{(pdfFile.size / (1024 * 1024)).toFixed(2)} MB • PDF Document</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="drop-icon">📕</div>
-                  <p className="drop-text">Klik atau seret file PDF ke sini</p>
-                  <p className="drop-hint">MIME: application/pdf</p>
-                </>
-              )}
-            </div>
+              📄 Upload File PDF
+            </button>
+            <button
+              type="button"
+              className={`mode-btn ${uploadMode === 'drive' ? 'mode-btn--active mode-btn--drive' : ''}`}
+              onClick={() => {
+                setUploadMode('drive');
+                setError('');
+                setSizeWarning('');
+                setPdfFile(null);
+              }}
+            >
+              📁 Pakai Link Drive
+            </button>
           </div>
+
+          {/* File PDF Upload — hanya tampil jika mode 'file' */}
+          {uploadMode === 'file' && (
+            <div className="field">
+              <label>File Dokumen (PDF) <span className="req">*</span></label>
+              <div
+                className={`drop-zone pdf-zone ${isDraggingPdf ? 'dragging' : ''} ${pdfFile ? 'has-pdf' : ''}`}
+                onDragOver={(e) => { e.preventDefault(); setIsDraggingPdf(true); }}
+                onDragLeave={() => setIsDraggingPdf(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDraggingPdf(false);
+                  if (e.dataTransfer.files[0]) handlePdfSelect(e.dataTransfer.files[0]);
+                }}
+                onClick={() => pdfInputRef.current?.click()}
+              >
+                <input
+                  ref={pdfInputRef}
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  style={{ display: 'none' }}
+                  onChange={(e) => e.target.files?.[0] && handlePdfSelect(e.target.files[0])}
+                />
+                {pdfFile ? (
+                  <div className="pdf-selected-info">
+                    <div className="pdf-badge-icon">📕</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p className="pdf-filename">{pdfFile.name}</p>
+                      <p className="pdf-filesize">
+                        <span
+                          className={`size-badge ${
+                            pdfFile.size / (1024 * 1024) > PDF_WARN_MB
+                              ? 'size-badge--warn'
+                              : 'size-badge--ok'
+                          }`}
+                        >
+                          {formatFileSize(pdfFile.size)}
+                        </span>
+                        {' '}• PDF Document
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="drop-icon">📕</div>
+                    <p className="drop-text">Klik atau seret file PDF ke sini</p>
+                    <p className="drop-hint">Warning jika &gt; {PDF_WARN_MB} MB • Tidak ada batas ukuran</p>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Link Google Drive — hanya tampil jika mode 'drive' */}
+          {uploadMode === 'drive' && (
+            <div className="field">
+              <label htmlFor="driveUrl">
+                Link Google Drive <span className="req">*</span>
+              </label>
+              <input
+                id="driveUrl"
+                type="url"
+                placeholder="https://drive.google.com/file/d/.../view"
+                value={driveUrl}
+                onChange={(e) => {
+                  setDriveUrl(e.target.value);
+                  setError('');
+                }}
+                className="input"
+              />
+              <p className="drive-hint">
+                💡 Pastikan pengaturan akses file di Google Drive sudah <strong>"Anyone with the link"</strong> agar bisa dibuka publik.
+              </p>
+            </div>
+          )}
 
           {/* Messages */}
           {error && <div className="error-box">⚠ {error}</div>}
-          {successMsg && <div className="success-box">{successMsg}</div>}
+          {sizeWarning && !error && <div className="warning-box">{sizeWarning}</div>}
+          {successMsg && (
+            <div className="success-box">
+              {successMsg}
+              {lastSizeInfo && (
+                <div className="size-info-row">
+                  <span className="size-info-label">Ukuran file:</span>
+                  {lastSizeInfo.wasOptimized ? (
+                    <>
+                      <span className="size-info-original">{lastSizeInfo.originalSizeMB} MB</span>
+                      <span className="size-info-arrow">→</span>
+                      <span className="size-info-compressed">{lastSizeInfo.compressedSizeMB} MB</span>
+                      <span className="size-info-saved">(-{lastSizeInfo.savedPercent}%)</span>
+                    </>
+                  ) : (
+                    <span className="size-info-compressed">{lastSizeInfo.originalSizeMB} MB</span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Submit Button */}
           <button
             className="btn-submit"
             onClick={handleSubmitDocument}
-            disabled={uploading || !judul.trim() || !pdfFile}
+            disabled={
+              uploading ||
+              !judul.trim() ||
+              (uploadMode === 'file' ? !pdfFile : !driveUrl.trim())
+            }
           >
-            {uploading ? '⏳ Mengupload Dokumen...' : '⬆ Upload Dokumen'}
+            {uploading
+              ? '⏳ Menyimpan Dokumen...'
+              : uploadMode === 'file'
+              ? '⬆ Upload Dokumen'
+              : '💾 Simpan Link Drive'
+            }
           </button>
         </div>
 
@@ -416,6 +577,44 @@ export default function DokumenUploadPage() {
           color: #6b7280;
           font-size: 0.925rem;
           margin: 0;
+        }
+        .mode-toggle-group {
+          display: flex;
+          gap: 0.5rem;
+          margin-bottom: 1.2rem;
+          background: #f3f4f6;
+          border-radius: 10px;
+          padding: 4px;
+        }
+        .mode-btn {
+          flex: 1;
+          padding: 0.5rem 0.75rem;
+          border: none;
+          border-radius: 7px;
+          font-size: 0.825rem;
+          font-weight: 600;
+          cursor: pointer;
+          background: transparent;
+          color: #6b7280;
+          transition: all 0.18s;
+        }
+        .mode-btn--active {
+          background: white;
+          color: #0b6330;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        .mode-btn--drive.mode-btn--active {
+          color: #1a73e8;
+        }
+        .drive-hint {
+          font-size: 0.775rem;
+          color: #6b7280;
+          margin-top: 0.5rem;
+          line-height: 1.5;
+          background: #eff6ff;
+          border: 1px solid #bfdbfe;
+          border-radius: 8px;
+          padding: 0.5rem 0.75rem;
         }
         .main-grid {
           display: grid;
@@ -523,8 +722,8 @@ export default function DokumenUploadPage() {
         }
         .pdf-zone.has-pdf {
           padding: 1rem 1.25rem;
-          background: #fdf2f2;
-          border-color: #fca5a5;
+          background: #f0fdf4;
+          border-color: #86efac;
         }
         .drop-icon {
           font-size: 1.8rem;
@@ -571,6 +770,15 @@ export default function DokumenUploadPage() {
           color: #b91c1c;
           font-size: 0.875rem;
         }
+        .warning-box {
+          background: #fffbeb;
+          border: 1px solid #fcd34d;
+          border-radius: 8px;
+          padding: 0.75rem 1rem;
+          margin-bottom: 1rem;
+          color: #92400e;
+          font-size: 0.875rem;
+        }
         .success-box {
           background: #f0fdf4;
           border: 1px solid #86efac;
@@ -580,6 +788,55 @@ export default function DokumenUploadPage() {
           color: #166534;
           font-size: 0.875rem;
           font-weight: 600;
+        }
+        .size-badge {
+          display: inline-block;
+          padding: 1px 8px;
+          border-radius: 999px;
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.3px;
+        }
+        .size-badge--ok {
+          background: #dcfce7;
+          color: #15803d;
+        }
+        .size-badge--warn {
+          background: #fef9c3;
+          color: #a16207;
+        }
+        .size-info-row {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          margin-top: 0.5rem;
+          font-size: 0.8rem;
+          font-weight: 400;
+          flex-wrap: wrap;
+        }
+        .size-info-label {
+          color: #4b7a5a;
+          font-weight: 600;
+        }
+        .size-info-original {
+          color: #6b7280;
+          text-decoration: line-through;
+        }
+        .size-info-arrow {
+          color: #16a34a;
+          font-weight: 700;
+        }
+        .size-info-compressed {
+          color: #15803d;
+          font-weight: 700;
+        }
+        .size-info-saved {
+          background: #dcfce7;
+          color: #15803d;
+          padding: 1px 6px;
+          border-radius: 999px;
+          font-size: 0.72rem;
+          font-weight: 700;
         }
         .btn-submit {
           width: 100%;

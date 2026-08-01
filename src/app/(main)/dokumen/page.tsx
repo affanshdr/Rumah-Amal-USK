@@ -8,6 +8,8 @@ interface DocumentItem {
   judul: string;
   imageUrl: string;
   pdfUrl: string;
+  fileSize: number | null;
+  downloadCount: number;
   createdAt: string;
 }
 
@@ -19,6 +21,8 @@ export default function DokumenPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedCover, setSelectedCover] = useState<string | null>(null);
+  // Track download counts yang diupdate secara lokal (optimistic update)
+  const [localDownloadCounts, setLocalDownloadCounts] = useState<Record<string, number>>({});
 
   const ITEMS_PER_PAGE = 6;
 
@@ -55,17 +59,24 @@ export default function DokumenPage() {
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-      });
-    } catch {
-      return dateStr;
-    }
+  const handleDownload = async (item: DocumentItem) => {
+    // Optimistic update: langsung tambah count di UI
+    setLocalDownloadCounts((prev) => ({
+      ...prev,
+      [item.id]: (prev[item.id] ?? item.downloadCount) + 1,
+    }));
+
+    // Buka PDF di tab baru
+    window.open(item.pdfUrl, '_blank', 'noopener,noreferrer');
+
+    // Kirim tracking ke API (fire-and-forget, tidak perlu await)
+    fetch(`/api/documents/${item.id}/download`, { method: 'POST' }).catch(() => {
+      // Jika tracking gagal, kembalikan count lokal
+      setLocalDownloadCounts((prev) => ({
+        ...prev,
+        [item.id]: item.downloadCount,
+      }));
+    });
   };
 
   return (
@@ -125,54 +136,82 @@ export default function DokumenPage() {
         ) : (
           /* Documents Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="group bg-white rounded-2xl border border-gray-100 shadow-2xs hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col p-4"
-              >
-                {/* Cover Image Container */}
+            {items.map((item) => {
+              const displayDownloadCount = localDownloadCounts[item.id] ?? item.downloadCount;
+              return (
                 <div
-                  className="relative aspect-[3/4] w-full bg-gray-50 rounded-xl overflow-hidden mb-5 cursor-pointer"
-                  onClick={() => setSelectedCover(item.imageUrl)}
+                  key={item.id}
+                  className="group bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.imageUrl || '/dokumen-cover.svg'}
-                    alt={`Cover ${item.judul}`}
-                    className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
-                    loading="lazy"
-                  />
-                  <div className="absolute top-3 right-3 bg-red-600 text-white font-extrabold text-[10px] px-2.5 py-1 rounded-md tracking-wider uppercase shadow-xs">
-                    PDF
-                  </div>
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300 flex items-center justify-center">
-                    <span className="opacity-0 group-hover:opacity-100 bg-white/90 text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow-xs transition-opacity duration-300">
-                      🔍 Perbesar Cover
-                    </span>
-                  </div>
-                </div>
-
-                {/* Info Text & Button */}
-                <div className="mt-auto px-1 flex flex-col flex-1">
-                  <h3 className="font-extrabold text-[#111827] text-base tracking-tight mb-2 uppercase leading-snug line-clamp-2">
-                    {item.judul}
-                  </h3>
-                  <p className="text-xs text-gray-500 font-medium mb-4">
-                    {formatDate(item.createdAt)}
-                  </p>
-
-                  <a
-                    href={item.pdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-auto inline-flex items-center justify-center gap-2 bg-[#0b6330] hover:bg-[#084823] text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all duration-200 shadow-xs"
+                  {/* Cover Image — klik untuk perbesar */}
+                  <div
+                    className="relative w-full bg-gray-50 cursor-pointer overflow-hidden"
+                    style={{ aspectRatio: '3/4' }}
+                    onClick={() => setSelectedCover(item.imageUrl || '/dokumen-cover.svg')}
                   >
-                    <span>📕 Unduh / Lihat PDF</span>
-                    <span>↗</span>
-                  </a>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.imageUrl || '/dokumen-cover.svg'}
+                      alt={`Cover ${item.judul}`}
+                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                      loading="lazy"
+                    />
+                    {/* Overlay hover */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300 flex items-center justify-center">
+                      <span className="opacity-0 group-hover:opacity-100 bg-white/90 text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow-xs transition-opacity duration-300">
+                        🔍 Perbesar Cover
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Info & Download Button */}
+                  <div className="flex flex-col flex-1 p-4 gap-3">
+                    {/* Judul */}
+                    <h3 className="font-extrabold text-[#111827] text-[0.95rem] tracking-tight leading-snug text-center line-clamp-3 uppercase">
+                      {item.judul}
+                    </h3>
+
+                    {/* Meta info */}
+                    <div className="flex flex-col gap-1 mt-auto">
+                      {item.fileSize != null && (
+                        <p className="text-xs text-gray-500 font-medium">
+                          <span className="font-semibold text-gray-600">Ukuran:</span>{' '}
+                          {item.fileSize >= 1
+                            ? `${item.fileSize} MB`
+                            : `${(item.fileSize * 1024).toFixed(0)} KB`}
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-500 font-medium">
+                        <span className="font-semibold text-gray-600">Diunduh:</span>{' '}
+                        {displayDownloadCount.toLocaleString('id-ID')}
+                      </p>
+                    </div>
+
+                    {/* Download Button */}
+                    <button
+                      onClick={() => handleDownload(item)}
+                      className="mt-1 w-full inline-flex items-center justify-center gap-2 bg-[#0b6330] hover:bg-[#084823] active:scale-[0.98] text-white font-bold text-sm px-4 py-2.5 rounded-xl transition-all duration-200 shadow-sm cursor-pointer"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2.5}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      Download
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

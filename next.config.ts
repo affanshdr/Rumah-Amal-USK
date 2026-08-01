@@ -9,6 +9,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Daftarkan pdf-lib sebagai server-only package agar tidak di-bundle ke client
+  serverExternalPackages: ['pdf-lib'],
+  experimental: {
+    // Naikkan batas ukuran body untuk Server Actions (jika dipakai)
+    serverActions: {
+      bodySizeLimit: '200mb',
+    },
+  },
 };
 
 export default nextConfig;

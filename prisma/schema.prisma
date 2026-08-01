@@ -137,12 +137,14 @@ model Mitra {
 }
 
 model Document {
-  id        String   @id @default(cuid())
-  judul     String
-  imageUrl  String?  @map("image_url")
-  pdfUrl    String   @map("pdf_url")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(cuid())
+  judul         String
+  imageUrl      String?  @map("image_url")
+  pdfUrl        String   @map("pdf_url")
+  fileSize      Float?   @map("file_size")       // Ukuran file dalam MB (null jika pakai link Drive)
+  downloadCount Int      @default(0) @map("download_count") // Jumlah klik tombol download
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("documents")
 }
