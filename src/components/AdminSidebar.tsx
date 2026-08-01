@@ -9,6 +9,7 @@ import {
   faGift,
   faImages,
   faNewspaper,
+  faBullhorn,
   faRightFromBracket,
 } from '@fortawesome/free-solid-svg-icons';
 import { logoutAdmin } from '@/actions/admin-auth';
@@ -24,6 +25,7 @@ export default function AdminSidebar({ adminName }: { adminName: string }) {
     { href: '/admin/infaq', label: 'Data Infaq', icon: faGift },
     { href: '/admin/donasi', label: 'Data Donasi', icon: faGift },
     { href: '/admin/kampanye', label: 'Kampanye', icon: faNewspaper },
+    { href: '/admin/pengumuman', label: 'Pengumuman', icon: faBullhorn },
     { href: '/admin/galeri', label: 'Galeri', icon: faImages },
     { href: '/admin/newsletter', label: 'Newsletter', icon: faNewspaper },
   ];
