@@ -32,7 +32,7 @@ export default function Navbar() {
     { href: "#berita", label: "Berita" },
     { href: "/pengumuman", label: "Pengumuman" },
     { href: "/newsletter", label: "Newsletter" },
-    { href: "#dokumen", label: "Dokumen" },
+    { href: "/dokumen", label: "Dokumen" },
     { href: "/galeri", label: "Galeri" },
   ];
 
@@ -259,7 +259,7 @@ export default function Navbar() {
 
               {/* Dokumen */}
               <Link
-                href="#dokumen"
+                href="/dokumen"
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-2.5 text-[17px] font-bold text-[#0b6330] transition-colors"
               >

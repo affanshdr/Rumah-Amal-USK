@@ -182,7 +182,6 @@ interface TipTapEditorProps {
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function TipTapEditor({ content, onChange, onUpload }: TipTapEditorProps) {
   const imageInputRef = useRef<HTMLInputElement>(null);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadLabel, setUploadLabel] = useState('');
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
@@ -191,6 +190,11 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
   const [btnLinkDialogOpen, setBtnLinkDialogOpen] = useState(false);
   const [btnLinkUrl, setBtnLinkUrl] = useState('');
   const [btnLinkLabel, setBtnLinkLabel] = useState('');
+
+  // State untuk dialog tombol PDF
+  const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
+  const [pdfSelectedFile, setPdfSelectedFile] = useState<File | null>(null);
+  const [pdfLabelInput, setPdfLabelInput] = useState('');
 
   const editor = useEditor({
     extensions: [
@@ -250,28 +254,24 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
     }
   };
 
-  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !editor) return;
-    const label = window.prompt(
-      'Label pada tombol download PDF:',
-      `📄 DOWNLOAD ${file.name.toUpperCase()}`
-    );
+  const handlePdfUploadFromDialog = async () => {
+    if (!pdfSelectedFile || !editor) return;
     setUploading(true);
     setUploadLabel('Mengupload PDF…');
     try {
-      const { url, storagePath } = await uploadFile(file);
+      const { url, storagePath } = await uploadFile(pdfSelectedFile);
       (editor.commands as any).setDownloadButton({
         url,
-        label: label || `📄 DOWNLOAD ${file.name.toUpperCase()}`,
+        label: pdfLabelInput.trim() || '📄 DOWNLOAD BERKAS (PDF)',
       });
       onUpload?.(url, storagePath); // Beritahu parent untuk tracking
+      setPdfDialogOpen(false);
+      setPdfSelectedFile(null);
     } catch (err) {
       alert(`Gagal upload PDF: ${(err as Error).message}`);
     } finally {
       setUploading(false);
       setUploadLabel('');
-      if (pdfInputRef.current) pdfInputRef.current.value = '';
     }
   };
 
@@ -305,7 +305,6 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
     <div className="border border-gray-300 rounded-xl overflow-visible bg-white shadow-sm">
       {/* ── Hidden file inputs ─────────────────────────────────────── */}
       <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-      <input ref={pdfInputRef} type="file" accept="application/pdf" className="hidden" onChange={handlePdfUpload} />
 
       {/* ── Toolbar ───────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-0.5 p-2 bg-gray-50 border-b border-gray-200 rounded-t-xl">
@@ -419,7 +418,13 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
           type="button"
           title="Sisipkan Tombol Download PDF"
           disabled={uploading}
-          onClick={() => pdfInputRef.current?.click()}
+          onClick={() => {
+            setPdfSelectedFile(null);
+            setPdfLabelInput('📄 DOWNLOAD BERKAS (PDF)');
+            setPdfDialogOpen(true);
+            setBtnLinkDialogOpen(false);
+            setLinkDialogOpen(false);
+          }}
           className="flex items-center gap-1.5 h-8 px-2.5 text-[12px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-md hover:bg-emerald-100 transition-colors cursor-pointer disabled:opacity-50 shrink-0"
         >
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg>
@@ -434,6 +439,8 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
             setBtnLinkUrl('');
             setBtnLinkLabel('🔗 LINK DOWNLOAD BERKAS');
             setBtnLinkDialogOpen(true);
+            setPdfDialogOpen(false);
+            setLinkDialogOpen(false);
           }}
           className="flex items-center gap-1.5 h-8 px-2.5 text-[12px] font-semibold text-violet-800 bg-violet-50 border border-violet-300 rounded-md hover:bg-violet-100 transition-colors cursor-pointer shrink-0"
         >
@@ -526,6 +533,59 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
             <button
               type="button"
               onClick={() => setBtnLinkDialogOpen(false)}
+              className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-300 cursor-pointer"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── PDF Button Dialog (Upload File PDF) ────────────── */}
+      {pdfDialogOpen && (
+        <div className="flex flex-col gap-2.5 px-3 py-3 bg-emerald-50 border-b border-emerald-200">
+          <span className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+            📄 Sisipkan Tombol Download PDF
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-emerald-700 shrink-0 w-14">Label:</span>
+            <input
+              type="text"
+              autoFocus
+              value={pdfLabelInput}
+              onChange={(e) => setPdfLabelInput(e.target.value)}
+              placeholder="Contoh: LINK DOWNLOAD BERKAS"
+              className="flex-1 text-sm px-2.5 py-1.5 border border-emerald-300 rounded-lg focus:outline-none focus:border-emerald-500 bg-white"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-emerald-700 shrink-0 w-14">File PDF:</span>
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                setPdfSelectedFile(file);
+              }}
+              className="flex-1 text-xs text-gray-700 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 file:cursor-pointer cursor-pointer"
+            />
+          </div>
+          <div className="flex gap-2 justify-end mt-1">
+            <button
+              type="button"
+              disabled={!pdfSelectedFile || uploading}
+              onClick={handlePdfUploadFromDialog}
+              className="px-4 py-1.5 bg-[#0b6330] text-white text-xs font-bold rounded-lg hover:bg-[#074722] cursor-pointer disabled:opacity-50 flex items-center gap-1.5 transition-colors shadow-2xs"
+            >
+              {uploading ? 'Mengupload…' : 'Upload & Sisipkan Tombol'}
+            </button>
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => {
+                setPdfDialogOpen(false);
+                setPdfSelectedFile(null);
+              }}
               className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-300 cursor-pointer"
             >
               Batal

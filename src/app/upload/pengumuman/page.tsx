@@ -38,6 +38,7 @@ function beaconCleanup(paths: string[]): void {
 export default function UploadPengumumanPage() {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [tagsInput, setTagsInput] = useState('');
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [contentHtml, setContentHtml] = useState('<p></p>');
   const [saving, setSaving] = useState(false);
@@ -111,6 +112,7 @@ export default function UploadPengumumanPage() {
     await cleanupOrphanFiles(pathsToClean);
     setTitle('');
     setDate(new Date().toISOString().slice(0, 10));
+    setTagsInput('');
     setCoverImageUrl('');
     setContentHtml('<p></p>');
     setResultMessage({ type: 'ok', text: '🗑️ Form dibatalkan. File yang diupload sudah dihapus.' });
@@ -127,16 +129,22 @@ export default function UploadPengumumanPage() {
     setSaving(true);
     setResultMessage(null);
 
+    const parsedTags = tagsInput
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+
     try {
       const res = await fetch('/api/announcements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: title.trim(),
-          category: 'Umum',
+          category: parsedTags[0] || 'Umum',
           publishedAt: new Date(date).toISOString(),
           coverImageUrl,
           content: contentHtml,
+          tags: parsedTags,
         }),
       });
 
@@ -254,9 +262,9 @@ export default function UploadPengumumanPage() {
             </div>
           </div>
 
-          {/* 2. Judul & 3. Tanggal */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <div className="sm:col-span-2">
+          {/* 2. Judul, 3. Tanggal & Tag */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-5">
+            <div className="sm:col-span-6">
               <label className="block text-sm font-bold text-gray-800 mb-1">
                 Judul Pengumuman <span className="text-red-500">*</span>
               </label>
@@ -270,7 +278,7 @@ export default function UploadPengumumanPage() {
               />
             </div>
 
-            <div>
+            <div className="sm:col-span-3">
               <label className="block text-sm font-bold text-gray-800 mb-1">
                 Tanggal <span className="text-red-500">*</span>
               </label>
@@ -280,6 +288,19 @@ export default function UploadPengumumanPage() {
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#0b6330] bg-white font-medium"
                 required
+              />
+            </div>
+
+            <div className="sm:col-span-3">
+              <label className="block text-sm font-bold text-gray-800 mb-1">
+                Tag / Label <span className="text-[11px] font-normal text-gray-400">(pisah koma)</span>
+              </label>
+              <input
+                type="text"
+                placeholder="misal: Beasiswa, 2026"
+                value={tagsInput}
+                onChange={(e) => setTagsInput(e.target.value)}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#0b6330] font-medium"
               />
             </div>
           </div>
@@ -429,7 +450,21 @@ export default function UploadPengumumanPage() {
                     <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
-                    <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">#Beasiswa</span>
+                    {tagsInput.trim() ? (
+                      <div className="flex gap-1.5 flex-wrap">
+                        {tagsInput
+                          .split(',')
+                          .map((t) => t.trim())
+                          .filter(Boolean)
+                          .map((tag, idx) => (
+                            <span key={idx} className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200">
+                              #{tag}
+                            </span>
+                          ))}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400 font-normal">Umum</span>
+                    )}
                   </div>
                 </div>
 

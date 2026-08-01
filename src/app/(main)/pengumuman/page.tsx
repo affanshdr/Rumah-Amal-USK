@@ -19,7 +19,7 @@ export default function PublicAnnouncementListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeQuery, setActiveQuery] = useState('');
   const [page, setPage] = useState(1);
-  const ITEMS_PER_PAGE = 6;
+  const ITEMS_PER_PAGE = 9;
 
   const fetchAnnouncements = useCallback(async () => {
     setLoading(true);
@@ -102,7 +102,7 @@ export default function PublicAnnouncementListPage() {
         {/* Loading State */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 animate-pulse mb-12">
-            {[...Array(6)].map((_, i) => (
+            {[...Array(ITEMS_PER_PAGE)].map((_, i) => (
               <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden flex flex-col">
                 <div className="bg-gray-200 aspect-[16/10] w-full"></div>
                 <div className="p-5 flex flex-col flex-1">
@@ -141,11 +141,23 @@ export default function PublicAnnouncementListPage() {
                       loading="lazy"
                     />
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center bg-emerald-800 text-white p-6 text-center">
-                      <span className="text-3xl mb-2">📢</span>
-                      <span className="text-xs font-bold uppercase tracking-wider line-clamp-2">
-                        {item.title}
-                      </span>
+                    <div className="w-full h-full relative bg-gradient-to-br from-[#064e26] via-[#0b6330] to-[#043319] overflow-hidden flex items-center justify-center p-6">
+                      <div className="absolute -right-8 -top-8 w-36 h-36 bg-emerald-400/20 rounded-full blur-xl pointer-events-none" />
+                      <div className="absolute -left-8 -bottom-8 w-36 h-36 bg-[#ffc800]/15 rounded-full blur-xl pointer-events-none" />
+
+                      <div className="relative z-10 flex flex-col items-center justify-center text-center group-hover:scale-105 transition-transform duration-300">
+                        <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-xl shadow-md border border-white/40 flex items-center justify-center mb-2">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src="/logo/rumah-amal.png"
+                            alt="Rumah Amal USK"
+                            className="h-7 sm:h-8 w-auto object-contain"
+                          />
+                        </div>
+                        <span className="text-[10px] font-extrabold text-[#ffc800] tracking-widest uppercase mt-0.5 drop-shadow-2xs">
+                          PENGUMUMAN RESMI
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -189,11 +201,10 @@ export default function PublicAnnouncementListPage() {
               <button
                 key={pageNum}
                 onClick={() => handlePageChange(pageNum)}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
-                  pageNum === page
+                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${pageNum === page
                     ? 'bg-[#ffc800] text-[#1a1a1a] font-extrabold shadow-2xs'
                     : 'text-gray-600 hover:bg-gray-100 hover:text-[#0b6330]'
-                }`}
+                  }`}
               >
                 {pageNum}
               </button>

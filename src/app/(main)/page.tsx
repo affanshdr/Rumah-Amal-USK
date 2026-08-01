@@ -76,8 +76,8 @@ export default function Home() {
     : [
         {
           id: 'default-1',
-          badge: 'PENGUMUMAN',
-          title: 'HASIL SELEKSI ADMINISTRASI BPRA–UKT SEMESTER GANJIL 2026/2027',
+          badge: 'RUMAH AMAL USK',
+          title: 'RUMAH AMAL MASJID JAMIK UNIVERSITAS SYIAH KUALA',
           coverImageUrl: null,
           slug: '',
         },
@@ -85,11 +85,13 @@ export default function Home() {
 
   const nextSlide = (e?: React.MouseEvent) => {
     e?.stopPropagation();
+    if (activeSlides.length <= 1) return;
     setCurrentSlide((prev) => (prev + 1) % activeSlides.length);
   };
 
   const prevSlide = (e?: React.MouseEvent) => {
     e?.stopPropagation();
+    if (activeSlides.length <= 1) return;
     setCurrentSlide((prev) => (prev - 1 + activeSlides.length) % activeSlides.length);
   };
 
@@ -106,26 +108,30 @@ export default function Home() {
         <div className="relative bg-[#0b6330] overflow-hidden h-[340px] sm:h-[420px] md:h-[480px] w-full flex items-center shadow-md group mx-auto" style={{ maxWidth: '100vw' }}>
           
           {/* Left Arrow Button */}
-          <button
-            onClick={prevSlide}
-            aria-label="Previous slide"
-            className="absolute left-3 md:left-6 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs"
-          >
-            <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+          {activeSlides.length > 1 && (
+            <button
+              onClick={prevSlide}
+              aria-label="Previous slide"
+              className="absolute left-3 md:left-6 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs"
+            >
+              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
 
           {/* Right Arrow Button */}
-          <button
-            onClick={nextSlide}
-            aria-label="Next slide"
-            className="absolute right-3 md:right-6 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs"
-          >
-            <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+          {activeSlides.length > 1 && (
+            <button
+              onClick={nextSlide}
+              aria-label="Next slide"
+              className="absolute right-3 md:right-6 z-20 w-10 h-10 md:w-11 md:h-11 rounded-full bg-black/35 hover:bg-black/55 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs"
+            >
+              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
 
           {/* Banner Clickable Container (Pure Image 100% Full Container) */}
           <Link
@@ -140,24 +146,28 @@ export default function Home() {
                 className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-300"
               />
             ) : (
-              /* Fallback jika tidak ada cover image */
-              <div className="w-full h-full grid grid-cols-1 md:grid-cols-12 items-center px-6 md:px-14 py-8 md:py-0 gap-6">
-                <div className="md:col-span-5 flex justify-center md:justify-start relative h-[280px] md:h-[460px] w-full items-end">
-                  <Image
-                    src="/student.png"
-                    alt="Student USK"
-                    fill
-                    priority
-                    className="object-contain object-bottom drop-shadow-2xl scale-105"
-                  />
-                </div>
-                <div className="md:col-span-7 flex flex-col justify-center items-start text-left z-10 pl-0 md:pl-4">
-                  <div className="mb-4 md:mb-6">
-                    <span className="bg-[#ffc800] text-[#111111] font-extrabold text-sm md:text-lg px-7 py-2.5 rounded-full inline-block tracking-wider shadow-xs">
+              /* Fallback jika tidak ada cover image (tanpa gambar dummy) */
+              <div className="w-full h-full relative bg-gradient-to-br from-[#064e26] via-[#0b6330] to-[#043319] overflow-hidden flex flex-col items-center justify-center p-6 sm:p-10 text-center">
+                <div className="absolute -right-16 -top-16 w-64 h-64 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-[#ffc800]/15 rounded-full blur-3xl pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col items-center max-w-4xl mx-auto">
+                  <div className="bg-white/95 backdrop-blur-md px-5 py-2 rounded-2xl shadow-md border border-white/40 flex items-center justify-center mb-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/logo/rumah-amal.png"
+                      alt="Rumah Amal USK"
+                      className="h-8 sm:h-10 w-auto object-contain"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <span className="bg-[#ffc800] text-[#111111] font-extrabold text-xs sm:text-sm md:text-base px-6 py-2 rounded-full inline-block tracking-wider shadow-xs uppercase">
                       {currentItem.badge}
                     </span>
                   </div>
-                  <h1 className="text-white font-black text-2xl sm:text-3xl md:text-4xl lg:text-[40px] leading-tight md:leading-[1.18] tracking-tight max-w-2xl group-hover:underline underline-offset-4 decoration-2">
+
+                  <h1 className="text-white font-black text-2xl sm:text-3xl md:text-4xl lg:text-[40px] leading-tight md:leading-[1.18] tracking-tight group-hover:underline underline-offset-4 decoration-2">
                     {currentItem.title}
                   </h1>
                 </div>

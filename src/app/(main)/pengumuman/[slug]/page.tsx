@@ -448,8 +448,13 @@ export default function PublicAnnouncementDetailPage({
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-emerald-800 text-white text-xs">
-                          📢
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#064e26] to-[#0b6330] text-white p-1">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src="/logo/rumah-amal.png"
+                            alt="Rumah Amal"
+                            className="h-5 w-auto object-contain brightness-0 invert opacity-90"
+                          />
                         </div>
                       )}
                     </div>
