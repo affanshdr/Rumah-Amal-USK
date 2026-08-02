@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Donasi } from "@prisma/client";
+import { Donasi, Kampanye } from "@prisma/client";
 import { approveDonasi, rejectDonasi } from "@/actions/donasi";
 
-export default function DonasiTableClient({ initialData }: { initialData: Donasi[] }) {
-  const [data, setData] = useState<Donasi[]>(initialData);
+type DonasiWithKampanye = Donasi & {
+  kampanye?: Kampanye | null;
+};
+
+export default function DonasiTableClient({ initialData }: { initialData: DonasiWithKampanye[] }) {
+  const [data, setData] = useState<DonasiWithKampanye[]>(initialData);
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const formatRupiah = (angka: number) => {
@@ -75,7 +79,7 @@ export default function DonasiTableClient({ initialData }: { initialData: Donasi
                   </td>
                   <td className="p-4">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {item.jenisDonasi}
+                      {item.kampanye?.judul || item.jenisDonasi}
                     </span>
                   </td>
                   <td className="p-4 font-bold text-gray-800">

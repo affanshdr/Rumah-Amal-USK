@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminDonasiPage() {
   const donasi = await prisma.donasi.findMany({
+    include: { kampanye: true },
     orderBy: { createdAt: 'desc' },
   });
 

@@ -8,6 +8,7 @@ import { redirect } from 'next/navigation';
 export async function submitDonasi(formData: FormData) {
   const tipePembayar = formData.get('tipe_pembayar') as string;
   const jenisDonasi = formData.get('jenis_donasi') as string;
+  const kampanyeId = formData.get('kampanye_id') as string | null;
   const jumlahDonasi = Number(formData.get('jumlah_donasi'));
   const nama = formData.get('nama') as string;
   const nip = formData.get('nip') as string | null;
@@ -46,6 +47,7 @@ export async function submitDonasi(formData: FormData) {
     data: {
       tipePembayar,
       jenisDonasi,
+      kampanyeId: kampanyeId || null,
       jumlahDonasi,
       nama: isHambaAllah ? 'Hamba Allah' : nama,
       nip: nip || null,
@@ -65,17 +67,61 @@ export async function submitDonasi(formData: FormData) {
 }
 
 export async function approveDonasi(id: string) {
+  const donasi = await prisma.donasi.findUnique({
+    where: { id },
+  });
+
+  if (!donasi) {
+    throw new Error('Donasi tidak ditemukan');
+  }
+
   await prisma.donasi.update({
     where: { id },
     data: { status: 'lunas' },
   });
+
+  if (donasi.status !== 'lunas' && donasi.kampanyeId) {
+    await prisma.kampanye.update({
+      where: { id: donasi.kampanyeId },
+      data: {
+        terkumpul: {
+          increment: donasi.jumlahDonasi,
+        },
+      },
+    });
+  }
+
   revalidatePath('/admin/donasi');
+  revalidatePath('/admin/kampanye');
+  revalidatePath('/donasi');
 }
 
 export async function rejectDonasi(id: string) {
+  const donasi = await prisma.donasi.findUnique({
+    where: { id },
+  });
+
+  if (!donasi) {
+    throw new Error('Donasi tidak ditemukan');
+  }
+
+  if (donasi.status === 'lunas' && donasi.kampanyeId) {
+    await prisma.kampanye.update({
+      where: { id: donasi.kampanyeId },
+      data: {
+        terkumpul: {
+          decrement: donasi.jumlahDonasi,
+        },
+      },
+    });
+  }
+
   await prisma.donasi.update({
     where: { id },
     data: { status: 'ditolak' },
   });
+
   revalidatePath('/admin/donasi');
+  revalidatePath('/admin/kampanye');
+  revalidatePath('/donasi');
 }
