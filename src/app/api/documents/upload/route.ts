@@ -14,31 +14,18 @@ const SECONDARY_FALLBACK = 'Galeri';
 
 /**
  * Optimasi metadata PDF menggunakan pdf-lib (lossless).
- * Tidak mengubah konten, teks, atau gambar sama sekali.
- * Hanya mengaktifkan object streams (cross-reference streams)
- * yang dapat mengurangi ukuran file 5–20% tergantung struktur PDF.
- *
- * @param buffer - Raw PDF buffer dari file upload
- * @returns Buffer PDF yang sudah dioptimasi
  */
 async function optimizePdf(buffer: Buffer): Promise<Buffer> {
   const pdfDoc = await PDFDocument.load(buffer, {
-    // Izinkan PDF yang mungkin punya minor issues tetap diload
     ignoreEncryption: false,
     updateMetadata: false,
   });
 
-  // Hapus metadata yang tidak perlu (author, creator tool, dll.)
-  // tapi jaga title jika ada — bisa dikosongkan semuanya untuk mengurangi size
   pdfDoc.setCreator('');
   pdfDoc.setProducer('');
 
   const optimizedBytes = await pdfDoc.save({
-    // useObjectStreams: true = aktifkan cross-reference object streams
-    // Ini adalah optimasi lossless utama yang mengompresi referensi internal PDF
     useObjectStreams: true,
-
-    // addDefaultPage: false = jangan tambah halaman kosong
     addDefaultPage: false,
   });
 
@@ -63,9 +50,10 @@ export async function POST(req: NextRequest) {
 
     // ── Mode Drive: body JSON dengan pdfUrl langsung ─────────────────────────
     if (contentType.includes('application/json')) {
-      const body = await req.json() as { judul?: string; pdfUrl?: string; createdAt?: string };
+      const body = await req.json() as { judul?: string; pdfUrl?: string; coverUrl?: string; createdAt?: string };
       const judul = body.judul?.trim();
       const pdfUrl = body.pdfUrl?.trim();
+      const reqCoverUrl = body.coverUrl?.trim();
       const customCreatedAt = body.createdAt;
 
       if (!judul) {
@@ -75,12 +63,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Link PDF wajib diisi.' }, { status: 400 });
       }
 
-      // Ambil cover dari dokumen terbaru yang ada
-      const latestDoc = await prisma.document.findFirst({
-        where: { imageUrl: { not: null } },
-        orderBy: { createdAt: 'desc' },
-      });
-      const imageUrl = latestDoc?.imageUrl || '/dokumen-cover.svg';
+      // Tentukan imageUrl: jika coverUrl dikirim gunakan itu, jika tidak cari custom cover terkini di DB
+      let imageUrl = reqCoverUrl;
+      if (!imageUrl) {
+        const latestCustomCover = await prisma.document.findFirst({
+          where: { imageUrl: { notIn: ['/dokumen-cover.svg'] } },
+          orderBy: { createdAt: 'desc' },
+        });
+        imageUrl = latestCustomCover?.imageUrl || '/dokumen-cover.svg';
+      }
 
       const createdAtDate = customCreatedAt ? new Date(customCreatedAt) : new Date();
 
@@ -89,7 +80,7 @@ export async function POST(req: NextRequest) {
           judul,
           imageUrl,
           pdfUrl,
-          fileSize: null, // Link Drive tidak diketahui ukurannya
+          fileSize: null,
           createdAt: isNaN(createdAtDate.getTime()) ? new Date() : createdAtDate,
         },
       });
@@ -102,6 +93,7 @@ export async function POST(req: NextRequest) {
     // ── Mode File: multipart form-data dengan file PDF ────────────────────────
     const formData = await req.formData();
     const coverFile = formData.get('image') as File | null;
+    const reqCoverUrl = (formData.get('coverUrl') as string | null)?.trim();
     const pdfFile = formData.get('pdf') as File | null;
     const judul = (formData.get('judul') as string | null)?.trim();
     const customCreatedAt = formData.get('createdAt') as string | null;
@@ -179,14 +171,12 @@ export async function POST(req: NextRequest) {
         ` | Saved: ${(savedBytes / 1024 / 1024).toFixed(2)} MB (${((savedBytes / originalSizeBytes) * 100).toFixed(1)}%)`
       );
     } catch (err) {
-      // Jika optimasi gagal (PDF terenkripsi/rusak), upload original tanpa kompresi
       console.warn(`[PDF Optimize] Gagal optimasi "${judul}", upload original:`, (err as Error).message);
       finalPdfBuffer = originalPdfBuffer;
       optimizationError = (err as Error).message;
     }
 
     const compressedSizeBytes = finalPdfBuffer.byteLength;
-    // Hitung ukuran dalam MB untuk disimpan ke DB (2 desimal)
     const fileSizeMB = parseFloat((compressedSizeBytes / 1024 / 1024).toFixed(2));
 
     // Upload PDF ke storage
@@ -211,16 +201,17 @@ export async function POST(req: NextRequest) {
         BUCKET_COVER,
         'cover'
       );
-      // Sync semua dokumen ke cover baru agar konsisten
       await prisma.document.updateMany({
         data: { imageUrl },
       });
+    } else if (reqCoverUrl) {
+      imageUrl = reqCoverUrl;
     } else {
-      const latestDoc = await prisma.document.findFirst({
-        where: { imageUrl: { not: null } },
+      const latestCustomCover = await prisma.document.findFirst({
+        where: { imageUrl: { notIn: ['/dokumen-cover.svg'] } },
         orderBy: { createdAt: 'desc' },
       });
-      imageUrl = latestDoc?.imageUrl || '/dokumen-cover.svg';
+      imageUrl = latestCustomCover?.imageUrl || '/dokumen-cover.svg';
     }
 
     const createdAtDate = customCreatedAt ? new Date(customCreatedAt) : new Date();
@@ -238,7 +229,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       document,
-      // Info ukuran untuk ditampilkan ke user
       sizeInfo: {
         originalSizeMB: parseFloat((originalSizeBytes / 1024 / 1024).toFixed(2)),
         compressedSizeMB: parseFloat((compressedSizeBytes / 1024 / 1024).toFixed(2)),

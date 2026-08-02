@@ -91,6 +91,11 @@ export default function DokumenUploadPage() {
   const [driveUrl, setDriveUrl] = useState('');
 
   useEffect(() => {
+    // Muat cover tersimpan dari localStorage jika ada
+    const savedCover = typeof window !== 'undefined' ? localStorage.getItem('global_doc_cover') : null;
+    if (savedCover) {
+      setCurrentCoverUrl(savedCover);
+    }
     fetchExistingDocuments();
   }, []);
 
@@ -101,9 +106,15 @@ export default function DokumenUploadPage() {
         const data = await res.json();
         if (data.documents && data.documents.length > 0) {
           setUploadedList(data.documents);
-          const firstWithCover = data.documents.find((d: DocumentResult) => d.imageUrl);
-          if (firstWithCover?.imageUrl) {
-            setCurrentCoverUrl(firstWithCover.imageUrl);
+          // Prioritaskan mencari cover custom yang bukan default '/dokumen-cover.svg'
+          const customCover = data.documents.find(
+            (d: DocumentResult) => d.imageUrl && d.imageUrl !== '/dokumen-cover.svg'
+          );
+          if (customCover?.imageUrl) {
+            setCurrentCoverUrl(customCover.imageUrl);
+            localStorage.setItem('global_doc_cover', customCover.imageUrl);
+          } else if (data.documents[0]?.imageUrl) {
+            setCurrentCoverUrl(data.documents[0].imageUrl);
           }
         }
       }
@@ -169,8 +180,15 @@ export default function DokumenUploadPage() {
         return;
       }
 
-      setCurrentCoverUrl(data.coverUrl);
+      const newUrl = data.coverUrl;
+      setCurrentCoverUrl(newUrl);
+      localStorage.setItem('global_doc_cover', newUrl);
       setSuccessMsg(`✅ Cover berhasil diperbarui untuk ${data.updatedCount || 'semua'} dokumen!`);
+
+      // Update daftar dokumen tersimpan secara lokal dengan cover baru
+      setUploadedList((prev) =>
+        prev.map((doc) => ({ ...doc, imageUrl: newUrl }))
+      );
 
       fetchExistingDocuments();
     } catch (err) {
@@ -217,18 +235,22 @@ export default function DokumenUploadPage() {
         const formData = new FormData();
         formData.append('judul', judul.trim());
         formData.append('pdf', pdfFile!);
+        if (currentCoverUrl) {
+          formData.append('coverUrl', currentCoverUrl);
+        }
         res = await fetch('/api/documents/upload', {
           method: 'POST',
           body: formData,
         });
       } else {
-        // Mode drive: kirim JSON dengan pdfUrl langsung
+        // Mode drive: kirim JSON dengan pdfUrl & coverUrl
         res = await fetch('/api/documents/upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             judul: judul.trim(),
             pdfUrl: driveUrl.trim(),
+            coverUrl: currentCoverUrl,
           }),
         });
       }
@@ -323,6 +345,9 @@ export default function DokumenUploadPage() {
           >
             {updatingCover ? '⏳ Mengunggah Cover Baru...' : '🔄 Ganti Cover Semua Dokumen'}
           </button>
+          <p className="cover-save-hint">
+            ⚡ Begitu Anda memilih gambar, sistem akan <strong>langsung otomatis menyimpan</strong> cover tersebut ke Supabase &amp; database.
+          </p>
           <input
             ref={globalCoverInputRef}
             type="file"
@@ -337,6 +362,23 @@ export default function DokumenUploadPage() {
           <div className="card-header">
             <h2>📄 Tambah Dokumen Baru</h2>
             <p className="card-desc">Isi judul & upload file PDF dokumen.</p>
+          </div>
+
+          {/* Indicator Cover Aktif yang Digunakan */}
+          <div className="active-cover-badge">
+            <span className="active-cover-label">🖼️ Cover yang digunakan saat ini:</span>
+            <div className="active-cover-preview font-sans">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={currentCoverUrl} alt="Cover Preview" className="active-cover-img" />
+              <div className="active-cover-text">
+                <span className="active-cover-status font-bold">
+                  {currentCoverUrl === '/dokumen-cover.svg' ? 'Cover Default (Hijau)' : 'Cover Custom Global'}
+                </span>
+                <span className="active-cover-desc text-xs text-gray-500">
+                  Otomatis dipasang pada dokumen baru &amp; publik
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Judul Dokumen */}
@@ -578,6 +620,49 @@ export default function DokumenUploadPage() {
           font-size: 0.925rem;
           margin: 0;
         }
+        .active-cover-badge {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 0.75rem 1rem;
+          margin-bottom: 1.25rem;
+        }
+        .active-cover-label {
+          display: block;
+          font-size: 0.775rem;
+          font-weight: 700;
+          color: #475569;
+          margin-bottom: 0.4rem;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .active-cover-preview {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+        .active-cover-img {
+          width: 44px;
+          height: 58px;
+          object-fit: cover;
+          border-radius: 6px;
+          border: 1px solid #cbd5e1;
+          background: #f1f5f9;
+          flex-shrink: 0;
+        }
+        .active-cover-text {
+          display: flex;
+          flex-direction: column;
+          gap: 0.1rem;
+        }
+        .active-cover-status {
+          font-size: 0.85rem;
+          color: #0f172a;
+        }
+        .active-cover-desc {
+          font-size: 0.75rem;
+          color: #64748b;
+        }
         .mode-toggle-group {
           display: flex;
           gap: 0.5rem;
@@ -678,6 +763,14 @@ export default function DokumenUploadPage() {
         .btn-change-cover:disabled {
           opacity: 0.6;
           cursor: not-allowed;
+        }
+        .cover-save-hint {
+          font-size: 0.75rem;
+          color: #6b7280;
+          margin-top: 0.6rem;
+          margin-bottom: 0;
+          line-height: 1.4;
+          text-align: center;
         }
         .field {
           margin-bottom: 1.2rem;
