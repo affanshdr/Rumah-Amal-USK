@@ -11,14 +11,14 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function getKampanye() {
   return await prisma.kampanye.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: 'asc' },
   });
 }
 
 export async function getActiveKampanye() {
   return await prisma.kampanye.findMany({
     where: { isActive: true },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: 'asc' },
   });
 }
 
@@ -44,7 +44,7 @@ export async function addKampanye(formData: FormData) {
   const buffer = Buffer.from(await file.arrayBuffer());
 
   const { error: uploadError } = await supabase.storage
-    .from('Galeri')
+    .from('Kampanye')
     .upload(fileName, buffer, {
       contentType: file.type,
       upsert: false
@@ -57,7 +57,7 @@ export async function addKampanye(formData: FormData) {
 
   // 2. Dapatkan Public URL
   const { data: publicUrlData } = supabase.storage
-    .from('Galeri')
+    .from('Kampanye')
     .getPublicUrl(fileName);
 
   await prisma.kampanye.create({
@@ -72,6 +72,8 @@ export async function addKampanye(formData: FormData) {
   });
 
   revalidatePath('/admin/kampanye');
+  revalidatePath('/upload/kampanye');
+  revalidatePath('/kampanye');
   revalidatePath('/donasi');
 }
 
@@ -100,7 +102,7 @@ export async function updateKampanye(formData: FormData) {
     const buffer = Buffer.from(await file.arrayBuffer());
 
     const { error: uploadError } = await supabase.storage
-      .from('Galeri')
+      .from('Kampanye')
       .upload(fileName, buffer, {
         contentType: file.type,
         upsert: false
@@ -111,7 +113,7 @@ export async function updateKampanye(formData: FormData) {
     }
 
     const { data: publicUrlData } = supabase.storage
-      .from('Galeri')
+      .from('Kampanye')
       .getPublicUrl(fileName);
       
     imageUrl = publicUrlData.publicUrl;
@@ -130,6 +132,8 @@ export async function updateKampanye(formData: FormData) {
   });
 
   revalidatePath('/admin/kampanye');
+  revalidatePath('/upload/kampanye');
+  revalidatePath('/kampanye');
   revalidatePath('/donasi');
 }
 
@@ -138,6 +142,8 @@ export async function deleteKampanye(id: string) {
     where: { id },
   });
   revalidatePath('/admin/kampanye');
+  revalidatePath('/upload/kampanye');
+  revalidatePath('/kampanye');
   revalidatePath('/donasi');
 }
 
@@ -147,5 +153,7 @@ export async function toggleKampanyeStatus(id: string, currentStatus: boolean) {
     data: { isActive: !currentStatus },
   });
   revalidatePath('/admin/kampanye');
+  revalidatePath('/upload/kampanye');
+  revalidatePath('/kampanye');
   revalidatePath('/donasi');
 }

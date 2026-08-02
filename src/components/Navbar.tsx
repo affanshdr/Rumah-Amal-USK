@@ -102,14 +102,14 @@ export default function Navbar() {
                       >
                         <div className="bg-white rounded-xl shadow-2xl border border-gray-100/80 py-1.5">
                           <Link
-                            href="#program"
+                            href="/program"
                             onClick={() => setProgramDropdownOpen(false)}
                             className="block px-4 py-2 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
                           >
                             Program
                           </Link>
                           <Link
-                            href="#kampanye"
+                            href="/kampanye"
                             onClick={() => setProgramDropdownOpen(false)}
                             className="block px-4 py-2 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
                           >
@@ -213,14 +213,14 @@ export default function Navbar() {
                 {mobileProgramOpen && (
                   <div className="pl-4 py-1 flex flex-col gap-2 border-l-2 border-green-200 my-1">
                     <Link
-                      href="#program"
+                      href="/program"
                       onClick={() => setMobileMenuOpen(false)}
                       className="py-1.5 text-base font-semibold text-gray-700 hover:text-[#0b6330]"
                     >
                       Program
                     </Link>
                     <Link
-                      href="#kampanye"
+                      href="/kampanye"
                       onClick={() => setMobileMenuOpen(false)}
                       className="py-1.5 text-base font-semibold text-gray-700 hover:text-[#0b6330]"
                     >

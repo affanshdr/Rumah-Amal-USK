@@ -186,4 +186,21 @@ model Kampanye {
   @@map("kampanyes")
 }
 
+model Program {
+  id            String    @id @default(cuid())
+  title         String
+  slug          String    @unique
+  category      String    @default("PENDIDIKAN")
+  excerpt       String?
+  coverImageUrl String?   @map("cover_image_url")
+  content       String    @db.Text
+  viewsCount    Int       @default(0) @map("views_count")
+  published     Boolean   @default(true)
+  publishedAt   DateTime? @default(now()) @map("published_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("programs")
+}
+
 

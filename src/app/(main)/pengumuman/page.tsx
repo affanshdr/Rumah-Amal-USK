@@ -202,13 +202,14 @@ export default function PublicAnnouncementListPage() {
                 key={pageNum}
                 onClick={() => handlePageChange(pageNum)}
                 className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${pageNum === page
-                    ? 'bg-[#ffc800] text-[#1a1a1a] font-extrabold shadow-2xs'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-[#0b6330]'
+                  ? 'bg-[#ffc800] text-[#1a1a1a] font-extrabold shadow-2xs'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-[#0b6330]'
                   }`}
               >
                 {pageNum}
               </button>
             ))}
+
 
             <button
               onClick={() => handlePageChange(page + 1)}

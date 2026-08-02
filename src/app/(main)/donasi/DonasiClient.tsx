@@ -1,16 +1,31 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { submitDonasi } from "@/actions/donasi";
 import { Kampanye } from "@prisma/client";
 
 export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
+  const searchParams = useSearchParams();
+  const programFromUrl = searchParams.get("program");
+
   const [tipePembayar, setTipePembayar] = useState<"masyarakat" | "dosen">("masyarakat");
 
   // Set default jenisDonasi to the first program if available
   const defaultProgram = programs.length > 0 ? programs[0].judul : "Umum";
   const [jenisDonasi, setJenisDonasi] = useState<string>(defaultProgram);
+
+  useEffect(() => {
+    if (programFromUrl) {
+      const match = programs.find((p) => p.judul.trim().toLowerCase() === programFromUrl.trim().toLowerCase());
+      if (match) {
+        setJenisDonasi(match.judul);
+      } else {
+        setJenisDonasi(programFromUrl);
+      }
+    }
+  }, [programFromUrl, programs]);
 
   const [jumlahDonasi, setJumlahDonasi] = useState<string>("");
   const [nama, setNama] = useState<string>("");

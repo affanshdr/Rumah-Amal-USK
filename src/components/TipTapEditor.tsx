@@ -132,6 +132,72 @@ export const LinkButtonNode = Node.create({
   },
 });
 
+// ─── Custom Bank Banner Node (untuk Banner Rekening Donasi) ───────────────────
+export const BankBannerNode = Node.create({
+  name: 'bankBanner',
+  group: 'block',
+  atom: true,
+
+  addAttributes() {
+    return {
+      bankName: { default: 'Bank Syariah Indonesia' },
+      accountNumber: { default: '1058125764' },
+      accountName: { default: 'An. Rumah Amal Mesjid Unsyiah' },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: 'div[data-type="bank-banner"]' }];
+  },
+
+  renderHTML({ HTMLAttributes, node }) {
+    return [
+      'div',
+      mergeAttributes(
+        {
+          'data-type': 'bank-banner',
+          style: [
+            'background:#0b6330',
+            'color:#ffffff',
+            'padding:16px 20px',
+            'border-radius:12px',
+            'text-align:center',
+            'font-weight:700',
+            'font-size:15px',
+            'margin:18px 0',
+            'box-shadow:0 3px 10px rgba(11,99,48,0.2)',
+          ].join(';'),
+        },
+        HTMLAttributes
+      ),
+      [
+        'div',
+        { style: 'font-size:14px; opacity:0.95; font-weight:600; margin-bottom:4px;' },
+        node.attrs.bankName || 'Bank Syariah Indonesia',
+      ],
+      [
+        'div',
+        { style: 'font-size:16px; font-weight:800; letter-spacing:0.5px; margin-bottom:4px;' },
+        `No. Rek ${node.attrs.accountNumber || '1058125764'}`,
+      ],
+      [
+        'div',
+        { style: 'font-size:14px; opacity:0.95; font-weight:600;' },
+        node.attrs.accountName || 'An. Rumah Amal Mesjid Unsyiah',
+      ],
+    ];
+  },
+
+  addCommands() {
+    return {
+      setBankBanner:
+        (options?: { bankName?: string; accountNumber?: string; accountName?: string }) =>
+        ({ commands }: any) =>
+          commands.insertContent({ type: this.name, attrs: options || {} }),
+    } as any;
+  },
+});
+
 // ─── Toolbar Icon Button ─────────────────────────────────────────────────────
 function ToolBtn({
   active,
@@ -196,6 +262,12 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
   const [pdfSelectedFile, setPdfSelectedFile] = useState<File | null>(null);
   const [pdfLabelInput, setPdfLabelInput] = useState('');
 
+  // State untuk dialog Banner Rekening
+  const [bankBannerDialogOpen, setBankBannerDialogOpen] = useState(false);
+  const [bankNameInput, setBankNameInput] = useState('Bank Syariah Indonesia');
+  const [accountNumberInput, setAccountNumberInput] = useState('1058125764');
+  const [accountNameInput, setAccountNameInput] = useState('An. Rumah Amal Mesjid Unsyiah');
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -214,9 +286,10 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
         openOnClick: false,
         HTMLAttributes: { class: 'text-blue-600 underline cursor-pointer' },
       }),
-      Placeholder.configure({ placeholder: 'Tulis isi pengumuman di sini…' }),
+      Placeholder.configure({ placeholder: 'Tulis isi konten di sini…' }),
       DownloadButtonNode,
       LinkButtonNode,
+      BankBannerNode,
     ],
     content,
     immediatelyRender: false,
@@ -441,11 +514,31 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
             setBtnLinkDialogOpen(true);
             setPdfDialogOpen(false);
             setLinkDialogOpen(false);
+            setBankBannerDialogOpen(false);
           }}
           className="flex items-center gap-1.5 h-8 px-2.5 text-[12px] font-semibold text-violet-800 bg-violet-50 border border-violet-300 rounded-md hover:bg-violet-100 transition-colors cursor-pointer shrink-0"
         >
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
           Tombol Link
+        </button>
+
+        {/* Insert Bank Banner Button (Rekening Donasi) */}
+        <button
+          type="button"
+          title="Sisipkan Banner Rekening Donasi (BSI, dll)"
+          onClick={() => {
+            setBankNameInput('Bank Syariah Indonesia');
+            setAccountNumberInput('1058125764');
+            setAccountNameInput('An. Rumah Amal Mesjid Unsyiah');
+            setBankBannerDialogOpen(true);
+            setPdfDialogOpen(false);
+            setBtnLinkDialogOpen(false);
+            setLinkDialogOpen(false);
+          }}
+          className="flex items-center gap-1.5 h-8 px-2.5 text-[12px] font-semibold text-emerald-900 bg-emerald-100 border border-emerald-300 rounded-md hover:bg-emerald-200 transition-colors cursor-pointer shrink-0"
+        >
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M4 10h16v2H4zm0 4h16v2H4zm0-8h16v2H4zm-2-4v18h20V2H2zm18 16H4V4h16v14z"/></svg>
+          🟢 Banner Rekening
         </button>
 
         {/* Upload indicator */}
@@ -586,6 +679,61 @@ export default function TipTapEditor({ content, onChange, onUpload }: TipTapEdit
                 setPdfDialogOpen(false);
                 setPdfSelectedFile(null);
               }}
+              className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-300 cursor-pointer"
+            >
+              Batal
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Bank Banner Dialog (Rekening Donasi) ────────────── */}
+      {bankBannerDialogOpen && (
+        <div className="flex flex-col gap-2.5 px-3 py-3 bg-emerald-50 border-b border-emerald-200">
+          <span className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
+            💳 Sisipkan Banner Rekening Donasi
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <input
+              type="text"
+              placeholder="Nama Bank (misal: Bank Syariah Indonesia)"
+              value={bankNameInput}
+              onChange={(e) => setBankNameInput(e.target.value)}
+              className="text-xs px-2.5 py-1.5 border border-emerald-300 rounded-lg focus:outline-none focus:border-emerald-600 bg-white font-medium"
+            />
+            <input
+              type="text"
+              placeholder="No. Rekening (misal: 1058125764)"
+              value={accountNumberInput}
+              onChange={(e) => setAccountNumberInput(e.target.value)}
+              className="text-xs px-2.5 py-1.5 border border-emerald-300 rounded-lg focus:outline-none focus:border-emerald-600 bg-white font-bold"
+            />
+            <input
+              type="text"
+              placeholder="Atas Nama (misal: An. Rumah Amal Mesjid Unsyiah)"
+              value={accountNameInput}
+              onChange={(e) => setAccountNameInput(e.target.value)}
+              className="text-xs px-2.5 py-1.5 border border-emerald-300 rounded-lg focus:outline-none focus:border-emerald-600 bg-white font-medium"
+            />
+          </div>
+          <div className="flex gap-2 justify-end mt-1">
+            <button
+              type="button"
+              onClick={() => {
+                (editor!.commands as any).setBankBanner({
+                  bankName: bankNameInput.trim() || 'Bank Syariah Indonesia',
+                  accountNumber: accountNumberInput.trim() || '1058125764',
+                  accountName: accountNameInput.trim() || 'An. Rumah Amal Mesjid Unsyiah',
+                });
+                setBankBannerDialogOpen(false);
+              }}
+              className="px-4 py-1.5 bg-[#0b6330] text-white text-xs font-bold rounded-lg hover:bg-[#074722] cursor-pointer flex items-center gap-1.5 transition-colors shadow-2xs"
+            >
+              Sisipkan Banner Rekening
+            </button>
+            <button
+              type="button"
+              onClick={() => setBankBannerDialogOpen(false)}
               className="px-3 py-1.5 bg-gray-200 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-300 cursor-pointer"
             >
               Batal
