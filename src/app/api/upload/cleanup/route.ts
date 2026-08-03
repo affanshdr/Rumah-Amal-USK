@@ -76,6 +76,8 @@ export async function POST(req: NextRequest) {
     method: 'DELETE',
     headers: req.headers,
     body: req.body,
+    // @ts-ignore
+    duplex: 'half',
   });
   return DELETE(new NextRequest(deleteReq));
 }

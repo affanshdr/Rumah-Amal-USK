@@ -427,9 +427,20 @@ export default function TipTapEditor({ content, onChange, onUpload, minHeight = 
         <ToolBtn active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="Daftar Angka">
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z" /></svg>
         </ToolBtn>
-        <ToolBtn active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()} title="Kutipan">
+        <button
+          type="button"
+          title="Sisipkan Kutipan / Quote Box"
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          className={[
+            'flex items-center gap-1.5 h-8 px-2.5 text-[12px] font-semibold rounded-md transition-colors cursor-pointer shrink-0 border',
+            editor.isActive('blockquote')
+              ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
+              : 'text-amber-900 bg-amber-50 border-amber-300 hover:bg-amber-100',
+          ].join(' ')}
+        >
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z" /></svg>
-        </ToolBtn>
+          Kutipan Box
+        </button>
         <Sep />
 
         <ToolBtn
@@ -674,7 +685,8 @@ export default function TipTapEditor({ content, onChange, onUpload, minHeight = 
         .tiptap-rumah-amal .tiptap ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
         .tiptap-rumah-amal .tiptap ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
         .tiptap-rumah-amal .tiptap li { margin: 0.2rem 0; }
-        .tiptap-rumah-amal .tiptap blockquote { border-left: 4px solid #d1d5db; padding-left: 1rem; color: #6b7280; font-style: italic; margin: 0.75rem 0; }
+        .tiptap-rumah-amal .tiptap blockquote { border-left: 5px solid #f5b016; background-color: #f8f9fa; padding: 1.25rem 1.75rem; border-radius: 0 0.75rem 0.75rem 0; color: #1f2937; font-style: italic; margin: 1rem 0; line-height: 1.8; font-size: 1.05rem; }
+        .tiptap-rumah-amal .tiptap blockquote p { margin: 0; }
         .tiptap-rumah-amal .tiptap a { color: #005621; text-decoration: underline; }
         .tiptap-rumah-amal .tiptap p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: #9ca3af; pointer-events: none; float: left; height: 0; }
         .tiptap-rumah-amal .tiptap strong { font-weight: 700; }

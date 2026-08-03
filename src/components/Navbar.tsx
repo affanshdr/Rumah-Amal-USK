@@ -29,7 +29,7 @@ export default function Navbar() {
     { href: "/", label: "Beranda" },
     { href: "/profil", label: "Profil" },
     { href: "#program", label: "Program", hasDropdown: true },
-    { href: "#berita", label: "Berita" },
+    { href: "/berita", label: "Berita" },
     { href: "/pengumuman", label: "Pengumuman" },
     { href: "/newsletter", label: "Newsletter" },
     { href: "/dokumen", label: "Dokumen" },
@@ -232,7 +232,7 @@ export default function Navbar() {
 
               {/* Berita */}
               <Link
-                href="#berita"
+                href="/berita"
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-2.5 text-[17px] font-bold text-[#0b6330] transition-colors"
               >

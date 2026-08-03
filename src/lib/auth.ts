@@ -2,11 +2,11 @@ import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 
-// Kredensial admin dibaca dari environment variable, bukan dari database.
-// ADMIN_EMAIL dan ADMIN_PASSWORD_HASH harus diset di .env.local
-// Untuk membuat hash: bcrypt.hashSync('password_anda', 10)
+// Kredensial admin HARUS diatur di file .env (ADMIN_EMAIL dan ADMIN_PASSWORD_HASH).
+// Untuk generate hash password: node -e "console.log(require('bcryptjs').hashSync('password_kamu', 10))"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.AUTH_SECRET,
   providers: [
     Credentials({
       name: 'credentials',
@@ -19,30 +19,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const adminEmail = process.env.ADMIN_EMAIL;
+        const inputEmail = (credentials.email as string).trim().toLowerCase();
+        const inputPassword = credentials.password as string;
+
+        // Email dan hash password wajib ada di .env
+        const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
         const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
 
-        console.log('--- DEBUG LOGIN ---');
-        console.log('Email diketik:', credentials.email);
-        console.log('Email di env:', adminEmail);
-        console.log('Password Hash di env:', adminPasswordHash ? 'Ada' : 'Kosong');
-
         if (!adminEmail || !adminPasswordHash) {
-          console.error('ADMIN_EMAIL atau ADMIN_PASSWORD_HASH belum diset di .env.local');
+          console.error('ADMIN_EMAIL atau ADMIN_PASSWORD_HASH tidak dikonfigurasi di .env');
           return null;
         }
 
-        // Cek email cocok
-        if (credentials.email !== adminEmail) {
-          console.log('=> Email tidak cocok');
+        // Cek email
+        if (inputEmail !== adminEmail) {
           return null;
         }
 
-        // Verifikasi password dengan bcrypt hash
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password as string,
-          adminPasswordHash
-        );
+        // Verifikasi password menggunakan bcrypt (HANYA bcrypt, tidak ada plaintext fallback)
+        const isPasswordValid = await bcrypt.compare(inputPassword, adminPasswordHash);
 
         if (!isPasswordValid) {
           return null;
@@ -51,7 +46,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return {
           id: 'admin',
           email: adminEmail,
-          name: 'Admin',
+          name: 'Admin Rumah Amal',
           role: 'admin',
         };
       },
@@ -65,18 +60,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       if (isLoginRoute) {
         if (isLoggedIn) {
-          // Kalau sudah login dan mencoba ke halaman login, redirect ke dashboard
           return Response.redirect(new URL('/admin/dashboard', nextUrl));
         }
-        return true; // Izinkan akses ke halaman login
+        return true;
       }
 
       if (isAdminRoute) {
-        if (isLoggedIn) return true; // Izinkan akses jika sudah login
-        return false; // Redirect ke halaman login jika belum login
+        return isLoggedIn;
       }
 
-      return true; // Izinkan route publik lainnya
+      return true;
     },
     async jwt({ token, user }) {
       if (user) {
@@ -97,6 +90,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   session: {
     strategy: 'jwt',
-    maxAge: 2 * 60 * 60, // Sesi akan otomatis kadaluarsa dalam 2 jam
+    maxAge: 2 * 60 * 60, // 2 jam
   },
 });
