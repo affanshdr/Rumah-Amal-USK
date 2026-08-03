@@ -1,46 +1,71 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faChartLine,
+  faHandHoldingHeart,
+  faGift,
+  faImages,
+  faNewspaper,
+  faBullhorn,
+  faRightFromBracket,
+} from '@fortawesome/free-solid-svg-icons';
+import { logoutAdmin } from '@/actions/admin-auth';
+import { useTransition } from 'react';
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ adminName }: { adminName: string }) {
   const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
 
-  const menuItems = [
-    { href: "/admin/zakat", label: "Data Zakat" },
-    { href: "/admin/infaq", label: "Data Infaq" },
-    { href: "/", label: "Kembali ke Website" },
+  const menu = [
+    { href: '/admin/dashboard', label: 'Dashboard', icon: faChartLine },
+    { href: '/admin/zakat', label: 'Data Zakat', icon: faHandHoldingHeart },
+    { href: '/admin/infaq', label: 'Data Infaq', icon: faGift },
+    { href: '/admin/donasi', label: 'Data Donasi', icon: faGift },
+    { href: '/admin/kampanye', label: 'Kampanye', icon: faNewspaper },
+    { href: '/admin/pengumuman', label: 'Pengumuman', icon: faBullhorn },
+    { href: '/admin/galeri', label: 'Galeri', icon: faImages },
+    { href: '/admin/newsletter', label: 'Newsletter', icon: faNewspaper },
   ];
 
+  function handleLogout() {
+    startTransition(() => logoutAdmin());
+  }
+
   return (
-    <aside className="w-64 bg-[#0b6330] text-white p-6 min-h-screen flex flex-col justify-between shrink-0 shadow-lg">
+    <aside className="w-64 bg-white text-black p-6 flex flex-col justify-between shrink-0 border-r border-gray-100">
       <div>
-        <h2 className="text-xl font-black mb-8 text-[#ffc800] tracking-wider uppercase">
-          Admin Panel
-        </h2>
-        <nav className="space-y-2">
-          {menuItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`block px-4 py-3 rounded-xl font-bold text-sm transition-all ${
-                  isActive
-                    ? "bg-[#ffc800] text-[#111111] shadow-md"
-                    : "hover:bg-white/10 text-white/90"
-                }`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
+        <h2 className="text-base font-bold mb-1">Admin Rumah Amal</h2>
+        <p className="text-xs text-black/60 mb-6 truncate">{adminName}</p>
+
+        <nav className="space-y-1">
+          {menu.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-smooth ${
+                pathname.startsWith(item.href)
+                  ? 'bg-[#ffc800] text-[#000] font-bold'
+                  : 'text-black/90 hover:bg-black/10'
+              }`}
+            >
+              <FontAwesomeIcon icon={item.icon} className="w-4" />
+              {item.label}
+            </Link>
+          ))}
         </nav>
       </div>
 
-      <div className="pt-6 border-t border-white/10 text-xs text-white/60">
-        Rumah Amal USK &copy; 2025
-      </div>
+      <button
+        onClick={handleLogout}
+        disabled={isPending}
+        className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-smooth disabled:opacity-50"
+      >
+        <FontAwesomeIcon icon={faRightFromBracket} className="w-4" />
+        {isPending ? 'Keluar...' : 'Logout'}
+      </button>
     </aside>
   );
 }

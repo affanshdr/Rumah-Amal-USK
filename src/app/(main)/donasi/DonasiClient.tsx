@@ -8,24 +8,29 @@ import { Kampanye } from "@prisma/client";
 
 export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
   const searchParams = useSearchParams();
-  const programFromUrl = searchParams.get("program");
+  const programFromUrl = searchParams.get("program") || searchParams.get("kampanyeId");
 
   const [tipePembayar, setTipePembayar] = useState<"masyarakat" | "dosen">("masyarakat");
 
-  // Set default jenisDonasi to the first program if available
-  const defaultProgram = programs.length > 0 ? programs[0].judul : "Umum";
-  const [jenisDonasi, setJenisDonasi] = useState<string>(defaultProgram);
+  // Set default kampanyeId to the first program if available
+  const defaultProgramId = programs.length > 0 ? programs[0].id : "";
+  const [selectedKampanyeId, setSelectedKampanyeId] = useState<string>(defaultProgramId);
 
   useEffect(() => {
     if (programFromUrl) {
-      const match = programs.find((p) => p.judul.trim().toLowerCase() === programFromUrl.trim().toLowerCase());
+      const match = programs.find(
+        (p) =>
+          p.id === programFromUrl ||
+          p.judul.trim().toLowerCase() === programFromUrl.trim().toLowerCase()
+      );
       if (match) {
-        setJenisDonasi(match.judul);
-      } else {
-        setJenisDonasi(programFromUrl);
+        setSelectedKampanyeId(match.id);
       }
     }
   }, [programFromUrl, programs]);
+
+  const selectedKampanye = programs.find((p) => p.id === selectedKampanyeId);
+  const jenisDonasiJudul = selectedKampanye ? selectedKampanye.judul : "Donasi Umum";
 
   const [jumlahDonasi, setJumlahDonasi] = useState<string>("");
   const [nama, setNama] = useState<string>("");
@@ -93,6 +98,8 @@ export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
         {/* Form Pembayaran Tengah */}
         <form action={submitDonasi} onSubmit={() => setSubmitting(true)} className="contents">
           <input type="hidden" name="tipe_pembayar" value={tipePembayar} />
+          <input type="hidden" name="kampanye_id" value={selectedKampanyeId} />
+          <input type="hidden" name="jenis_donasi" value={jenisDonasiJudul} />
 
           <div className="lg:col-span-5 bg-white p-6 sm:p-7 rounded-2xl shadow-md border border-gray-100 space-y-4">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
@@ -106,24 +113,29 @@ export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5">Kategori Program Donasi <span className="text-red-500">*</span></label>
               <select
-                name="jenis_donasi"
-                value={jenisDonasi}
-                onChange={(e) => setJenisDonasi(e.target.value)}
+                value={selectedKampanyeId}
+                onChange={(e) => setSelectedKampanyeId(e.target.value)}
                 required
                 className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white font-semibold"
               >
                 {programs.length === 0 ? (
-                  <option value="Umum">Donasi Umum</option>
+                  <option value="">Donasi Umum</option>
                 ) : (
                   programs.map((prog) => (
-                    <option key={prog.id} value={prog.judul}>{prog.judul}</option>
+                    <option key={prog.id} value={prog.id}>{prog.judul}</option>
                   ))
                 )}
               </select>
-              {programs.find(p => p.judul === jenisDonasi)?.deskripsi && (
-                <p className="mt-1.5 text-xs text-gray-500 bg-gray-50 p-2 rounded-lg border border-gray-100">
-                  {programs.find(p => p.judul === jenisDonasi)?.deskripsi}
-                </p>
+              {selectedKampanye && (
+                <div className="mt-2 text-xs text-gray-600 bg-emerald-50/60 border border-emerald-100 p-3 rounded-xl space-y-1">
+                  {selectedKampanye.deskripsi && <p className="text-gray-700 font-medium">{selectedKampanye.deskripsi}</p>}
+                  <div className="flex items-center justify-between pt-1 text-[11px] font-bold text-emerald-800">
+                    <span>Terkumpul: Rp {selectedKampanye.terkumpul.toLocaleString('id-ID')}</span>
+                    {selectedKampanye.targetDana ? (
+                      <span>Target: Rp {selectedKampanye.targetDana.toLocaleString('id-ID')}</span>
+                    ) : null}
+                  </div>
+                </div>
               )}
             </div>
 

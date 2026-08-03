@@ -4,21 +4,21 @@ import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function getKampanye() {
   return await prisma.kampanye.findMany({
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: 'desc' },
   });
 }
 
 export async function getActiveKampanye() {
   return await prisma.kampanye.findMany({
     where: { isActive: true },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { createdAt: 'desc' },
   });
 }
 
@@ -30,17 +30,17 @@ export async function addKampanye(formData: FormData) {
   const tanggalSelesaiStr = formData.get('tanggalSelesai') as string;
   const tanggalSelesai = tanggalSelesaiStr ? new Date(tanggalSelesaiStr) : null;
   const isActive = formData.get('isActive') === '1';
-  
+
   const file = formData.get('image') as File;
 
   if (!judul || !file || file.size === 0) {
     throw new Error('Judul dan Gambar wajib diisi');
   }
 
-  // 1. Upload ke Supabase Storage (Bucket: Galeri)
+  // 1. Upload ke Supabase Storage (Bucket: Kampanye)
   const fileExt = file.name.split('.').pop();
   const fileName = `kampanye-${Date.now()}.${fileExt}`;
-  
+
   const buffer = Buffer.from(await file.arrayBuffer());
 
   const { error: uploadError } = await supabase.storage
@@ -86,7 +86,7 @@ export async function updateKampanye(formData: FormData) {
   const tanggalSelesaiStr = formData.get('tanggalSelesai') as string;
   const tanggalSelesai = tanggalSelesaiStr ? new Date(tanggalSelesaiStr) : null;
   const isActive = formData.get('isActive') === '1';
-  
+
   const file = formData.get('image') as File | null;
 
   if (!id || !judul) {
@@ -115,7 +115,7 @@ export async function updateKampanye(formData: FormData) {
     const { data: publicUrlData } = supabase.storage
       .from('Kampanye')
       .getPublicUrl(fileName);
-      
+
     imageUrl = publicUrlData.publicUrl;
   }
 

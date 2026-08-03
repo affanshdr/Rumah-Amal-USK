@@ -133,7 +133,7 @@ export default function Home() {
             </button>
           )}
 
-          {/* Banner Clickable Container (Pure Image 100% Full Container) */}
+          {/* Banner Clickable Container */}
           <Link
             href={slideHref}
             className="w-full h-full relative block cursor-pointer"
@@ -146,7 +146,6 @@ export default function Home() {
                 className="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-300"
               />
             ) : (
-              /* Fallback jika tidak ada cover image (tanpa gambar dummy) */
               <div className="w-full h-full relative bg-gradient-to-br from-[#064e26] via-[#0b6330] to-[#043319] overflow-hidden flex flex-col items-center justify-center p-6 sm:p-10 text-center">
                 <div className="absolute -right-16 -top-16 w-64 h-64 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-[#ffc800]/15 rounded-full blur-3xl pointer-events-none" />
@@ -280,7 +279,7 @@ export default function Home() {
           {/* Right: Text Content */}
           <div className="flex flex-col justify-between gap-6 py-1">
 
-            {/* Upper Content: Title, Paragraph & Link */}
+            {/* Upper Content */}
             <div>
               <h3 className="text-[17px] md:text-[19px] font-black text-[#0b6330] tracking-wide uppercase mb-3 leading-snug">
                 Rumah Amal Masjid Jamik USK

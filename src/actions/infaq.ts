@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { supabase } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
@@ -22,6 +23,25 @@ export async function submitInfaq(formData: FormData) {
     throw new Error('Data tidak lengkap');
   }
 
+  const buktiFile = formData.get('bukti_pembayaran') as File | null;
+  let buktiPembayaran = null;
+
+  if (buktiFile && buktiFile.size > 0) {
+    const ext = buktiFile.name.split('.').pop() || 'jpg';
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from('bukti_Pembayaran')
+      .upload(fileName, buktiFile, { cacheControl: '3600', upsert: false });
+
+    if (error) {
+      throw new Error(`Gagal upload bukti pembayaran: ${error.message}`);
+    }
+
+    const { data } = supabase.storage.from('bukti_Pembayaran').getPublicUrl(fileName);
+    buktiPembayaran = data.publicUrl;
+  }
+
   const infaq = await prisma.infaq.create({
     data: {
       tipePembayar,
@@ -35,6 +55,7 @@ export async function submitInfaq(formData: FormData) {
       isHambaAllah,
       bersediaDihubungi,
       pesan: pesan || null,
+      buktiPembayaran,
       setujuTerms,
       status: 'pending',
     },
