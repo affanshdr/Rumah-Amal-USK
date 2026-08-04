@@ -9,6 +9,42 @@ type UploadResult = {
     errors: string[];
 };
 
+export async function getPaginatedGallery(page: number = 1, limit: number = 8) {
+    const skip = (page - 1) * limit;
+
+    const [items, totalCount] = await Promise.all([
+        prisma.gallery.findMany({
+            orderBy: { createdAt: 'desc' },
+            skip,
+            take: limit,
+        }),
+        prisma.gallery.count(),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit) || 1;
+
+    return {
+        items,
+        totalCount,
+        totalPages,
+        page,
+        limit,
+    };
+}
+
+export async function addGalleryImage(imageUrl: string) {
+    if (!imageUrl) throw new Error('URL Gambar tidak boleh kosong.');
+
+    const created = await prisma.gallery.create({
+        data: { imageUrl },
+    });
+
+    revalidatePath('/admin/galeri');
+    revalidatePath('/galeri');
+    revalidatePath('/');
+    return created;
+}
+
 export async function uploadGalleryImages(formData: FormData): Promise<UploadResult> {
     const files = formData.getAll('files') as File[];
     const uploaded: { imageUrl: string }[] = [];
@@ -43,6 +79,8 @@ export async function uploadGalleryImages(formData: FormData): Promise<UploadRes
     }
 
     revalidatePath('/admin/galeri');
+    revalidatePath('/galeri');
+    revalidatePath('/');
     return { uploaded, errors };
 }
 
@@ -61,4 +99,6 @@ export async function deleteGalleryImage(id: string, imageUrl: string) {
 
     await prisma.gallery.delete({ where: { id } });
     revalidatePath('/admin/galeri');
+    revalidatePath('/galeri');
+    revalidatePath('/');
 }

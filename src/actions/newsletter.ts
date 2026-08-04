@@ -9,6 +9,56 @@ type UploadResult = {
     error?: string;
 };
 
+export async function getPaginatedNewsletter(page: number = 1, limit: number = 5) {
+    const skip = (page - 1) * limit;
+
+    const [items, totalCount] = await Promise.all([
+        prisma.newsletter.findMany({
+            orderBy: { tanggal: 'desc' },
+            skip,
+            take: limit,
+        }),
+        prisma.newsletter.count(),
+    ]);
+
+    const totalPages = Math.ceil(totalCount / limit) || 1;
+
+    return {
+        items,
+        totalCount,
+        totalPages,
+        page,
+        limit,
+    };
+}
+
+export async function addNewsletter(formData: FormData): Promise<UploadResult> {
+    const judul = (formData.get('judul') as string).trim();
+    const tanggalStr = formData.get('tanggal') as string;
+    const imageUrl = (formData.get('imageUrl') as string | null)?.trim() || null;
+
+    if (!judul || !tanggalStr || !imageUrl) {
+        return { success: false, error: 'Judul, Tanggal, dan Gambar Newsletter wajib diisi.' };
+    }
+
+    try {
+        await prisma.newsletter.create({
+            data: {
+                judul,
+                tanggal: new Date(tanggalStr),
+                imageUrl,
+            },
+        });
+
+        revalidatePath('/admin/newsletter');
+        revalidatePath('/newsletter');
+        revalidatePath('/');
+        return { success: true };
+    } catch (e) {
+        return { success: false, error: `Gagal menyimpan: ${(e as Error).message}` };
+    }
+}
+
 export async function uploadNewsletter(formData: FormData): Promise<UploadResult> {
     const judul = formData.get('judul') as string;
     const tanggalStr = formData.get('tanggal') as string;
@@ -40,6 +90,8 @@ export async function uploadNewsletter(formData: FormData): Promise<UploadResult
         });
 
         revalidatePath('/admin/newsletter');
+        revalidatePath('/newsletter');
+        revalidatePath('/');
         return { success: true };
     } catch (e) {
         return { success: false, error: `Gagal menyimpan: ${(e as Error).message}` };
@@ -61,4 +113,6 @@ export async function deleteNewsletter(id: string, imageUrl: string) {
 
     await prisma.newsletter.delete({ where: { id } });
     revalidatePath('/admin/newsletter');
+    revalidatePath('/newsletter');
+    revalidatePath('/');
 }

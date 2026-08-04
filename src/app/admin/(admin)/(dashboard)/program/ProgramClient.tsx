@@ -5,11 +5,11 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  addKampanye,
-  updateKampanye,
-  deleteKampanye,
-  toggleKampanyeStatus,
-} from "@/actions/kampanye";
+  addProgram,
+  updateProgram,
+  deleteProgram,
+  toggleProgramPublished,
+} from "@/actions/program";
 
 const TipTapEditor = dynamic(() => import("@/components/TipTapEditor"), {
   ssr: false,
@@ -23,28 +23,29 @@ const TipTapEditor = dynamic(() => import("@/components/TipTapEditor"), {
   ),
 });
 
-type KampanyeRow = {
+type ProgramRow = {
   id: string;
-  judul: string;
-  deskripsi: string | null;
-  imageUrl: string | null;
-  targetDana: number | null;
-  terkumpul: number;
-  tanggalSelesai: Date | null;
-  isActive: boolean;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  category: string;
+  coverImageUrl: string | null;
+  published: boolean;
+  publishedAt: Date | null;
+  content: string;
   createdAt: Date;
 };
 
 type ModalMode = "add" | "edit" | "preview-only";
 
-function formatRupiah(amount: number | null) {
-  if (amount === null || amount === undefined) return "Rp 0";
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+const CATEGORIES = [
+  "PENDIDIKAN",
+  "PEMBERDAYAAN",
+  "SOSIAL & KEMANUSIAAN",
+  "SYIAR & QURBAN",
+  "KEMITRAAN",
+  "FASILITATOR & RELAWAN",
+];
 
 function formatTanggal(date: Date | null) {
   if (!date) return "-";
@@ -53,14 +54,16 @@ function formatTanggal(date: Date | null) {
   });
 }
 
-function PreviewPanel({
-  judul, deskripsi, imageUrl, targetDana, terkumpul, tanggalSelesai,
-}: {
-  judul: string; deskripsi: string; imageUrl: string;
-  targetDana: number; terkumpul: number; tanggalSelesai: string;
-}) {
-  const percent = targetDana > 0 ? Math.min(100, Math.round((terkumpul / targetDana) * 100)) : 0;
+function stripHtml(html: string) {
+  return html.replace(/<[^>]*>/g, "").trim().slice(0, 120) + "…";
+}
 
+function PreviewPanel({
+  title, excerpt, category, coverImageUrl, content, publishedAt,
+}: {
+  title: string; excerpt: string; category: string;
+  coverImageUrl: string; content: string; publishedAt: string;
+}) {
   return (
     <div className="flex flex-col h-full overflow-y-auto bg-gray-50 border-l border-gray-200">
       <div className="px-5 py-3 bg-gray-900 text-white flex items-center gap-2 shrink-0">
@@ -68,50 +71,47 @@ function PreviewPanel({
         <span className="text-xs font-bold uppercase tracking-wide text-gray-200">Preview Tampilan Publik</span>
       </div>
 
-      <div className="p-5 sm:p-6 overflow-y-auto flex-1 font-sans text-gray-800 space-y-4">
-        {imageUrl && (
-          <div className="rounded-xl overflow-hidden border border-gray-200 bg-white flex justify-center max-h-[220px]">
+      <div className="p-5 sm:p-6 overflow-y-auto flex-1 font-sans text-gray-800">
+        <div className="mb-5 pb-4 border-b border-gray-200">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full border border-emerald-100 uppercase">
+              {category || "PROGRAM"}
+            </span>
+            <span className="text-xs text-gray-400">
+              {publishedAt ? formatTanggal(new Date(publishedAt)) : formatTanggal(new Date())}
+            </span>
+          </div>
+          <h1 className="text-xl font-extrabold text-gray-900 leading-tight">
+            {title || <span className="text-gray-300 italic">(Belum ada judul)</span>}
+          </h1>
+          {excerpt && (
+            <p className="mt-2 text-sm text-gray-500 leading-relaxed text-justify">{excerpt}</p>
+          )}
+        </div>
+
+        {coverImageUrl && (
+          <div className="mb-5 rounded-xl overflow-hidden border border-gray-200 bg-white flex justify-center max-h-[240px]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imageUrl} alt="Banner Kampanye" className="w-full object-contain max-h-[220px]" />
+            <img src={coverImageUrl} alt="Cover" className="w-full object-contain max-h-[240px]" />
           </div>
         )}
-
-        <div>
-          <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full border border-emerald-100 uppercase">
-            DONASI KAMPANYE
-          </span>
-          <h1 className="text-xl font-extrabold text-gray-900 leading-tight mt-2">
-            {judul || <span className="text-gray-300 italic">(Belum ada judul kampanye)</span>}
-          </h1>
-        </div>
-
-        {/* Progress Card */}
-        <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-2xs space-y-2">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-500 font-medium">Terkumpul: <strong className="text-emerald-700">{formatRupiah(terkumpul)}</strong></span>
-            <span className="text-gray-400 font-medium">Target: {formatRupiah(targetDana)}</span>
-          </div>
-          <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-            <div className="bg-[#005621] h-2.5 rounded-full transition-all duration-300" style={{ width: `${percent}%` }} />
-          </div>
-          <div className="flex items-center justify-between text-[11px] text-gray-400 pt-1">
-            <span>Progress: {percent}%</span>
-            <span>Batas Waktu: {tanggalSelesai ? formatTanggal(new Date(tanggalSelesai)) : "Tanpa batas"}</span>
-          </div>
-        </div>
 
         <style>{`
           .prev-body p { margin-bottom:.9rem; line-height:1.75; text-align:justify; }
           .prev-body h1 { font-size:1.5rem; font-weight:800; margin:1.2rem 0 .5rem; }
           .prev-body h2 { font-size:1.25rem; font-weight:700; margin:1rem 0 .4rem; }
+          .prev-body h3 { font-size:1.05rem; font-weight:700; margin:.8rem 0 .3rem; }
           .prev-body ul { list-style:disc; padding-left:1.4rem; margin-bottom:.9rem; }
           .prev-body ol { list-style:decimal; padding-left:1.4rem; margin-bottom:.9rem; }
+          .prev-body li { margin-bottom:.2rem; text-align:justify; }
           .prev-body blockquote { border-left:4px solid #d1d5db; padding-left:1rem; color:#6b7280; font-style:italic; margin:.75rem 0; }
+          .prev-body a { color:#005621; text-decoration:underline; }
+          .prev-body img { max-width:100%; height:auto; border-radius:.6rem; margin:.75rem 0; }
         `}</style>
         <div
-          className="prev-body text-sm leading-relaxed text-gray-800 pt-2"
+          className="prev-body text-sm leading-relaxed text-gray-800"
           dangerouslySetInnerHTML={{
-            __html: deskripsi || '<p class="text-gray-400 italic text-center py-6">(Belum ada deskripsi rincian kampanye)</p>',
+            __html: content || '<p class="text-gray-400 italic text-center py-8">(Belum ada konten — mulai menulis di editor)</p>',
           }}
         />
       </div>
@@ -119,23 +119,23 @@ function PreviewPanel({
   );
 }
 
-interface KampanyeClientProps {
-  initialData: KampanyeRow[];
+interface ProgramClientProps {
+  initialData: ProgramRow[];
   currentPage?: number;
   totalPages?: number;
   totalCount?: number;
-  activeCount?: number;
-  inactiveCount?: number;
+  publishedCount?: number;
+  draftCount?: number;
 }
 
-export default function KampanyeClient({
+export default function ProgramClient({
   initialData,
   currentPage = 1,
   totalPages = 1,
   totalCount = initialData.length,
-  activeCount = initialData.filter((d) => d.isActive).length,
-  inactiveCount = initialData.filter((d) => !d.isActive).length,
-}: KampanyeClientProps) {
+  publishedCount = initialData.filter((d) => d.published).length,
+  draftCount = initialData.filter((d) => !d.published).length,
+}: ProgramClientProps) {
   const router = useRouter();
   const [data, setData] = useState(initialData);
 
@@ -144,49 +144,50 @@ export default function KampanyeClient({
   }, [initialData]);
 
   const [modalMode, setModalMode] = useState<ModalMode | null>(null);
-  const [editing, setEditing] = useState<KampanyeRow | null>(null);
-  const [previewingItem, setPreviewingItem] = useState<KampanyeRow | null>(null);
+  const [editing, setEditing] = useState<ProgramRow | null>(null);
+  const [previewingItem, setPreviewingItem] = useState<ProgramRow | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [coverPreview, setCoverPreview] = useState("");
-  const [deskripsiHtml, setDeskripsiHtml] = useState("<p></p>");
+  const [contentHtml, setContentHtml] = useState("<p></p>");
   const [showPreviewPanel, setShowPreviewPanel] = useState(false);
 
-  const [liveJudul, setLiveJudul] = useState("");
-  const [liveTarget, setLiveTarget] = useState<number>(0);
-  const [liveTerkumpul, setLiveTerkumpul] = useState<number>(0);
-  const [liveDate, setLiveDate] = useState("");
+  const [liveTitle, setLiveTitle] = useState("");
+  const [liveExcerpt, setLiveExcerpt] = useState("");
+  const [liveCategory, setLiveCategory] = useState("PENDIDIKAN");
+  const [liveDate, setLiveDate] = useState(new Date().toISOString().slice(0, 10));
 
   const [search, setSearch] = useState("");
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const filtered = data.filter((item) =>
-    item.judul.toLowerCase().includes(search.toLowerCase())
+    item.title.toLowerCase().includes(search.toLowerCase())
   );
 
   const openAdd = () => {
     setEditing(null);
     setCoverPreview("");
-    setDeskripsiHtml("<p></p>");
-    setLiveJudul(""); setLiveTarget(0); setLiveTerkumpul(0); setLiveDate("");
+    setContentHtml("<p></p>");
+    setLiveTitle(""); setLiveExcerpt(""); setLiveCategory("PENDIDIKAN");
+    setLiveDate(new Date().toISOString().slice(0, 10));
     setShowPreviewPanel(false);
     setModalMode("add");
   };
 
-  const openEdit = (item: KampanyeRow) => {
+  const openEdit = (item: ProgramRow) => {
     setEditing(item);
-    setCoverPreview(item.imageUrl || "");
-    setDeskripsiHtml(item.deskripsi || "<p></p>");
-    setLiveJudul(item.judul);
-    setLiveTarget(item.targetDana || 0);
-    setLiveTerkumpul(item.terkumpul || 0);
-    setLiveDate(item.tanggalSelesai ? new Date(item.tanggalSelesai).toISOString().slice(0, 10) : "");
+    setCoverPreview(item.coverImageUrl || "");
+    setContentHtml(item.content || "<p></p>");
+    setLiveTitle(item.title);
+    setLiveExcerpt(item.excerpt || "");
+    setLiveCategory(item.category || "PENDIDIKAN");
+    setLiveDate(item.publishedAt ? new Date(item.publishedAt).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
     setShowPreviewPanel(false);
     setModalMode("edit");
   };
 
-  const openPreviewOnly = (item: KampanyeRow) => {
+  const openPreviewOnly = (item: ProgramRow) => {
     setPreviewingItem(item);
     setModalMode("preview-only");
   };
@@ -217,10 +218,10 @@ export default function KampanyeClient({
     setIsSubmitting(true);
     try {
       const fd = new FormData(e.currentTarget);
-      fd.set("imageUrl", coverPreview);
-      fd.set("deskripsi", deskripsiHtml);
-      if (editing) { fd.append("id", editing.id); await updateKampanye(fd); }
-      else { await addKampanye(fd); }
+      fd.set("coverImageUrl", coverPreview);
+      fd.set("content", contentHtml);
+      if (editing) { fd.append("id", editing.id); await updateProgram(fd); }
+      else { await addProgram(fd); }
       closeModal();
       router.refresh();
     } catch (error: any) { alert(error.message || "Terjadi kesalahan sistem."); }
@@ -228,15 +229,15 @@ export default function KampanyeClient({
   };
 
   const handleToggle = async (id: string, current: boolean) => {
-    setData((prev) => prev.map((item) => item.id === id ? { ...item, isActive: !current } : item));
-    await toggleKampanyeStatus(id, current);
+    setData((prev) => prev.map((item) => item.id === id ? { ...item, published: !current } : item));
+    await toggleProgramPublished(id, current);
     router.refresh();
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Hapus kampanye donasi ini? Data tidak dapat dikembalikan.")) return;
+    if (!confirm("Hapus program ini? Data tidak dapat dikembalikan.")) return;
     setData((prev) => prev.filter((item) => item.id !== id));
-    await deleteKampanye(id);
+    await deleteProgram(id);
     router.refresh();
   };
 
@@ -249,14 +250,14 @@ export default function KampanyeClient({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
-              type="text" placeholder="Cari kampanye donasi…" value={search}
+              type="text" placeholder="Cari program…" value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#005621] bg-gray-50/60 placeholder-gray-400"
             />
           </div>
           <button onClick={openAdd} className="flex items-center gap-2 bg-[#005621] hover:bg-[#004219] text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-colors cursor-pointer whitespace-nowrap">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
-            Tambah Kampanye
+            Tambah Program
           </button>
         </div>
 
@@ -264,10 +265,10 @@ export default function KampanyeClient({
           <table className="w-full text-sm text-left text-gray-600">
             <thead className="bg-gray-50/80 text-gray-700 border-b border-gray-100">
               <tr>
-                <th className="px-5 py-3 font-bold w-[220px]">Kampanye</th>
-                <th className="px-5 py-3 font-bold">Target & Terkumpul</th>
-                <th className="px-5 py-3 font-bold">Progress</th>
-                <th className="px-5 py-3 font-bold">Batas Waktu</th>
+                <th className="px-5 py-3 font-bold w-[220px]">Judul</th>
+                <th className="px-5 py-3 font-bold">Kategori</th>
+                <th className="px-5 py-3 font-bold">Kutipan</th>
+                <th className="px-5 py-3 font-bold">Tanggal</th>
                 <th className="px-5 py-3 font-bold">Status</th>
                 <th className="px-5 py-3 font-bold text-right">Aksi</th>
               </tr>
@@ -278,71 +279,63 @@ export default function KampanyeClient({
                   <td colSpan={6} className="px-5 py-16 text-center text-gray-400">
                     <div className="flex flex-col items-center gap-2">
                       <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                       </svg>
-                      <p className="text-sm font-semibold">{search ? "Tidak ada yang cocok" : "Belum ada kampanye"}</p>
-                      {!search && <p className="text-xs text-gray-300">Klik &quot;Tambah Kampanye&quot; untuk mulai.</p>}
+                      <p className="text-sm font-semibold">{search ? "Tidak ada yang cocok" : "Belum ada program"}</p>
+                      {!search && <p className="text-xs text-gray-300">Klik &quot;Tambah Program&quot; untuk mulai.</p>}
                     </div>
                   </td>
                 </tr>
               ) : (
-                filtered.map((item) => {
-                  const target = item.targetDana || 0;
-                  const terkumpul = item.terkumpul || 0;
-                  const pct = target > 0 ? Math.min(100, Math.round((terkumpul / target) * 100)) : 0;
-
-                  return (
-                    <tr key={item.id} className="hover:bg-gray-50/60 transition-colors">
-                      <td className="px-5 py-4 max-w-[220px]">
-                        <div className="flex items-start gap-3">
-                          {item.imageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.imageUrl} alt={item.judul} className="w-12 h-9 object-cover rounded-lg border border-gray-200 shrink-0" />
-                          ) : (
-                            <div className="w-12 h-9 rounded-lg bg-gradient-to-br from-[#005621]/10 to-[#005621]/20 flex items-center justify-center shrink-0 border border-[#005621]/10">
-                              <svg className="w-5 h-5 text-[#005621]/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                              </svg>
-                            </div>
-                          )}
-                          <p className="font-semibold text-gray-800 text-xs leading-snug line-clamp-2">{item.judul}</p>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <div className="text-xs">
-                          <p className="font-bold text-gray-800">{formatRupiah(terkumpul)}</p>
-                          <p className="text-[11px] text-gray-400">Target: {formatRupiah(target)}</p>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <div className="w-24 bg-gray-100 rounded-full h-2 overflow-hidden mb-1">
-                          <div className="bg-[#005621] h-2 rounded-full" style={{ width: `${pct}%` }} />
-                        </div>
-                        <span className="text-[11px] font-bold text-gray-500">{pct}%</span>
-                      </td>
-                      <td className="px-5 py-4 whitespace-nowrap text-xs text-gray-500">{formatTanggal(item.tanggalSelesai)}</td>
-                      <td className="px-5 py-4">
-                        <button onClick={() => handleToggle(item.id, item.isActive)}
-                          className={`px-3 py-1 text-[11px] font-bold rounded-full transition-colors cursor-pointer ${item.isActive ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
-                          {item.isActive ? "Aktif" : "Nonaktif"}
+                filtered.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50/60 transition-colors">
+                    <td className="px-5 py-4 max-w-[220px]">
+                      <div className="flex items-start gap-3">
+                        {item.coverImageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={item.coverImageUrl} alt={item.title} className="w-12 h-9 object-cover rounded-lg border border-gray-200 shrink-0" />
+                        ) : (
+                          <div className="w-12 h-9 rounded-lg bg-gradient-to-br from-[#005621]/10 to-[#005621]/20 flex items-center justify-center shrink-0 border border-[#005621]/10">
+                            <svg className="w-5 h-5 text-[#005621]/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                          </div>
+                        )}
+                        <p className="font-semibold text-gray-800 text-xs leading-snug line-clamp-2">{item.title}</p>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="inline-block px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full border border-emerald-100">
+                        {item.category || "PENDIDIKAN"}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 max-w-[200px]">
+                      <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed text-justify">
+                        {item.excerpt || stripHtml(item.content)}
+                      </p>
+                    </td>
+                    <td className="px-5 py-4 whitespace-nowrap text-xs text-gray-500">{formatTanggal(item.publishedAt)}</td>
+                    <td className="px-5 py-4">
+                      <button onClick={() => handleToggle(item.id, item.published)}
+                        className={`px-3 py-1 text-[11px] font-bold rounded-full transition-colors cursor-pointer ${item.published ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
+                        {item.published ? "Tayang" : "Draft"}
+                      </button>
+                    </td>
+                    <td className="px-5 py-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button onClick={() => openPreviewOnly(item)} title="Preview" className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center transition-colors cursor-pointer">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                         </button>
-                      </td>
-                      <td className="px-5 py-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button onClick={() => openPreviewOnly(item)} title="Preview" className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center transition-colors cursor-pointer">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                          </button>
-                          <button onClick={() => openEdit(item)} title="Edit" className="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center transition-colors cursor-pointer">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                          </button>
-                          <button onClick={() => handleDelete(item.id)} title="Hapus" className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
+                        <button onClick={() => openEdit(item)} title="Edit" className="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center transition-colors cursor-pointer">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        </button>
+                        <button onClick={() => handleDelete(item.id)} title="Hapus" className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -351,14 +344,14 @@ export default function KampanyeClient({
         {totalCount > 0 && (
           <div className="px-5 py-4 border-t border-gray-100 bg-gray-50/40 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-gray-500 font-medium">
-              Menampilkan <span className="font-bold text-gray-700">{filtered.length}</span> dari <span className="font-bold text-gray-700">{totalCount}</span> kampanye
+              Menampilkan <span className="font-bold text-gray-700">{filtered.length}</span> dari <span className="font-bold text-gray-700">{totalCount}</span> program
             </p>
 
             {totalPages > 1 && (
               <div className="flex items-center gap-1.5">
                 {currentPage > 1 ? (
                   <Link
-                    href={`/admin/kampanye?page=${currentPage - 1}`}
+                    href={`/admin/program?page=${currentPage - 1}`}
                     className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors shadow-2xs"
                   >
                     « Prev
@@ -390,7 +383,7 @@ export default function KampanyeClient({
                     return (
                       <Link
                         key={p}
-                        href={`/admin/kampanye?page=${p}`}
+                        href={`/admin/program?page=${p}`}
                         className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-colors ${isActive
                           ? "bg-[#005621] text-white shadow-xs"
                           : "bg-white border border-gray-200 hover:bg-gray-100 text-gray-700"
@@ -404,7 +397,7 @@ export default function KampanyeClient({
 
                 {currentPage < totalPages ? (
                   <Link
-                    href={`/admin/kampanye?page=${currentPage + 1}`}
+                    href={`/admin/program?page=${currentPage + 1}`}
                     className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors shadow-2xs"
                   >
                     Next »
@@ -418,9 +411,9 @@ export default function KampanyeClient({
             )}
 
             <div className="flex items-center gap-3 text-xs text-gray-400">
-              <span>Aktif: <span className="text-green-600 font-bold">{activeCount}</span></span>
+              <span>Tayang: <span className="text-green-600 font-bold">{publishedCount}</span></span>
               <span className="text-gray-200">|</span>
-              <span>Nonaktif: <span className="text-gray-600 font-bold">{inactiveCount}</span></span>
+              <span>Draft: <span className="text-gray-600 font-bold">{draftCount}</span></span>
             </div>
           </div>
         )}
@@ -433,12 +426,12 @@ export default function KampanyeClient({
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-[#005621]/10 flex items-center justify-center">
                   <svg className="w-4 h-4 text-[#005621]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.684a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-800 text-sm">{editing ? "Edit Kampanye Donasi" : "Tambah Kampanye Donasi Baru"}</h3>
-                  <p className="text-xs text-gray-400">{editing ? "Perbarui informasi rincian kampanye" : "Buat kampanye donasi baru"}</p>
+                  <h3 className="font-bold text-gray-800 text-sm">{editing ? "Edit Program" : "Tambah Program Baru"}</h3>
+                  <p className="text-xs text-gray-400">{editing ? "Perbarui konten program" : "Tulis dan publikasikan program baru"}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -462,7 +455,7 @@ export default function KampanyeClient({
               >
                 <div className="p-6 space-y-5 flex-1">
                   <div className="rounded-xl border border-gray-200 bg-gray-50/70 p-4 space-y-3">
-                    <label className="block text-xs font-bold text-gray-700">🖼️ Banner / Header Kampanye</label>
+                    <label className="block text-xs font-bold text-gray-700">🖼️ Gambar Cover / Flyer Program</label>
                     {coverPreview && (
                       <div className="relative rounded-lg overflow-hidden border border-gray-200 bg-white flex justify-center max-h-[200px]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -483,19 +476,19 @@ export default function KampanyeClient({
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="sm:col-span-2">
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Judul Kampanye <span className="text-red-500">*</span></label>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Judul Program <span className="text-red-500">*</span></label>
                       <input
-                        type="text" name="judul" required
-                        value={liveJudul}
-                        onChange={(e) => setLiveJudul(e.target.value)}
-                        placeholder="Contoh: Beasiswa Anak Yatim USK 2026"
+                        type="text" name="title" required
+                        value={liveTitle}
+                        onChange={(e) => setLiveTitle(e.target.value)}
+                        placeholder="Masukkan judul program…"
                         className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Batas Waktu Kampanye</label>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Tanggal <span className="text-red-500">*</span></label>
                       <input
-                        type="date" name="tanggalSelesai"
+                        type="date" name="publishedAt" required
                         value={liveDate}
                         onChange={(e) => setLiveDate(e.target.value)}
                         className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
@@ -503,44 +496,46 @@ export default function KampanyeClient({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Target Dana (Rp)</label>
-                      <input
-                        type="number" name="targetDana"
-                        value={liveTarget || ""}
-                        onChange={(e) => setLiveTarget(Number(e.target.value))}
-                        placeholder="Contoh: 50000000"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Dana Terkumpul Saat Ini (Rp)</label>
-                      <input
-                        type="number" name="terkumpul"
-                        value={liveTerkumpul || ""}
-                        onChange={(e) => setLiveTerkumpul(Number(e.target.value))}
-                        placeholder="Contoh: 15000000"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
-                      />
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Kategori</label>
+                      <select name="category" value={liveCategory} onChange={(e) => setLiveCategory(e.target.value)}
+                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white cursor-pointer">
+                        {CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+                      </select>
                     </div>
                     <div className="flex flex-col justify-end pb-1">
                       <div className="flex items-center gap-2.5">
                         <input type="checkbox" id="published" name="published" value="1"
-                          defaultChecked={editing ? editing.isActive : true}
+                          defaultChecked={editing ? editing.published : true}
                           className="w-4 h-4 text-[#005621] rounded focus:ring-[#005621] cursor-pointer" />
-                        <label htmlFor="published" className="text-sm text-gray-700 font-semibold cursor-pointer">Status Aktif</label>
+                        <label htmlFor="published" className="text-sm text-gray-700 font-semibold cursor-pointer">Tampilkan (Tayang)</label>
                       </div>
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                      Rincian Deskripsi Kampanye
+                      Kutipan / Ringkasan <span className="text-gray-400 font-normal">(opsional, maks. 200 karakter)</span>
+                    </label>
+                    <textarea
+                      name="excerpt" rows={2}
+                      value={liveExcerpt}
+                      onChange={(e) => setLiveExcerpt(e.target.value)}
+                      maxLength={200}
+                      placeholder="Ringkasan singkat program…"
+                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] resize-none leading-relaxed text-justify"
+                    />
+                    <p className="text-right text-[10px] text-gray-400 mt-1">{liveExcerpt.length}/200</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                      Isi Program <span className="text-red-500">*</span>
                     </label>
                     <TipTapEditor
-                      content={deskripsiHtml}
-                      onChange={(html) => setDeskripsiHtml(html)}
+                      content={contentHtml}
+                      onChange={(html) => setContentHtml(html)}
                       minHeight="320px"
                     />
                   </div>
@@ -556,7 +551,7 @@ export default function KampanyeClient({
                     {isSubmitting ? (
                       <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>Menyimpan…</>
                     ) : (
-                      <>💾 {editing ? "Perbarui Kampanye" : "Simpan Kampanye"}</>
+                      <>💾 {editing ? "Perbarui Program" : "Simpan Program"}</>
                     )}
                   </button>
                 </div>
@@ -565,12 +560,12 @@ export default function KampanyeClient({
               {showPreviewPanel && (
                 <div className="flex-1 flex flex-col overflow-hidden border-l border-gray-200">
                   <PreviewPanel
-                    judul={liveJudul}
-                    deskripsi={deskripsiHtml}
-                    imageUrl={coverPreview}
-                    targetDana={liveTarget}
-                    terkumpul={liveTerkumpul}
-                    tanggalSelesai={liveDate}
+                    title={liveTitle}
+                    excerpt={liveExcerpt}
+                    category={liveCategory}
+                    coverImageUrl={coverPreview}
+                    content={contentHtml}
+                    publishedAt={liveDate}
                   />
                 </div>
               )}
@@ -590,51 +585,49 @@ export default function KampanyeClient({
               <button type="button" onClick={closeModal} className="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 w-8 h-8 rounded-lg flex items-center justify-center font-bold transition-all cursor-pointer text-lg">×</button>
             </div>
 
-            <div className="p-6 sm:p-10 overflow-y-auto flex-1 font-sans text-gray-800 space-y-4">
-              {previewingItem.imageUrl && (
-                <div className="rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 flex justify-center max-h-[320px]">
+            <div className="p-6 sm:p-10 overflow-y-auto flex-1 font-sans text-gray-800">
+              <div className="mb-6 pb-5 border-b border-gray-100">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full border border-emerald-100 uppercase">
+                    {previewingItem.category || "PROGRAM"}
+                  </span>
+                  <span className="text-gray-400 text-xs">{formatTanggal(previewingItem.publishedAt)}</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">{previewingItem.title}</h1>
+                {previewingItem.excerpt && (
+                  <p className="mt-3 text-base text-gray-500 leading-relaxed text-justify">{previewingItem.excerpt}</p>
+                )}
+              </div>
+
+              {previewingItem.coverImageUrl && (
+                <div className="mb-8 rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 flex justify-center max-h-[360px]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={previewingItem.imageUrl} alt="Cover" className="w-full object-contain max-h-[320px]" />
+                  <img src={previewingItem.coverImageUrl} alt="Cover" className="w-full object-contain max-h-[360px]" />
                 </div>
               )}
-
-              <div>
-                <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full border border-emerald-100 uppercase">
-                  DONASI KAMPANYE
-                </span>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight mt-2">{previewingItem.judul}</h1>
-              </div>
-
-              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 font-medium">Terkumpul: <strong className="text-emerald-700">{formatRupiah(previewingItem.terkumpul)}</strong></span>
-                  <span className="text-gray-500 font-medium">Target: {formatRupiah(previewingItem.targetDana)}</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                  <div
-                    className="bg-[#005621] h-3 rounded-full"
-                    style={{ width: `${previewingItem.targetDana ? Math.min(100, Math.round((previewingItem.terkumpul / previewingItem.targetDana) * 100)) : 0}%` }}
-                  />
-                </div>
-              </div>
 
               <style>{`
                 .prev-full p { margin-bottom:1rem; line-height:1.8; text-align:justify; }
                 .prev-full h1 { font-size:1.7rem; font-weight:800; margin:1.4rem 0 .6rem; }
                 .prev-full h2 { font-size:1.35rem; font-weight:700; margin:1.2rem 0 .5rem; }
+                .prev-full h3 { font-size:1.1rem; font-weight:700; margin:1rem 0 .4rem; }
                 .prev-full ul { list-style:disc; padding-left:1.5rem; margin-bottom:1rem; }
                 .prev-full ol { list-style:decimal; padding-left:1.5rem; margin-bottom:1rem; }
+                .prev-full li { margin-bottom:.3rem; text-align:justify; }
+                .prev-full blockquote { border-left:4px solid #d1d5db; padding-left:1rem; color:#6b7280; font-style:italic; margin:1rem 0; }
+                .prev-full a { color:#005621; text-decoration:underline; }
+                .prev-full img { max-width:100%; height:auto; border-radius:.75rem; margin:1rem 0; }
               `}</style>
               <div className="prev-full text-base leading-relaxed text-gray-800"
                 dangerouslySetInnerHTML={{
-                  __html: previewingItem.deskripsi || '<p class="text-gray-400 italic text-center">(Belum ada deskripsi)</p>',
+                  __html: previewingItem.content || '<p class="text-gray-400 italic text-center">(Belum ada konten)</p>',
                 }}
               />
             </div>
 
             <div className="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200 shrink-0">
-              <div className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${previewingItem.isActive ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>
-                {previewingItem.isActive ? "● Aktif" : "○ Nonaktif"}
+              <div className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${previewingItem.published ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                {previewingItem.published ? "● Tayang" : "○ Draft"}
               </div>
               <button type="button" onClick={closeModal} className="px-5 py-2 bg-gray-800 hover:bg-gray-900 text-white font-bold text-sm rounded-xl transition-colors cursor-pointer">Tutup Preview</button>
             </div>

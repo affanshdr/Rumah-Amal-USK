@@ -1,71 +1,45 @@
-import { prisma } from '@/lib/prisma';
-import GalleryUploadForm from './GalleryUploadForm';
-import GalleryImageCard from './GalleryImageCard';
-import Link from 'next/link';
+import { getPaginatedGallery } from '@/actions/gallery';
+import GaleriClient from './GaleriClient';
+
+export const dynamic = 'force-dynamic';
 
 export default async function AdminGaleriPage(
-    props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }
+  props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }
 ) {
-    const searchParams = await props.searchParams;
-    const page = parseInt(searchParams.page as string || '1', 10);
-    const limit = 12; // Menampilkan 12 gambar per halaman
-    const skip = (page - 1) * limit;
+  const searchParams = await props.searchParams;
+  const page = parseInt((searchParams.page as string) || '1', 10);
+  const limit = 8;
 
-    const [images, totalCount] = await Promise.all([
-        prisma.gallery.findMany({
-            orderBy: { createdAt: 'desc' },
-            skip,
-            take: limit
-        }),
-        prisma.gallery.count()
-    ]);
+  const { items, totalCount, totalPages } = await getPaginatedGallery(page, limit);
 
-    const totalPages = Math.ceil(totalCount / limit);
+  const serialised = items.map((a: any) => ({
+    ...a,
+    createdAt: new Date(a.createdAt),
+  }));
 
-    return (
+  return (
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-            <h1 className="text-xl font-bold text-uskGreen mb-6">Galeri</h1>
-
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <GalleryUploadForm />
-
-                <div className="border-t border-gray-100 pt-4">
-                    <h3 className="text-sm font-bold text-uskGreen mb-3">
-                        Foto Tersimpan ({images.length})
-                    </h3>
-
-                    {images.length === 0 ? (
-                        <p className="text-xs text-gray-400">Belum ada foto yang diunggah.</p>
-                    ) : (
-                        <>
-                            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-                                {images.map((img: any) => (
-                                    <GalleryImageCard key={img.id} id={img.id} imageUrl={img.imageUrl} />
-                                ))}
-                            </div>
-
-                            {/* Pagination Controls */}
-                            {totalPages > 1 && (
-                                <div className="mt-6 flex justify-center items-center gap-2">
-                                    {page > 1 && (
-                                        <Link href={`/admin/galeri?page=${page - 1}`} className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-xs font-bold rounded">
-                                            &laquo; Prev
-                                        </Link>
-                                    )}
-                                    <span className="text-xs font-bold text-gray-600">
-                                        Halaman {page} dari {totalPages}
-                                    </span>
-                                    {page < totalPages && (
-                                        <Link href={`/admin/galeri?page=${page + 1}`} className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-xs font-bold rounded">
-                                            Next &raquo;
-                                        </Link>
-                                    )}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
-            </div>
+          <h1 className="text-2xl font-black text-[#000]">Galeri Foto</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Kelola arsip dokumentasi foto kegiatan & penyaluran Rumah Amal USK
+          </p>
         </div>
-    );
+        <div className="flex items-center gap-2">
+          <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-100">
+            {totalCount} Dokumentasi Foto
+          </span>
+        </div>
+      </div>
+
+      <GaleriClient
+        initialData={serialised}
+        currentPage={page}
+        totalPages={totalPages}
+        totalCount={totalCount}
+      />
+    </div>
+  );
 }

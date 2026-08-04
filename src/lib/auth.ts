@@ -5,7 +5,7 @@ import Credentials from 'next-auth/providers/credentials';
 // karena NextAuth v5 beta + Turbopack menjalankan authorize di Edge runtime yang
 // tidak mendukung bcryptjs dengan benar.
 export const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'admin@rumahamal.usk.ac.id';
-export const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH ?? '$2b$10$1afU72q.jCc6DwyMM/gM2OzJCV1.iGuxka8L7dGcg1bq8IjOnYu8y';
+export const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH ?? '$2b$10$m8/TJG5mmVkIWNbVTlvjdOLnDCm4uwbTT4oTLzUaWP8ffvoSO9aEq';
 export const BYPASS_TOKEN = (process.env.AUTH_SECRET ?? 'rumah-amal-usk-secret-key-2026') + '_verified_bypass_2026';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({

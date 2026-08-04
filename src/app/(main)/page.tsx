@@ -88,7 +88,6 @@ function RevealOnScroll({
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
 
   const [kampanyes, setKampanyes] = useState<KampanyeItem[]>([]);
   const [loadingKampanye, setLoadingKampanye] = useState(true);
@@ -202,17 +201,6 @@ export default function Home() {
     }
   }, [activeSlides.length, currentSlide]);
 
-  // Auto-play hero slider banner every 5 seconds
-  useEffect(() => {
-    if (activeSlides.length <= 1 || isPaused) return;
-
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % activeSlides.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [activeSlides.length, isPaused]);
-
   const nextSlide = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (activeSlides.length <= 1) return;
@@ -237,13 +225,11 @@ export default function Home() {
       {/* Hero Section - Full 100vw Banner */}
       <section className="w-full pt-3 sm:pt-5">
         
-        {/* Main Banner Slider with Auto-Play & Smooth Transitions */}
+        {/* Main Banner Slider with Smooth Transitions */}
         {isLoadingBanner ? (
           <div className="w-full h-[220px] xs:h-[280px] sm:h-[360px] md:h-[440px] lg:h-[500px] bg-gray-200 animate-pulse" />
         ) : activeSlides.length > 0 ? (
           <div
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
             className="relative bg-gray-900 overflow-hidden h-[220px] xs:h-[280px] sm:h-[360px] md:h-[440px] lg:h-[500px] w-full flex items-center shadow-md group mx-auto"
             style={{ maxWidth: '100vw' }}
           >

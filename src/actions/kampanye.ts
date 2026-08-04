@@ -2,12 +2,6 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function getKampanye() {
   return await prisma.kampanye.findMany({
@@ -22,50 +16,56 @@ export async function getActiveKampanye() {
   });
 }
 
+export async function getPaginatedKampanye(page: number = 1, limit: number = 5) {
+  const skip = (page - 1) * limit;
+
+  const [items, totalCount, activeCount, inactiveCount] = await Promise.all([
+    prisma.kampanye.findMany({
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.kampanye.count(),
+    prisma.kampanye.count({ where: { isActive: true } }),
+    prisma.kampanye.count({ where: { isActive: false } }),
+  ]);
+
+  const totalPages = Math.ceil(totalCount / limit) || 1;
+
+  return {
+    items,
+    totalCount,
+    totalPages,
+    activeCount,
+    inactiveCount,
+    page,
+    limit,
+  };
+}
+
 export async function addKampanye(formData: FormData) {
-  const judul = formData.get('judul') as string;
-  const deskripsi = formData.get('deskripsi') as string | null;
+  const judul = (formData.get('judul') as string).trim();
+  const deskripsi = (formData.get('deskripsi') as string | null)?.trim() || null;
   const targetDanaStr = formData.get('targetDana') as string;
   const targetDana = targetDanaStr ? Number(targetDanaStr) : null;
+  const terkumpulStr = formData.get('terkumpul') as string;
+  const terkumpul = terkumpulStr ? Number(terkumpulStr) : 0;
   const tanggalSelesaiStr = formData.get('tanggalSelesai') as string;
   const tanggalSelesai = tanggalSelesaiStr ? new Date(tanggalSelesaiStr) : null;
-  const isActive = formData.get('isActive') === '1';
+  const isActive = formData.get('isActive') === '1' || formData.get('published') === '1';
+  const imageUrl = (formData.get('imageUrl') as string | null)?.trim() || null;
 
-  const file = formData.get('image') as File;
-
-  if (!judul || !file || file.size === 0) {
-    throw new Error('Judul dan Gambar wajib diisi');
+  if (!judul) {
+    throw new Error('Judul kampanye wajib diisi');
   }
-
-  // 1. Upload ke Supabase Storage (Bucket: Kampanye)
-  const fileExt = file.name.split('.').pop();
-  const fileName = `kampanye-${Date.now()}.${fileExt}`;
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  const { error: uploadError } = await supabase.storage
-    .from('Kampanye')
-    .upload(fileName, buffer, {
-      contentType: file.type,
-      upsert: false
-    });
-
-  if (uploadError) {
-    console.error("Supabase Upload Error:", uploadError);
-    throw new Error('Gagal mengupload gambar');
-  }
-
-  // 2. Dapatkan Public URL
-  const { data: publicUrlData } = supabase.storage
-    .from('Kampanye')
-    .getPublicUrl(fileName);
 
   await prisma.kampanye.create({
     data: {
       judul,
       deskripsi,
-      imageUrl: publicUrlData.publicUrl,
+      imageUrl: imageUrl || '',
       targetDana,
+      terkumpul,
       tanggalSelesai,
       isActive,
     },
@@ -75,48 +75,24 @@ export async function addKampanye(formData: FormData) {
   revalidatePath('/upload/kampanye');
   revalidatePath('/kampanye');
   revalidatePath('/donasi');
+  revalidatePath('/');
 }
 
 export async function updateKampanye(formData: FormData) {
   const id = formData.get('id') as string;
-  const judul = formData.get('judul') as string;
-  const deskripsi = formData.get('deskripsi') as string | null;
+  const judul = (formData.get('judul') as string).trim();
+  const deskripsi = (formData.get('deskripsi') as string | null)?.trim() || null;
   const targetDanaStr = formData.get('targetDana') as string;
   const targetDana = targetDanaStr ? Number(targetDanaStr) : null;
+  const terkumpulStr = formData.get('terkumpul') as string;
+  const terkumpul = terkumpulStr ? Number(terkumpulStr) : undefined;
   const tanggalSelesaiStr = formData.get('tanggalSelesai') as string;
   const tanggalSelesai = tanggalSelesaiStr ? new Date(tanggalSelesaiStr) : null;
-  const isActive = formData.get('isActive') === '1';
-
-  const file = formData.get('image') as File | null;
+  const isActive = formData.get('isActive') === '1' || formData.get('published') === '1';
+  const imageUrl = (formData.get('imageUrl') as string | null)?.trim() || null;
 
   if (!id || !judul) {
-    throw new Error('Data tidak lengkap');
-  }
-
-  let imageUrl = undefined;
-
-  // Jika ada file gambar baru yang diunggah
-  if (file && file.size > 0) {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `kampanye-${Date.now()}.${fileExt}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
-
-    const { error: uploadError } = await supabase.storage
-      .from('Kampanye')
-      .upload(fileName, buffer, {
-        contentType: file.type,
-        upsert: false
-      });
-
-    if (uploadError) {
-      throw new Error('Gagal mengupload gambar baru');
-    }
-
-    const { data: publicUrlData } = supabase.storage
-      .from('Kampanye')
-      .getPublicUrl(fileName);
-
-    imageUrl = publicUrlData.publicUrl;
+    throw new Error('ID dan judul kampanye wajib diisi');
   }
 
   await prisma.kampanye.update({
@@ -126,6 +102,7 @@ export async function updateKampanye(formData: FormData) {
       deskripsi,
       ...(imageUrl && { imageUrl }),
       targetDana,
+      ...(terkumpul !== undefined && { terkumpul }),
       tanggalSelesai,
       isActive,
     },
@@ -135,6 +112,7 @@ export async function updateKampanye(formData: FormData) {
   revalidatePath('/upload/kampanye');
   revalidatePath('/kampanye');
   revalidatePath('/donasi');
+  revalidatePath('/');
 }
 
 export async function deleteKampanye(id: string) {
@@ -145,6 +123,7 @@ export async function deleteKampanye(id: string) {
   revalidatePath('/upload/kampanye');
   revalidatePath('/kampanye');
   revalidatePath('/donasi');
+  revalidatePath('/');
 }
 
 export async function toggleKampanyeStatus(id: string, currentStatus: boolean) {
@@ -156,4 +135,5 @@ export async function toggleKampanyeStatus(id: string, currentStatus: boolean) {
   revalidatePath('/upload/kampanye');
   revalidatePath('/kampanye');
   revalidatePath('/donasi');
+  revalidatePath('/');
 }
