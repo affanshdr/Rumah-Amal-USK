@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -38,8 +39,8 @@ const menuGroups = [
     label: 'Konten',
     items: [
       { href: '/admin/kampanye', label: 'Kampanye', icon: faChartLine },
-      { href: '/admin/berita', label: 'Berita', icon: faNewspaper },
       { href: '/admin/program', label: 'Program', icon: faClipboardList },
+      { href: '/admin/berita', label: 'Berita', icon: faNewspaper },
       { href: '/admin/pengumuman', label: 'Pengumuman', icon: faBullhorn },
     ],
   },
@@ -75,34 +76,28 @@ export default function AdminSidebar({ adminName }: { adminName: string }) {
       <div>
         <div
           style={{
-            padding: '1.5rem 1.25rem 1rem',
+            padding: '1.25rem 1.25rem 1rem',
             borderBottom: '1px solid rgba(255,255,255,0.08)',
           }}
         >
-          <div className="flex items-center gap-2.5 mb-1">
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                background: '#F5B016',
-                borderRadius: 8,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <span style={{ fontSize: '1rem' }}>🕌</span>
+          <Link href="/admin/dashboard" className="block group">
+            <div className="bg-white/95 group-hover:bg-white p-2.5 rounded-xl shadow-sm transition-all flex items-center justify-center">
+              <Image
+                src="/logo/rumah-amal.png"
+                alt="Rumah Amal USK"
+                width={160}
+                height={40}
+                className="h-8 w-auto object-contain"
+                priority
+              />
             </div>
-            <div>
-              <p style={{ color: '#fff', fontWeight: 800, fontSize: '0.875rem', margin: 0, lineHeight: 1.2 }}>
-                Rumah Amal
-              </p>
-              <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.7rem', margin: 0 }}>
+            <div className="mt-2 flex items-center justify-between px-1">
+              <span className="text-[10px] font-bold text-white/50 tracking-wider uppercase">
                 Admin Panel
-              </p>
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             </div>
-          </div>
+          </Link>
 
           <div
             style={{

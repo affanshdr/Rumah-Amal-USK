@@ -125,57 +125,49 @@ export default function NewsletterClient({
           </button>
         </div>
 
-        {/* Data Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-gray-600">
-            <thead className="bg-gray-50/80 text-gray-700 border-b border-gray-100">
-              <tr>
-                <th className="px-5 py-3 font-bold">Judul E-Buletin</th>
-                <th className="px-5 py-3 font-bold">Edisi / Tanggal Terbit</th>
-                <th className="px-5 py-3 font-bold text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="px-5 py-16 text-center text-gray-400">
-                    <div className="flex flex-col items-center gap-2">
-                      <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
-                      <p className="text-sm font-semibold">{search ? "Tidak ada yang cocok" : "Belum ada newsletter"}</p>
-                      {!search && <p className="text-xs text-gray-300">Klik &quot;Tambah Newsletter&quot; untuk mengunggah edisi baru.</p>}
+        {/* Card Grid */}
+        <div className="p-5">
+          {filtered.length === 0 ? (
+            <div className="py-16 text-center text-gray-400">
+              <div className="flex flex-col items-center gap-2">
+                <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <p className="text-sm font-semibold">{search ? "Tidak ada yang cocok" : "Belum ada newsletter"}</p>
+                {!search && <p className="text-xs text-gray-300">Klik &quot;Tambah Newsletter&quot; untuk mengunggah edisi baru.</p>}
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {filtered.map((item) => (
+                <div key={item.id} className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col">
+                  {/* Thumbnail gambar newsletter */}
+                  <div className="relative h-40 bg-gray-50 shrink-0 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={item.imageUrl} alt={item.judul} className="w-full h-full object-cover" />
+                    {/* overlay gradient bawah */}
+                    <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/30 to-transparent" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-3 flex flex-col flex-1 gap-2">
+                    <p className="font-bold text-gray-800 text-xs leading-snug line-clamp-2">{item.judul}</p>
+                    <p className="text-[10px] text-gray-400 mt-auto">Edisi: {formatTanggal(item.tanggal)}</p>
+
+                    {/* Actions */}
+                    <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-gray-50">
+                      <button onClick={() => setPreviewingItem(item)} title="Preview" className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center transition-colors cursor-pointer">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                      </button>
+                      <button onClick={() => handleDelete(item.id, item.imageUrl)} title="Hapus" className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
                     </div>
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50/60 transition-colors">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-12 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0 overflow-hidden">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={item.imageUrl} alt={item.judul} className="w-full h-full object-cover" />
-                        </div>
-                        <p className="font-bold text-gray-800 text-xs leading-snug">{item.judul}</p>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 whitespace-nowrap text-xs text-gray-500">{formatTanggal(item.tanggal)}</td>
-                    <td className="px-5 py-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button onClick={() => setPreviewingItem(item)} title="Preview" className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center transition-colors cursor-pointer">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                        </button>
-                        <button onClick={() => handleDelete(item.id, item.imageUrl)} title="Hapus" className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {totalCount > 0 && (

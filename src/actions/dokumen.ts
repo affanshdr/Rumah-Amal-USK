@@ -8,7 +8,7 @@ export async function getPaginatedDocuments(page: number = 1, limit: number = 5)
 
   const [items, totalCount] = await Promise.all([
     prisma.document.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { updatedAt: 'desc' },
       skip,
       take: limit,
     }),
@@ -28,6 +28,19 @@ export async function getPaginatedDocuments(page: number = 1, limit: number = 5)
 
 export async function deleteDocumentAction(id: string) {
   await prisma.document.delete({ where: { id } });
+  revalidatePath('/admin/dokumen');
+  revalidatePath('/dokumen');
+  revalidatePath('/');
+}
+
+export async function updateDocumentAction(id: string, data: { judul: string; pdfUrl: string }) {
+  await prisma.document.update({
+    where: { id },
+    data: {
+      judul: data.judul,
+      pdfUrl: data.pdfUrl,
+    },
+  });
   revalidatePath('/admin/dokumen');
   revalidatePath('/dokumen');
   revalidatePath('/');

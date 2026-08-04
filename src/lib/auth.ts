@@ -22,19 +22,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const adminEmail = process.env.ADMIN_EMAIL;
         const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
 
-        console.log('--- DEBUG LOGIN ---');
-        console.log('Email diketik:', credentials.email);
-        console.log('Email di env:', adminEmail);
-        console.log('Password Hash di env:', adminPasswordHash ? 'Ada' : 'Kosong');
-
         if (!adminEmail || !adminPasswordHash) {
-          console.error('ADMIN_EMAIL atau ADMIN_PASSWORD_HASH belum diset di .env.local');
           return null;
         }
 
         // Cek email cocok
         if (credentials.email !== adminEmail) {
-          console.log('=> Email tidak cocok');
           return null;
         }
 
