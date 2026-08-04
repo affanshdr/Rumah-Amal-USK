@@ -5,14 +5,14 @@ import { revalidatePath } from 'next/cache';
 
 export async function getKampanye() {
   return await prisma.kampanye.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: { updatedAt: 'desc' },
   });
 }
 
 export async function getActiveKampanye() {
   return await prisma.kampanye.findMany({
     where: { isActive: true },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { updatedAt: 'desc' },
   });
 }
 
@@ -21,7 +21,7 @@ export async function getPaginatedKampanye(page: number = 1, limit: number = 5) 
 
   const [items, totalCount, activeCount, inactiveCount] = await Promise.all([
     prisma.kampanye.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { updatedAt: 'desc' },
       skip,
       take: limit,
     }),

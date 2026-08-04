@@ -147,11 +147,11 @@ export default function DokumenPage() {
                   <div
                     className="relative w-full bg-gray-50 cursor-pointer overflow-hidden"
                     style={{ aspectRatio: '3/4' }}
-                    onClick={() => setSelectedCover(item.imageUrl || '/dokumen-cover.svg')}
+                    onClick={() => setSelectedCover(item.imageUrl || '/cover/Cover Doc RA.jpeg')}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={item.imageUrl || '/dokumen-cover.svg'}
+                      src={item.imageUrl || '/cover/Cover Doc RA.jpeg'}
                       alt={`Cover ${item.judul}`}
                       className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
                       loading="lazy"
