@@ -12,6 +12,9 @@ import {
   faClipboardList,
   faFile,
   faBuilding,
+  faCoins,
+  faHandHoldingHeart,
+  faReceipt,
 } from '@fortawesome/free-solid-svg-icons';
 import { logoutAdmin } from '@/actions/admin-auth';
 import { useTransition } from 'react';
@@ -21,6 +24,14 @@ const menuGroups = [
     label: 'Overview',
     items: [
       { href: '/admin/dashboard', label: 'Dashboard', icon: faChartLine },
+    ],
+  },
+  {
+    label: 'Keuangan',
+    items: [
+      { href: '/admin/zakat', label: 'Zakat', icon: faCoins },
+      { href: '/admin/infaq', label: 'Infaq', icon: faHandHoldingHeart },
+      { href: '/admin/donasi', label: 'Donasi Kampanye', icon: faReceipt },
     ],
   },
   {

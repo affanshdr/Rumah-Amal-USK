@@ -156,8 +156,8 @@ export default function Home() {
   };
 
   const formatRupiah = (val: number | null) => {
-    if (val === null || val === undefined) return '0';
-    return new Intl.NumberFormat('id-ID').format(val);
+    if (val === null || val === undefined) return '0,00';
+    return new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
   };
 
   const getDurasiText = (tanggalSelesaiStr: string | null) => {
@@ -402,7 +402,8 @@ export default function Home() {
               {displayedKampanye.map((item) => {
                 const target = item.targetDana || 0;
                 const current = item.terkumpul || 0;
-                const percentage = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+                const rawPct = target > 0 ? (current / target) * 100 : 0;
+                const barWidth = rawPct > 0 ? Math.max(1.5, Math.min(100, rawPct)) : 0;
                 const durasiText = getDurasiText(item.tanggalSelesai);
 
                 return (
@@ -440,7 +441,7 @@ export default function Home() {
                       <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden mb-4">
                         <div
                           className="bg-[#FFBB0C] h-full rounded-full transition-all duration-1000 ease-out"
-                          style={{ width: `${percentage}%` }}
+                          style={{ width: `${barWidth}%` }}
                         />
                       </div>
 

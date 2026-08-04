@@ -38,11 +38,12 @@ type KampanyeRow = {
 type ModalMode = "add" | "edit" | "preview-only";
 
 function formatRupiah(amount: number | null) {
-  if (amount === null || amount === undefined) return "Rp 0";
+  if (amount === null || amount === undefined) return "Rp 0,00";
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 
@@ -59,7 +60,9 @@ function PreviewPanel({
   judul: string; deskripsi: string; imageUrl: string;
   targetDana: number; terkumpul: number; tanggalSelesai: string;
 }) {
-  const percent = targetDana > 0 ? Math.min(100, Math.round((terkumpul / targetDana) * 100)) : 0;
+  const rawPct = targetDana > 0 ? (terkumpul / targetDana) * 100 : 0;
+  const pctText = rawPct > 0 && rawPct < 1 ? rawPct.toFixed(1) : Math.round(rawPct);
+  const barWidth = rawPct > 0 ? Math.max(1, Math.min(100, rawPct)) : 0;
 
   return (
     <div className="flex flex-col h-full overflow-y-auto bg-gray-50 border-l border-gray-200">
@@ -92,10 +95,10 @@ function PreviewPanel({
             <span className="text-gray-400 font-medium">Target: {formatRupiah(targetDana)}</span>
           </div>
           <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-            <div className="bg-[#005621] h-2.5 rounded-full transition-all duration-300" style={{ width: `${percent}%` }} />
+            <div className="bg-[#005621] h-2.5 rounded-full transition-all duration-300" style={{ width: `${barWidth}%` }} />
           </div>
           <div className="flex items-center justify-between text-[11px] text-gray-400 pt-1">
-            <span>Progress: {percent}%</span>
+            <span>Progress: {pctText}%</span>
             <span>Batas Waktu: {tanggalSelesai ? formatTanggal(new Date(tanggalSelesai)) : "Tanpa batas"}</span>
           </div>
         </div>
@@ -289,7 +292,9 @@ export default function KampanyeClient({
                 filtered.map((item) => {
                   const target = item.targetDana || 0;
                   const terkumpul = item.terkumpul || 0;
-                  const pct = target > 0 ? Math.min(100, Math.round((terkumpul / target) * 100)) : 0;
+                  const rawPct = target > 0 ? (terkumpul / target) * 100 : 0;
+                  const pctText = rawPct > 0 && rawPct < 1 ? rawPct.toFixed(1) : Math.round(rawPct);
+                  const barWidth = rawPct > 0 ? Math.max(1, Math.min(100, rawPct)) : 0;
 
                   return (
                     <tr key={item.id} className="hover:bg-gray-50/60 transition-colors">
@@ -316,9 +321,9 @@ export default function KampanyeClient({
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap">
                         <div className="w-24 bg-gray-100 rounded-full h-2 overflow-hidden mb-1">
-                          <div className="bg-[#005621] h-2 rounded-full" style={{ width: `${pct}%` }} />
+                          <div className="bg-[#005621] h-2 rounded-full" style={{ width: `${barWidth}%` }} />
                         </div>
-                        <span className="text-[11px] font-bold text-gray-500">{pct}%</span>
+                        <span className="text-[11px] font-bold text-gray-500">{pctText}%</span>
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap text-xs text-gray-500">{formatTanggal(item.tanggalSelesai)}</td>
                       <td className="px-5 py-4">
