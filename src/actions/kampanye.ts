@@ -1,0 +1,139 @@
+'use server';
+
+import prisma from '@/lib/prisma';
+import { revalidatePath } from 'next/cache';
+
+export async function getKampanye() {
+  return await prisma.kampanye.findMany({
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
+export async function getActiveKampanye() {
+  return await prisma.kampanye.findMany({
+    where: { isActive: true },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
+export async function getPaginatedKampanye(page: number = 1, limit: number = 5) {
+  const skip = (page - 1) * limit;
+
+  const [items, totalCount, activeCount, inactiveCount] = await Promise.all([
+    prisma.kampanye.findMany({
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.kampanye.count(),
+    prisma.kampanye.count({ where: { isActive: true } }),
+    prisma.kampanye.count({ where: { isActive: false } }),
+  ]);
+
+  const totalPages = Math.ceil(totalCount / limit) || 1;
+
+  return {
+    items,
+    totalCount,
+    totalPages,
+    activeCount,
+    inactiveCount,
+    page,
+    limit,
+  };
+}
+
+export async function addKampanye(formData: FormData) {
+  const judul = (formData.get('judul') as string).trim();
+  const deskripsi = (formData.get('deskripsi') as string | null)?.trim() || null;
+  const targetDanaStr = formData.get('targetDana') as string;
+  const targetDana = targetDanaStr ? Number(targetDanaStr) : null;
+  const terkumpulStr = formData.get('terkumpul') as string;
+  const terkumpul = terkumpulStr ? Number(terkumpulStr) : 0;
+  const tanggalSelesaiStr = formData.get('tanggalSelesai') as string;
+  const tanggalSelesai = tanggalSelesaiStr ? new Date(tanggalSelesaiStr) : null;
+  const isActive = formData.get('isActive') === '1' || formData.get('published') === '1';
+  const imageUrl = (formData.get('imageUrl') as string | null)?.trim() || null;
+
+  if (!judul) {
+    throw new Error('Judul kampanye wajib diisi');
+  }
+
+  await prisma.kampanye.create({
+    data: {
+      judul,
+      deskripsi,
+      imageUrl: imageUrl || '',
+      targetDana,
+      terkumpul,
+      tanggalSelesai,
+      isActive,
+    },
+  });
+
+  revalidatePath('/admin/kampanye');
+  revalidatePath('/upload/kampanye');
+  revalidatePath('/kampanye');
+  revalidatePath('/donasi');
+  revalidatePath('/');
+}
+
+export async function updateKampanye(formData: FormData) {
+  const id = formData.get('id') as string;
+  const judul = (formData.get('judul') as string).trim();
+  const deskripsi = (formData.get('deskripsi') as string | null)?.trim() || null;
+  const targetDanaStr = formData.get('targetDana') as string;
+  const targetDana = targetDanaStr ? Number(targetDanaStr) : null;
+  const terkumpulStr = formData.get('terkumpul') as string;
+  const terkumpul = terkumpulStr ? Number(terkumpulStr) : undefined;
+  const tanggalSelesaiStr = formData.get('tanggalSelesai') as string;
+  const tanggalSelesai = tanggalSelesaiStr ? new Date(tanggalSelesaiStr) : null;
+  const isActive = formData.get('isActive') === '1' || formData.get('published') === '1';
+  const imageUrl = (formData.get('imageUrl') as string | null)?.trim() || null;
+
+  if (!id || !judul) {
+    throw new Error('ID dan judul kampanye wajib diisi');
+  }
+
+  await prisma.kampanye.update({
+    where: { id },
+    data: {
+      judul,
+      deskripsi,
+      ...(imageUrl && { imageUrl }),
+      targetDana,
+      ...(terkumpul !== undefined && { terkumpul }),
+      tanggalSelesai,
+      isActive,
+    },
+  });
+
+  revalidatePath('/admin/kampanye');
+  revalidatePath('/upload/kampanye');
+  revalidatePath('/kampanye');
+  revalidatePath('/donasi');
+  revalidatePath('/');
+}
+
+export async function deleteKampanye(id: string) {
+  await prisma.kampanye.delete({
+    where: { id },
+  });
+  revalidatePath('/admin/kampanye');
+  revalidatePath('/upload/kampanye');
+  revalidatePath('/kampanye');
+  revalidatePath('/donasi');
+  revalidatePath('/');
+}
+
+export async function toggleKampanyeStatus(id: string, currentStatus: boolean) {
+  await prisma.kampanye.update({
+    where: { id },
+    data: { isActive: !currentStatus },
+  });
+  revalidatePath('/admin/kampanye');
+  revalidatePath('/upload/kampanye');
+  revalidatePath('/kampanye');
+  revalidatePath('/donasi');
+  revalidatePath('/');
+}
