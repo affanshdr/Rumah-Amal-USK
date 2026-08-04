@@ -296,24 +296,7 @@ export default function Home() {
               </div>
             ))}
 
-            {/* Indicator Dots */}
-            {activeSlides.length > 1 && (
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2 bg-black/30 backdrop-blur-xs px-3 py-1.5 rounded-full border border-white/10">
-                {activeSlides.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setCurrentSlide(idx);
-                    }}
-                    aria-label={`Go to slide ${idx + 1}`}
-                    className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                      idx === currentSlide ? "w-6 sm:w-8 bg-[#ffc800] shadow-xs" : "w-2 bg-white/60 hover:bg-white"
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
+
 
           </div>
         ) : null}
@@ -779,7 +762,7 @@ export default function Home() {
                   <div className="p-4 sm:p-5 flex flex-col flex-1">
                     <div className="mb-2.5 sm:mb-3">
                       <span className="inline-block bg-[#ffc800] text-[#111827] text-[10px] sm:text-[11px] font-extrabold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-md uppercase tracking-wider shadow-2xs">
-                        {item.category && item.category !== 'Umum' ? item.category : 'BERITA'}
+                        BERITA
                       </span>
                     </div>
 

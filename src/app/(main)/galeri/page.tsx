@@ -131,7 +131,7 @@ export default function GaleriPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-8 text-sm font-bold">
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-8 text-sm font-bold flex-wrap">
             <button
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1}
@@ -140,19 +140,44 @@ export default function GaleriPage() {
               &lt; Previous
             </button>
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-              <button
-                key={pageNum}
-                onClick={() => handlePageChange(pageNum)}
-                className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
-                  pageNum === page
-                    ? 'bg-[#ffc800] text-[#1a1a1a] font-extrabold shadow-xs'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-[#0b6330]'
-                }`}
-              >
-                {pageNum}
-              </button>
-            ))}
+            {(() => {
+              const pages: (number | string)[] = [];
+              if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+              } else {
+                pages.push(1);
+                if (page > 3) pages.push('...1');
+                const start = Math.max(2, page - 1);
+                const end = Math.min(totalPages - 1, page + 1);
+                for (let i = start; i <= end; i++) pages.push(i);
+                if (page < totalPages - 2) pages.push('...2');
+                pages.push(totalPages);
+              }
+
+              return pages.map((p, idx) => {
+                if (typeof p === 'string') {
+                  return (
+                    <span key={`dots-${idx}`} className="w-8 h-9 flex items-center justify-center text-gray-400 font-semibold select-none">
+                      ...
+                    </span>
+                  );
+                }
+
+                return (
+                  <button
+                    key={p}
+                    onClick={() => handlePageChange(p)}
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
+                      p === page
+                        ? 'bg-[#ffc800] text-[#1a1a1a] font-extrabold shadow-xs'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-[#0b6330]'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                );
+              });
+            })()}
 
             <button
               onClick={() => handlePageChange(page + 1)}

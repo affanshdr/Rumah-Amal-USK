@@ -162,7 +162,7 @@ export default function PublicNewsDetailPage({
             {/* Category & Date */}
             <div className="flex items-center gap-2 text-xs font-extrabold text-[#0b6330] uppercase tracking-wider mb-3">
               <span className="bg-[#ffc800] text-[#111827] px-3 py-1 rounded-md text-[11px] font-extrabold uppercase tracking-wider shadow-2xs">
-                {news.category || 'BERITA'}
+                BERITA
               </span>
               <span>•</span>
               <time dateTime={news.publishedAt}>{formatDate(news.publishedAt || news.createdAt)}</time>
