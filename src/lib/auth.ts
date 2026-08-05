@@ -1,15 +1,12 @@
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
 
-// Kredensial admin — verifikasi bcrypt dilakukan di server action (bukan di sini)
-// karena NextAuth v5 beta + Turbopack menjalankan authorize di Edge runtime yang
-// tidak mendukung bcryptjs dengan benar.
-export const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'admin@rumahamal.usk.ac.id';
-export const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH ?? '$2b$10$m8/TJG5mmVkIWNbVTlvjdOLnDCm4uwbTT4oTLzUaWP8ffvoSO9aEq';
-export const BYPASS_TOKEN = (process.env.AUTH_SECRET ?? 'rumah-amal-usk-secret-key-2026') + '_verified_bypass_2026';
+// Kredensial admin dibaca dari environment variable, bukan dari database.
+// ADMIN_EMAIL dan ADMIN_PASSWORD_HASH harus diset di .env.local
+// Untuk membuat hash: bcrypt.hashSync('password_anda', 10)
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  secret: process.env.AUTH_SECRET,
   providers: [
     Credentials({
       name: 'credentials',
@@ -22,23 +19,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const inputEmail = (credentials.email as string).trim().toLowerCase();
-        const inputToken = credentials.password as string;
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
 
-        // Cek email
-        if (inputEmail !== ADMIN_EMAIL.trim().toLowerCase()) {
+        if (!adminEmail || !adminPasswordHash) {
           return null;
         }
 
-        // Verifikasi bypass token — password hashing dilakukan di server action
-        if (inputToken !== BYPASS_TOKEN) {
+        // Cek email cocok
+        if (credentials.email !== adminEmail) {
+          return null;
+        }
+
+        // Verifikasi password dengan bcrypt hash
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password as string,
+          adminPasswordHash
+        );
+
+        if (!isPasswordValid) {
           return null;
         }
 
         return {
           id: 'admin',
-          email: ADMIN_EMAIL,
-          name: 'Admin Rumah Amal',
+          email: adminEmail,
+          name: 'Admin',
           role: 'admin',
         };
       },
@@ -52,16 +58,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       if (isLoginRoute) {
         if (isLoggedIn) {
+          // Kalau sudah login dan mencoba ke halaman login, redirect ke dashboard
           return Response.redirect(new URL('/admin/dashboard', nextUrl));
         }
-        return true;
+        return true; // Izinkan akses ke halaman login
       }
 
       if (isAdminRoute) {
-        return isLoggedIn;
+        if (isLoggedIn) return true; // Izinkan akses jika sudah login
+        return false; // Redirect ke halaman login jika belum login
       }
 
-      return true;
+      return true; // Izinkan route publik lainnya
     },
     async jwt({ token, user }) {
       if (user) {
@@ -82,6 +90,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   session: {
     strategy: 'jwt',
-    maxAge: 2 * 60 * 60, // 2 jam
+    maxAge: 2 * 60 * 60, // Sesi akan otomatis kadaluarsa dalam 2 jam
   },
 });

@@ -62,7 +62,6 @@ export default function NewsletterClient({
     try {
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("bucket", "Newsletter");
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       if (!res.ok) { const err = await res.json(); alert(`Upload gagal: ${err.error}`); return; }
       const result = await res.json();

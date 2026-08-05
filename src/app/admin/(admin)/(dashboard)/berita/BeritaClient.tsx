@@ -199,7 +199,6 @@ export default function BeritaClient({
     try {
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("bucket", "Berita");
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       if (!res.ok) { const err = await res.json(); alert(`Upload gagal: ${err.error}`); return; }
       const result = await res.json();
@@ -530,7 +529,6 @@ export default function BeritaClient({
                     <TipTapEditor
                       content={contentHtml}
                       onChange={(html) => setContentHtml(html)}
-                      bucket="Berita"
                       minHeight="320px"
                     />
                   </div>

@@ -1,0 +1,306 @@
+'use client';
+
+import { useState } from 'react';
+import { createDosen, updateDosen, deleteDosen } from '@/actions/dosen';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus, faSearch, faEdit, faTrash, faUserTie } from '@fortawesome/free-solid-svg-icons';
+
+type DosenItem = {
+  nip: string;
+  nama: string;
+  npwp: string | null;
+  alamat: string | null;
+  unitKerja: string | null;
+  createdAt: Date;
+};
+
+export default function DosenClient({ initialData }: { initialData: DosenItem[] }) {
+  const [data, setData] = useState<DosenItem[]>(initialData);
+  const [search, setSearch] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingDosen, setEditingDosen] = useState<DosenItem | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  // Form states
+  const [nip, setNip] = useState('');
+  const [nama, setNama] = useState('');
+  const [npwp, setNpwp] = useState('');
+  const [alamat, setAlamat] = useState('');
+  const [unitKerja, setUnitKerja] = useState('');
+
+  const filteredData = data.filter(
+    (item) =>
+      item.nama.toLowerCase().includes(search.toLowerCase()) ||
+      item.nip.toLowerCase().includes(search.toLowerCase()) ||
+      (item.unitKerja && item.unitKerja.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  function openAddModal() {
+    setEditingDosen(null);
+    setNip('');
+    setNama('');
+    setNpwp('');
+    setAlamat('');
+    setUnitKerja('');
+    setErrorMsg('');
+    setIsModalOpen(true);
+  }
+
+  function openEditModal(item: DosenItem) {
+    setEditingDosen(item);
+    setNip(item.nip);
+    setNama(item.nama);
+    setNpwp(item.npwp || '');
+    setAlamat(item.alamat || '');
+    setUnitKerja(item.unitKerja || '');
+    setErrorMsg('');
+    setIsModalOpen(true);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg('');
+
+    const formData = new FormData();
+    formData.append('nip', nip);
+    formData.append('nama', nama);
+    formData.append('npwp', npwp);
+    formData.append('alamat', alamat);
+    formData.append('unit_kerja', unitKerja);
+
+    try {
+      if (editingDosen) {
+        await updateDosen(editingDosen.nip, formData);
+        setData((prev) =>
+          prev.map((item) =>
+            item.nip === editingDosen.nip
+              ? { ...item, nip, nama, npwp: npwp || null, alamat: alamat || null, unitKerja: unitKerja || null }
+              : item
+          )
+        );
+      } else {
+        await createDosen(formData);
+        setData((prev) => [
+          { nip, nama, npwp: npwp || null, alamat: alamat || null, unitKerja: unitKerja || null, createdAt: new Date() },
+          ...prev,
+        ]);
+      }
+      setIsModalOpen(false);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Gagal menyimpan data dosen');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDelete(nipToDelete: string) {
+    if (!confirm(`Apakah Anda yakin ingin menghapus data dosen dengan NIP ${nipToDelete}?`)) return;
+
+    try {
+      await deleteDosen(nipToDelete);
+      setData((prev) => prev.filter((item) => item.nip !== nipToDelete));
+    } catch (err: any) {
+      alert(err.message || 'Gagal menghapus data dosen');
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header & Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+            <FontAwesomeIcon icon={faUserTie} className="text-[#063A1E] w-6 h-6" />
+            Data Dosen & Pegawai
+          </h1>
+          <p className="text-xs text-gray-500 mt-1">
+            Kelola data Master Dosen USK (NIP, NPWP, Alamat, Unit Kerja) untuk relasi Zakat dan Infaq.
+          </p>
+        </div>
+
+        <button
+          onClick={openAddModal}
+          className="inline-flex items-center justify-center gap-2 bg-[#063A1E] hover:bg-[#042814] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer shrink-0"
+        >
+          <FontAwesomeIcon icon={faPlus} className="w-3.5 h-3.5" />
+          Tambah Dosen
+        </button>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative max-w-md">
+        <FontAwesomeIcon icon={faSearch} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <input
+          type="text"
+          placeholder="Cari berdasarkan NIP, Nama, atau Unit Kerja..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
+        />
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase tracking-wider font-bold">
+                <th className="py-3.5 px-4">NIP</th>
+                <th className="py-3.5 px-4">Nama Dosen</th>
+                <th className="py-3.5 px-4">NPWP</th>
+                <th className="py-3.5 px-4">Unit Kerja</th>
+                <th className="py-3.5 px-4">Alamat</th>
+                <th className="py-3.5 px-4 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filteredData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-10 text-gray-400">
+                    Belum ada data dosen ditemukan.
+                  </td>
+                </tr>
+              ) : (
+                filteredData.map((item) => (
+                  <tr key={item.nip} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="py-3.5 px-4 font-mono font-bold text-gray-800">{item.nip}</td>
+                    <td className="py-3.5 px-4 font-semibold text-gray-900">{item.nama}</td>
+                    <td className="py-3.5 px-4 text-gray-600 font-mono">{item.npwp || '-'}</td>
+                    <td className="py-3.5 px-4 text-gray-700">{item.unitKerja || '-'}</td>
+                    <td className="py-3.5 px-4 text-gray-600 max-w-[200px] truncate">{item.alamat || '-'}</td>
+                    <td className="py-3.5 px-4 text-center">
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          onClick={() => openEditModal(item)}
+                          className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
+                          title="Edit Dosen"
+                        >
+                          <FontAwesomeIcon icon={faEdit} className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.nip)}
+                          className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Hapus Dosen"
+                        >
+                          <FontAwesomeIcon icon={faTrash} className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Modal Form Tambah / Edit */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-lg w-full overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+              <h3 className="font-bold text-sm text-gray-900">
+                {editingDosen ? 'Edit Data Dosen' : 'Tambah Data Dosen Baru'}
+              </h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 font-bold text-base cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              {errorMsg && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-medium">
+                  {errorMsg}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  NIP <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  disabled={!!editingDosen}
+                  value={nip}
+                  onChange={(e) => setNip(e.target.value)}
+                  placeholder="Contoh: 198501012010121001"
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E] disabled:bg-gray-100"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  Nama Lengkap <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={nama}
+                  onChange={(e) => setNama(e.target.value)}
+                  placeholder="Contoh: Dr. Ir. Ahmad Subagyo, M.T."
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">NPWP</label>
+                <input
+                  type="text"
+                  value={npwp}
+                  onChange={(e) => setNpwp(e.target.value)}
+                  placeholder="Contoh: 12.345.678.9-012.000"
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Unit Kerja / Fakultas / Prodi</label>
+                <input
+                  type="text"
+                  value={unitKerja}
+                  onChange={(e) => setUnitKerja(e.target.value)}
+                  placeholder="Contoh: Fakultas Teknik / Informatika"
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Alamat</label>
+                <textarea
+                  rows={2}
+                  value={alamat}
+                  onChange={(e) => setAlamat(e.target.value)}
+                  placeholder="Alamat domisili dosen"
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-5 py-2 bg-[#063A1E] hover:bg-[#042814] text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? 'Simpan...' : 'Simpan Data'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

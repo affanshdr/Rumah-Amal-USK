@@ -239,10 +239,9 @@ interface TipTapEditorProps {
   onChange: (html: string) => void;
   onUpload?: (url: string, storagePath: string) => void;
   minHeight?: string;
-  bucket?: string;
 }
 
-export default function TipTapEditor({ content, onChange, onUpload, minHeight = '340px', bucket }: TipTapEditorProps) {
+export default function TipTapEditor({ content, onChange, onUpload, minHeight = '340px' }: TipTapEditorProps) {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadLabel, setUploadLabel] = useState('');
@@ -293,9 +292,6 @@ export default function TipTapEditor({ content, onChange, onUpload, minHeight = 
   const uploadFile = useCallback(async (file: File): Promise<{ url: string; storagePath: string }> => {
     const formData = new FormData();
     formData.append('file', file);
-    if (bucket) {
-      formData.append('bucket', bucket);
-    }
     const res = await fetch('/api/upload', { method: 'POST', body: formData });
     if (!res.ok) {
       const err = await res.json();
@@ -303,7 +299,7 @@ export default function TipTapEditor({ content, onChange, onUpload, minHeight = 
     }
     const data = await res.json();
     return { url: data.url as string, storagePath: data.storagePath as string };
-  }, [bucket]);
+  }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

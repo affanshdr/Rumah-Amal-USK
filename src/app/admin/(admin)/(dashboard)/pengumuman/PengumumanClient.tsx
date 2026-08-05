@@ -214,7 +214,6 @@ export default function PengumumanClient({
     try {
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("bucket", "announcements");
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       if (!res.ok) { const err = await res.json(); alert(`Upload gagal: ${err.error}`); return; }
       const result = await res.json();
@@ -567,7 +566,6 @@ export default function PengumumanClient({
                     <TipTapEditor
                       content={contentHtml}
                       onChange={(html) => setContentHtml(html)}
-                      bucket="announcements"
                       minHeight="320px"
                     />
                     <p className="text-[10px] text-gray-400 mt-1.5">
