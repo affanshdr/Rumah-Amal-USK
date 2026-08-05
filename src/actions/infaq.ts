@@ -8,17 +8,38 @@ import { redirect } from 'next/navigation';
 export async function submitInfaq(formData: FormData) {
   const tipePembayar = formData.get('tipe_pembayar') as string;
   const jenisInfaq = formData.get('jenis_infaq') as string;
-  const kampanyeId = formData.get('kampanye_id') as string | null;
+  const kampanyeId = (formData.get('kampanye_id') as string | null)?.trim() || null;
   const jumlahInfaq = Number(formData.get('jumlah_infaq'));
-  const nama = formData.get('nama') as string;
-  const nip = formData.get('nip') as string | null;
-  const email = formData.get('email') as string | null;
-  const alamat = formData.get('alamat') as string | null;
-  const noHp = formData.get('no_hp') as string | null;
+  const nip = (formData.get('nip') as string | null)?.trim() || null;
+  let nama = (formData.get('nama') as string | null)?.trim() || '';
+  let email = (formData.get('email') as string | null)?.trim() || null;
+  let alamat = (formData.get('alamat') as string | null)?.trim() || null;
+  const noHp = (formData.get('no_hp') as string | null)?.trim() || null;
   const isHambaAllah = formData.get('is_hamba_allah') === '1';
   const bersediaDihubungi = formData.get('bersedia_dihubungi') === '1';
-  const pesan = formData.get('pesan') as string | null;
+  const pesan = (formData.get('pesan') as string | null)?.trim() || null;
   const setujuTerms = formData.get('setuju_terms') === '1';
+
+  if (tipePembayar === 'dosen') {
+    if (!nip) {
+      throw new Error('NIP / NIDN wajib diisi untuk Dosen / Pegawai USK');
+    }
+    // Ambik data Dosen dari tabel dosens berdasarkan NIP
+    const dosenObj = await prisma.dosen.findUnique({
+      where: { nip },
+    });
+
+    if (!dosenObj) {
+      throw new Error('NIP tidak terdaftar pada Master Data Dosen. Silakan hubungi Rumah Amal USK untuk mendaftarkan data NIP Anda.');
+    }
+
+    nama = dosenObj.nama;
+    if (!alamat) alamat = dosenObj.alamat;
+  } else {
+    if (isHambaAllah) {
+      nama = 'Hamba Allah';
+    }
+  }
 
   if (!jenisInfaq || !jumlahInfaq || !nama) {
     throw new Error('Data tidak lengkap');
@@ -49,12 +70,12 @@ export async function submitInfaq(formData: FormData) {
       jenisInfaq,
       kampanyeId: kampanyeId || null,
       jumlahInfaq,
-      nama: isHambaAllah ? 'Hamba Allah' : nama,
+      nama,
       nip: nip || null,
       email: email || null,
       alamat: alamat || null,
       noHp: noHp || null,
-      isHambaAllah,
+      isHambaAllah: tipePembayar === 'dosen' ? false : isHambaAllah,
       bersediaDihubungi,
       pesan: pesan || null,
       buktiPembayaran,

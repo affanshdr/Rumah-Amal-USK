@@ -15,7 +15,7 @@ export async function DELETE(
     revalidatePath('/kampanye');
     revalidatePath('/upload/kampanye');
     revalidatePath('/admin/kampanye');
-    revalidatePath('/donasi');
+    revalidatePath('/infaq');
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -40,7 +40,7 @@ export async function PATCH(
     revalidatePath('/kampanye');
     revalidatePath('/upload/kampanye');
     revalidatePath('/admin/kampanye');
-    revalidatePath('/donasi');
+    revalidatePath('/infaq');
 
     return NextResponse.json({ success: true, kampanye });
   } catch (error) {

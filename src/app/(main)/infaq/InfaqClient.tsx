@@ -3,36 +3,22 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
-import { submitDonasi } from "@/actions/donasi";
-import { Kampanye } from "@prisma/client";
+import { submitInfaq } from "@/actions/infaq";
 
-export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
+type KampanyeOption = {
+  id: string;
+  judul: string;
+};
+
+export default function InfaqClient({ programs }: { programs: KampanyeOption[] }) {
   const searchParams = useSearchParams();
-  const programFromUrl = searchParams.get("program") || searchParams.get("kampanyeId");
+  const kampanyeIdFromUrl = searchParams.get("kampanyeId");
+  const programFromUrl = searchParams.get("program");
 
   const [tipePembayar, setTipePembayar] = useState<"masyarakat" | "dosen">("masyarakat");
-
-  // Set default kampanyeId to the first program if available
-  const defaultProgramId = programs.length > 0 ? programs[0].id : "";
-  const [selectedKampanyeId, setSelectedKampanyeId] = useState<string>(defaultProgramId);
-
-  useEffect(() => {
-    if (programFromUrl) {
-      const match = programs.find(
-        (p) =>
-          p.id === programFromUrl ||
-          p.judul.trim().toLowerCase() === programFromUrl.trim().toLowerCase()
-      );
-      if (match) {
-        setSelectedKampanyeId(match.id);
-      }
-    }
-  }, [programFromUrl, programs]);
-
-  const selectedKampanye = programs.find((p) => p.id === selectedKampanyeId);
-  const jenisDonasiJudul = selectedKampanye ? selectedKampanye.judul : "Donasi Umum";
-
-  const [jumlahDonasi, setJumlahDonasi] = useState<string>("");
+  const [selectedKampanyeId, setSelectedKampanyeId] = useState<string>("");
+  const [jenisInfaq, setJenisInfaq] = useState<string>("Infak Umum / Sedekah Sukarela");
+  const [jumlahInfaq, setJumlahInfaq] = useState<string>("");
   const [nama, setNama] = useState<string>("");
   const [isHambaAllah, setIsHambaAllah] = useState<boolean>(false);
   const [nip, setNip] = useState<string>("");
@@ -44,11 +30,57 @@ export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
   const [setujuTerms, setSetujuTerms] = useState<boolean>(false);
   const [fileName, setFileName] = useState<string>("File...");
   const [submitting, setSubmitting] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string>("");
+
+  // Sync selected Kampanye from URL parameter if provided
+  useEffect(() => {
+    if (kampanyeIdFromUrl) {
+      const found = programs.find((p) => p.id === kampanyeIdFromUrl);
+      if (found) {
+        setSelectedKampanyeId(found.id);
+        setJenisInfaq(found.judul);
+      }
+    } else if (programFromUrl) {
+      const found = programs.find((p) => p.judul.toLowerCase() === programFromUrl.toLowerCase());
+      if (found) {
+        setSelectedKampanyeId(found.id);
+        setJenisInfaq(found.judul);
+      } else {
+        setJenisInfaq(programFromUrl);
+      }
+    }
+  }, [kampanyeIdFromUrl, programFromUrl, programs]);
+
+  const handleKampanyeChange = (value: string) => {
+    setSelectedKampanyeId(value);
+    if (!value) {
+      setJenisInfaq("Infak Umum / Sedekah Sukarela");
+    } else {
+      const selected = programs.find((p) => p.id === value);
+      if (selected) {
+        setJenisInfaq(selected.judul);
+      }
+    }
+  };
 
   const handleTipeSwitch = (tipe: "dosen" | "masyarakat") => {
     setTipePembayar(tipe);
+    setErrorMsg("");
     if (tipe === "dosen") {
       setIsHambaAllah(false);
+    }
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setErrorMsg("");
+    const formData = new FormData(e.currentTarget);
+    try {
+      await submitInfaq(formData);
+    } catch (err: any) {
+      setErrorMsg(err.message || "Terjadi kesalahan saat memproses infaq.");
+      setSubmitting(false);
     }
   };
 
@@ -61,9 +93,10 @@ export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
     }
   };
 
-  return (
-    <main className="flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full">
+  const selectedKampanyeObj = programs.find((p) => p.id === selectedKampanyeId);
 
+  return (
+    <main className="flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full font-sans">
       {/* Selector Tab Tipe Pembayar */}
       <div className="text-center mb-8">
         <div className="inline-flex rounded-xl p-1 bg-gray-200/80 shadow-inner">
@@ -91,147 +124,180 @@ export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-
         {/* Sidebar Navigasi */}
         <Sidebar />
 
-        {/* Form Pembayaran Tengah */}
-        <form action={submitDonasi} onSubmit={() => setSubmitting(true)} className="contents">
+        {/* Form Pembayaran Infaq */}
+        <form onSubmit={handleFormSubmit} className="contents">
           <input type="hidden" name="tipe_pembayar" value={tipePembayar} />
           <input type="hidden" name="kampanye_id" value={selectedKampanyeId} />
-          <input type="hidden" name="jenis_donasi" value={jenisDonasiJudul} />
 
           <div className="lg:col-span-5 bg-white p-6 sm:p-7 rounded-2xl shadow-md border border-gray-100 space-y-4">
+            {errorMsg && (
+              <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-semibold flex items-start gap-2">
+                <span className="shrink-0 text-base">⚠️</span>
+                <span className="leading-snug">{errorMsg}</span>
+              </div>
+            )}
+
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-lg font-black text-[#000]">Formulir Pembayaran Donasi</h3>
+              <h3 className="text-lg font-black text-[#000]">Formulir Pembayaran Infaq</h3>
               <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-[#000] uppercase">
                 {tipePembayar}
               </span>
             </div>
 
-            {/* Jenis Donasi Dinamis */}
+            {/* Kategori Infaq / Kampanye Selector */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Kategori Program Donasi <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                Kategori Program Infaq <span className="text-red-500">*</span>
+              </label>
               <select
-                value={selectedKampanyeId}
-                onChange={(e) => setSelectedKampanyeId(e.target.value)}
+                name="jenis_infaq"
+                value={selectedKampanyeId ? selectedKampanyeId : jenisInfaq}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (programs.some((p) => p.id === val)) {
+                    handleKampanyeChange(val);
+                  } else {
+                    setSelectedKampanyeId("");
+                    setJenisInfaq(val);
+                  }
+                }}
                 required
-                className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white font-semibold"
+                className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white font-medium"
               >
-                {programs.length === 0 ? (
-                  <option value="">Donasi Umum</option>
-                ) : (
-                  programs.map((prog) => (
-                    <option key={prog.id} value={prog.id}>{prog.judul}</option>
-                  ))
+                <optgroup label="Infaq Bebas (Rutin / Umum)">
+                  <option value="Infak Umum / Sedekah Sukarela">Infak Umum / Sedekah Sukarela</option>
+                  <option value="Komunitas Infaq Rutin">Komunitas Infaq Rutin</option>
+                </optgroup>
+                {programs.length > 0 && (
+                  <optgroup label="Infaq Terikat (Kampanye Khusus)">
+                    {programs.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.judul}
+                      </option>
+                    ))}
+                  </optgroup>
                 )}
               </select>
-              {selectedKampanye && (
-                <div className="mt-2 text-xs text-gray-600 bg-emerald-50/60 border border-emerald-100 p-3 rounded-xl space-y-1">
-                  {selectedKampanye.deskripsi && <p className="text-gray-700 font-medium">{selectedKampanye.deskripsi}</p>}
-                  <div className="flex items-center justify-between pt-1 text-[11px] font-bold text-emerald-800">
-                    <span>Terkumpul: Rp {selectedKampanye.terkumpul.toLocaleString('id-ID')}</span>
-                    {selectedKampanye.targetDana ? (
-                      <span>Target: Rp {selectedKampanye.targetDana.toLocaleString('id-ID')}</span>
-                    ) : null}
-                  </div>
+
+              {/* Indicator badge for selected Kampanye */}
+              {selectedKampanyeObj ? (
+                <div className="mt-2 text-xs p-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl flex items-center gap-1.5 font-medium">
+                  <span>🔗</span>
+                  <span>
+                    Infaq Terikat Kampanye: <strong>{selectedKampanyeObj.judul}</strong>
+                  </span>
+                </div>
+              ) : (
+                <div className="mt-2 text-xs p-2 bg-blue-50 border border-blue-100 text-blue-700 rounded-xl flex items-center gap-1.5 font-medium">
+                  <span>🔓</span>
+                  <span>Infaq Bebas (Bebas Disalurkan)</span>
                 </div>
               )}
             </div>
 
-            {/* Jumlah Donasi */}
+            {/* Jumlah Infaq */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Jumlah Donasi <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                Jumlah Infaq <span className="text-red-500">*</span>
+              </label>
               <div className="flex rounded-xl shadow-2xs overflow-hidden border border-gray-300 focus-within:border-[#005621]">
                 <span className="inline-flex items-center px-4 bg-gray-100 text-gray-600 text-xs font-bold border-r border-gray-300">
                   Rp.
                 </span>
                 <input
                   type="number"
-                  name="jumlah_donasi"
-                  value={jumlahDonasi}
-                  onChange={(e) => setJumlahDonasi(e.target.value)}
+                  name="jumlah_infaq"
+                  value={jumlahInfaq}
+                  onChange={(e) => setJumlahInfaq(e.target.value)}
                   required
-                  placeholder="Jumlah donasi yang ingin disalurkan"
-                  className="flex-1 block w-full px-3.5 py-2.5 text-sm focus:outline-none bg-white font-bold"
+                  placeholder="Jumlah infaq yang ingin disalurkan"
+                  className="flex-1 block w-full px-3.5 py-2.5 text-sm focus:outline-none bg-white"
                 />
               </div>
             </div>
 
-            {/* Nama Lengkap */}
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Nama Lengkap <span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                name="nama"
-                value={nama}
-                onChange={(e) => setNama(e.target.value)}
-                readOnly={isHambaAllah}
-                required
-                placeholder="Nama Lengkap Donatur"
-                className={`w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] ${isHambaAllah ? "bg-gray-100 text-gray-500" : "bg-white"
-                  }`}
-              />
-            </div>
-
-            {/* Opsi Masyarakat: Checkbox Hamba Allah */}
-            {tipePembayar === "masyarakat" && (
-              <div className="flex items-center gap-2 pt-0.5">
-                <input
-                  type="checkbox"
-                  id="anon-check-donasi"
-                  name="is_hamba_allah"
-                  value="1"
-                  checked={isHambaAllah}
-                  onChange={(e) => handleHambaAllahChange(e.target.checked)}
-                  className="w-4 h-4 text-[#000] rounded focus:ring-[#005621] cursor-pointer"
-                />
-                <label htmlFor="anon-check-donasi" className="text-xs text-gray-600 font-semibold cursor-pointer">
-                  Sembunyikan nama saya (Hamba Allah)
-                </label>
-              </div>
-            )}
-
-            {/* Opsi Dosen: NIP */}
-            {tipePembayar === "dosen" && (
+            {/* Opsi Dosen: NIP (Nama, Email, Alamat diambil otomatis dari tabel Dosen) */}
+            {tipePembayar === "dosen" ? (
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">NIP / NIDN</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                  NIP / NIDN <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   name="nip"
                   value={nip}
                   onChange={(e) => setNip(e.target.value)}
-                  placeholder="Nomor Induk Pegawai / Dosen USK"
-                  className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white"
+                  required
+                  placeholder="Masukkan Nomor Induk Pegawai / Dosen USK"
+                  className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white font-mono"
                 />
               </div>
+            ) : (
+              <>
+                {/* Nama Lengkap */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                    Nama Lengkap <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="nama"
+                    value={nama}
+                    onChange={(e) => setNama(e.target.value)}
+                    readOnly={isHambaAllah}
+                    required
+                    placeholder="Nama Lengkap Donatur"
+                    className={`w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] ${isHambaAllah ? "bg-gray-100 text-gray-500" : "bg-white"
+                      }`}
+                  />
+                </div>
+
+                {/* Checkbox Hamba Allah */}
+                <div className="flex items-center gap-2 pt-0.5">
+                  <input
+                    type="checkbox"
+                    id="anon-check-infaq"
+                    name="is_hamba_allah"
+                    value="1"
+                    checked={isHambaAllah}
+                    onChange={(e) => handleHambaAllahChange(e.target.checked)}
+                    className="w-4 h-4 text-[#000] rounded focus:ring-[#005621] cursor-pointer"
+                  />
+                  <label htmlFor="anon-check-infaq" className="text-xs text-gray-600 font-semibold cursor-pointer">
+                    Sembunyikan nama saya (Hamba Allah)
+                  </label>
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Contoh: nama@gmail.com"
+                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white"
+                  />
+                </div>
+
+                {/* Alamat */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">Alamat</label>
+                  <input
+                    type="text"
+                    name="alamat"
+                    value={alamat}
+                    onChange={(e) => setAlamat(e.target.value)}
+                    placeholder="Alamat Tinggal / Domisili"
+                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white"
+                  />
+                </div>
+              </>
             )}
-
-            {/* Email */}
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Contoh: nama@gmail.com"
-                className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white"
-              />
-            </div>
-
-            {/* Alamat */}
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Alamat</label>
-              <input
-                type="text"
-                name="alamat"
-                value={alamat}
-                onChange={(e) => setAlamat(e.target.value)}
-                placeholder="Alamat Tinggal / Domisili"
-                className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white"
-              />
-            </div>
 
             {/* No. Telepon */}
             <div>
@@ -250,15 +316,15 @@ export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
             <div className="flex items-start gap-2 pt-1">
               <input
                 type="checkbox"
-                id="agree-contact-donasi"
+                id="agree-contact-infaq"
                 name="bersedia_dihubungi"
                 value="1"
                 checked={bersediaDihubungi}
                 onChange={(e) => setBersediaDihubungi(e.target.checked)}
                 className="w-4 h-4 text-[#000] rounded focus:ring-[#005621] mt-0.5 cursor-pointer"
               />
-              <label htmlFor="agree-contact-donasi" className="text-xs text-gray-600 leading-snug cursor-pointer">
-                Bersedia dihubungi oleh Rumah Amal USK mengenai update penggunaan donasi
+              <label htmlFor="agree-contact-infaq" className="text-xs text-gray-600 leading-snug cursor-pointer">
+                Bersedia dihubungi oleh Rumah Amal USK mengenai update penggunaan infaq
               </label>
             </div>
 
@@ -270,11 +336,10 @@ export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
                 rows={3}
                 value={pesan}
                 onChange={(e) => setPesan(e.target.value)}
-                placeholder="Tulis doa atau niat baik untuk keberkahan donasi ini..."
+                placeholder="Tulis doa atau niat baik untuk keberkahan infaq ini..."
                 className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white"
               />
             </div>
-
           </div>
 
           {/* Kolom Kanan: Metode Pembayaran */}
@@ -317,7 +382,7 @@ export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
               <div className="flex items-center justify-between border border-gray-300 rounded-xl p-2 bg-gray-50/80">
                 <input
                   type="file"
-                  id="bukti-donasi"
+                  id="bukti-infaq"
                   name="bukti_pembayaran"
                   className="hidden"
                   onChange={(e) => setFileName(e.target.files?.[0]?.name || "File...")}
@@ -325,7 +390,7 @@ export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
                 <span className="text-xs text-gray-500 truncate px-2 max-w-[200px]">{fileName}</span>
                 <button
                   type="button"
-                  onClick={() => document.getElementById("bukti-donasi")?.click()}
+                  onClick={() => document.getElementById("bukti-infaq")?.click()}
                   className="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
                 >
                   Pilih File...
@@ -337,7 +402,7 @@ export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
             <div className="flex items-start gap-2 pt-1">
               <input
                 type="checkbox"
-                id="terms-donasi"
+                id="terms-infaq"
                 name="setuju_terms"
                 value="1"
                 checked={setujuTerms}
@@ -345,8 +410,8 @@ export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
                 required
                 className="w-4 h-4 text-[#000] rounded focus:ring-[#005621] mt-0.5 cursor-pointer"
               />
-              <label htmlFor="terms-donasi" className="text-xs text-gray-600 leading-snug cursor-pointer">
-                Saya menyetujui syarat dan ketentuan donasi di Rumah Amal USK
+              <label htmlFor="terms-infaq" className="text-xs text-gray-600 leading-snug cursor-pointer">
+                Saya menyetujui syarat dan ketentuan infaq di Rumah Amal USK
               </label>
             </div>
 
@@ -356,11 +421,10 @@ export default function DonasiClient({ programs }: { programs: Kampanye[] }) {
               disabled={submitting}
               className="w-full bg-[#FFBB0C] hover:bg-[#e8b500] text-[#000] font-black py-3.5 rounded-xl text-sm shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer disabled:opacity-50"
             >
-              {submitting ? "Memproses Donasi..." : "Lanjutkan Pembayaran Donasi"}
+              {submitting ? "Memproses Infaq..." : "Lanjutkan Pembayaran Infaq"}
             </button>
           </div>
         </form>
-
       </div>
     </main>
   );

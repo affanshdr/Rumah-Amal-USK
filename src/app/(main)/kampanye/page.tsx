@@ -196,12 +196,12 @@ export default function PublicKampanyePage() {
                       </div>
                     </div>
 
-                    {/* Action DONASI Button */}
+                    {/* Action INFAQ Button */}
                     <Link
-                      href={`/donasi?program=${encodeURIComponent(item.judul)}`}
+                      href={`/infaq?kampanyeId=${item.id}`}
                       className="w-full bg-[#0b6330] hover:bg-[#074722] text-white font-extrabold py-3.5 rounded-xl text-sm transition-all duration-200 text-center tracking-wider uppercase block shadow-sm hover:shadow-md mt-auto"
                     >
-                      DONASI
+                      INFAQ SEKARANG
                     </Link>
                   </div>
                 </div>

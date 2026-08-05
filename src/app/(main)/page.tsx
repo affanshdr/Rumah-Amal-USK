@@ -190,7 +190,7 @@ export default function Home() {
       id: `kam-${item.id}`,
       title: item.judul,
       imageUrl: item.imageUrl,
-      href: `/donasi?program=${encodeURIComponent(item.judul)}`,
+      href: `/infaq?kampanyeId=${item.id}`,
     }));
 
   const activeSlides = [...announcementSlides, ...kampanyeSlides];
@@ -464,12 +464,12 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Action DONASI Button */}
+                      {/* Action INFAQ Button */}
                       <Link
-                        href={`/donasi?program=${encodeURIComponent(item.judul)}`}
+                        href={`/infaq?kampanyeId=${item.id}`}
                         className="w-full bg-[#0b6330] hover:bg-[#074722] text-white font-extrabold py-3 sm:py-3.5 rounded-xl text-xs sm:text-sm transition-all duration-200 text-center tracking-wider uppercase block shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] mt-auto"
                       >
-                        DONASI
+                        INFAQ SEKARANG
                       </Link>
                     </div>
                   </div>

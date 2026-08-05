@@ -75,7 +75,7 @@ export async function addKampanye(formData: FormData) {
   revalidatePath('/admin/kampanye');
   revalidatePath('/upload/kampanye');
   revalidatePath('/kampanye');
-  revalidatePath('/donasi');
+  revalidatePath('/infaq');
   revalidatePath('/');
 }
 
@@ -125,7 +125,7 @@ export async function updateKampanye(formData: FormData) {
   revalidatePath('/admin/kampanye');
   revalidatePath('/upload/kampanye');
   revalidatePath('/kampanye');
-  revalidatePath('/donasi');
+  revalidatePath('/infaq');
   revalidatePath('/');
 }
 
@@ -145,7 +145,7 @@ export async function deleteKampanye(id: string) {
   revalidatePath('/admin/kampanye');
   revalidatePath('/upload/kampanye');
   revalidatePath('/kampanye');
-  revalidatePath('/donasi');
+  revalidatePath('/infaq');
   revalidatePath('/');
 }
 
@@ -157,6 +157,6 @@ export async function toggleKampanyeStatus(id: string, currentStatus: boolean) {
   revalidatePath('/admin/kampanye');
   revalidatePath('/upload/kampanye');
   revalidatePath('/kampanye');
-  revalidatePath('/donasi');
+  revalidatePath('/infaq');
   revalidatePath('/');
 }
