@@ -20,6 +20,33 @@ model User {
   @@map("users")
 }
 
+model Dosen {
+  nip       String   @id
+  nama      String
+  npwp      String?
+  alamat    String?
+  unitKerja String?  @map("unit_kerja")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  zakats      Zakat[]
+  infaqs      Infaq[]
+  rekapZakats RekapZakat[]
+
+  @@map("dosens")
+}
+
+model RekapZakat {
+  id         String   @id @default(cuid())
+  dosenNIP   String   @map("dosen_nip")
+  dosen      Dosen    @relation(fields: [dosenNIP], references: [nip], onDelete: Cascade)
+  fileUrl    String   @map("file_url")
+  tahunRekap String   @map("tahun_rekap")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("rekap_zakats")
+}
+
 model Zakat {
   id                String   @id @default(cuid())
   tipePembayar      String   @default("masyarakat") @map("tipe_pembayar")
@@ -29,6 +56,7 @@ model Zakat {
   jumlahZakat       Float    @map("jumlah_zakat")
   nama              String
   nip               String?
+  dosen             Dosen?   @relation(fields: [nip], references: [nip], onDelete: SetNull)
   email             String?
   alamat            String?
   noHp              String?  @map("no_hp")
@@ -45,23 +73,26 @@ model Zakat {
 }
 
 model Infaq {
-  id                String   @id @default(cuid())
-  tipePembayar      String   @default("masyarakat") @map("tipe_pembayar")
-  jenisInfaq        String   @map("jenis_infaq")
-  jumlahInfaq       Float    @map("jumlah_infaq")
+  id                String    @id @default(cuid())
+  tipePembayar      String    @default("masyarakat") @map("tipe_pembayar")
+  jenisInfaq        String    @map("jenis_infaq")
+  kampanyeId        String?   @map("kampanye_id")
+  kampanye          Kampanye? @relation(fields: [kampanyeId], references: [id], onDelete: SetNull)
+  jumlahInfaq       Float     @map("jumlah_infaq")
   nama              String
   nip               String?
+  dosen             Dosen?    @relation(fields: [nip], references: [nip], onDelete: SetNull)
   email             String?
   alamat            String?
-  noHp              String?  @map("no_hp")
-  isHambaAllah      Boolean  @default(false) @map("is_hamba_allah")
-  bersediaDihubungi Boolean  @default(false) @map("bersedia_dihubungi")
+  noHp              String?   @map("no_hp")
+  isHambaAllah      Boolean   @default(false) @map("is_hamba_allah")
+  bersediaDihubungi Boolean   @default(false) @map("bersedia_dihubungi")
   pesan             String?
-  buktiPembayaran   String?  @map("bukti_pembayaran")
-  setujuTerms       Boolean  @default(false) @map("setuju_terms")
-  status            String   @default("pending")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  buktiPembayaran   String?   @map("bukti_pembayaran")
+  setujuTerms       Boolean   @default(false) @map("setuju_terms")
+  status            String    @default("pending")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
   @@map("infaqs")
 }
@@ -84,30 +115,6 @@ model Newsletter {
   @@map("newsletters")
 }
 
-model Donasi {
-  id                String    @id @default(cuid())
-  tipePembayar      String    @default("masyarakat") @map("tipe_pembayar")
-  jenisDonasi       String    @map("jenis_donasi")
-  kampanyeId        String?   @map("kampanye_id")
-  kampanye          Kampanye? @relation(fields: [kampanyeId], references: [id], onDelete: SetNull)
-  jumlahDonasi      Float     @map("jumlah_donasi")
-  nama              String
-  nip               String?
-  email             String?
-  alamat            String?
-  noHp              String?   @map("no_hp")
-  isHambaAllah      Boolean   @default(false) @map("is_hamba_allah")
-  bersediaDihubungi Boolean   @default(false) @map("bersedia_dihubungi")
-  pesan             String?
-  buktiPembayaran   String?   @map("bukti_pembayaran")
-  setujuTerms       Boolean   @default(false) @map("setuju_terms")
-  status            String    @default("pending")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
-
-  @@map("donasies")
-}
-
 model Kampanye {
   id             String    @id @default(cuid())
   judul          String
@@ -119,7 +126,7 @@ model Kampanye {
   isActive       Boolean   @default(true) @map("is_active")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
-  donasi         Donasi[]
+  infaq          Infaq[]
 
   @@map("kampanyes")
 }

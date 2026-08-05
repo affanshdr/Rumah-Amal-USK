@@ -83,3 +83,32 @@ export async function rejectZakat(id: string) {
   });
   revalidatePath('/admin/zakat');
 }
+
+export async function updateZakatAdmin(id: string, data: {
+  nama: string;
+  nip?: string | null;
+  tipePembayar?: string;
+  jenisZakat: string;
+  jumlahZakat: number;
+  sumberDana?: string | null;
+  jenisPerusahaan?: string | null;
+  pesan?: string | null;
+  status: string;
+}) {
+  await prisma.zakat.update({
+    where: { id },
+    data: {
+      nama: data.nama,
+      nip: data.nip || null,
+      ...(data.tipePembayar && { tipePembayar: data.tipePembayar }),
+      jenisZakat: data.jenisZakat,
+      jumlahZakat: Number(data.jumlahZakat),
+      sumberDana: data.sumberDana || null,
+      jenisPerusahaan: data.jenisPerusahaan || null,
+      pesan: data.pesan || null,
+      status: data.status,
+    },
+  });
+
+  revalidatePath('/admin/zakat');
+}

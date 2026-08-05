@@ -15,7 +15,7 @@ import {
   faBuilding,
   faCoins,
   faHandHoldingHeart,
-  faReceipt,
+  faUserTie,
 } from '@fortawesome/free-solid-svg-icons';
 import { logoutAdmin } from '@/actions/admin-auth';
 import { useTransition } from 'react';
@@ -32,7 +32,12 @@ const menuGroups = [
     items: [
       { href: '/admin/zakat', label: 'Zakat', icon: faCoins },
       { href: '/admin/infaq', label: 'Infaq', icon: faHandHoldingHeart },
-      { href: '/admin/donasi', label: 'Donasi Kampanye', icon: faReceipt },
+    ],
+  },
+  {
+    label: 'Data Master',
+    items: [
+      { href: '/admin/dosen', label: 'Data Dosen', icon: faUserTie },
     ],
   },
   {

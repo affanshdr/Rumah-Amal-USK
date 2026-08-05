@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+// submitDonasi sekarang menyimpan ke tabel Infaq (model Donasi telah dihapus)
 export async function submitDonasi(formData: FormData) {
   const tipePembayar = formData.get('tipe_pembayar') as string;
   const jenisDonasi = formData.get('jenis_donasi') as string;
@@ -43,12 +44,13 @@ export async function submitDonasi(formData: FormData) {
     buktiPembayaran = data.publicUrl;
   }
 
-  const donasi = await prisma.donasi.create({
+  // Simpan ke tabel Infaq dengan jenisInfaq = jenisDonasi (migrasi dari model Donasi)
+  const infaq = await prisma.infaq.create({
     data: {
-      tipePembayar,
-      jenisDonasi,
+      tipePembayar: tipePembayar || 'masyarakat',
+      jenisInfaq: jenisDonasi,
       kampanyeId: kampanyeId || null,
-      jumlahDonasi,
+      jumlahInfaq: jumlahDonasi,
       nama: isHambaAllah ? 'Hamba Allah' : nama,
       nip: nip || null,
       email: email || null,
@@ -63,65 +65,21 @@ export async function submitDonasi(formData: FormData) {
     },
   });
 
-  redirect(`/donasi/sukses/${donasi.id}`);
+  redirect(`/donasi/sukses/${infaq.id}`);
 }
 
 export async function approveDonasi(id: string) {
-  const donasi = await prisma.donasi.findUnique({
-    where: { id },
-  });
-
-  if (!donasi) {
-    throw new Error('Donasi tidak ditemukan');
-  }
-
-  await prisma.donasi.update({
+  await prisma.infaq.update({
     where: { id },
     data: { status: 'lunas' },
   });
-
-  if (donasi.status !== 'lunas' && donasi.kampanyeId) {
-    await prisma.kampanye.update({
-      where: { id: donasi.kampanyeId },
-      data: {
-        terkumpul: {
-          increment: donasi.jumlahDonasi,
-        },
-      },
-    });
-  }
-
-  revalidatePath('/admin/donasi');
-  revalidatePath('/admin/kampanye');
-  revalidatePath('/donasi');
+  revalidatePath('/admin/infaq');
 }
 
 export async function rejectDonasi(id: string) {
-  const donasi = await prisma.donasi.findUnique({
-    where: { id },
-  });
-
-  if (!donasi) {
-    throw new Error('Donasi tidak ditemukan');
-  }
-
-  if (donasi.status === 'lunas' && donasi.kampanyeId) {
-    await prisma.kampanye.update({
-      where: { id: donasi.kampanyeId },
-      data: {
-        terkumpul: {
-          decrement: donasi.jumlahDonasi,
-        },
-      },
-    });
-  }
-
-  await prisma.donasi.update({
+  await prisma.infaq.update({
     where: { id },
     data: { status: 'ditolak' },
   });
-
-  revalidatePath('/admin/donasi');
-  revalidatePath('/admin/kampanye');
-  revalidatePath('/donasi');
+  revalidatePath('/admin/infaq');
 }
