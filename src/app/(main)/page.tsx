@@ -227,10 +227,10 @@ export default function Home() {
         
         {/* Main Banner Slider with Smooth Transitions */}
         {isLoadingBanner ? (
-          <div className="w-full h-[220px] xs:h-[280px] sm:h-[360px] md:h-[440px] lg:h-[500px] bg-gray-200 animate-pulse" />
+          <div className="w-full aspect-[16/6] bg-gray-200 animate-pulse" />
         ) : activeSlides.length > 0 ? (
           <div
-            className="relative bg-gray-900 overflow-hidden h-[220px] xs:h-[280px] sm:h-[360px] md:h-[440px] lg:h-[500px] w-full flex items-center shadow-md group mx-auto"
+            className="relative bg-gray-950 overflow-hidden w-full shadow-md group mx-auto"
             style={{ maxWidth: '100vw' }}
           >
             
@@ -239,7 +239,7 @@ export default function Home() {
               <button
                 onClick={prevSlide}
                 aria-label="Previous slide"
-                className="absolute left-2 sm:left-4 md:left-6 z-30 w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs shadow-md hover:scale-105"
+                className="absolute left-2 sm:left-4 md:left-6 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs shadow-md hover:scale-105"
               >
                 <svg className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -252,7 +252,7 @@ export default function Home() {
               <button
                 onClick={nextSlide}
                 aria-label="Next slide"
-                className="absolute right-2 sm:right-4 md:right-6 z-30 w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs shadow-md hover:scale-105"
+                className="absolute right-2 sm:right-4 md:right-6 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs shadow-md hover:scale-105"
               >
                 <svg className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -260,29 +260,32 @@ export default function Home() {
               </button>
             )}
 
-            {/* Slide Images with Fade Transitions */}
-            {activeSlides.map((slide, index) => (
-              <div
-                key={slide.id}
-                className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
-                  index === currentSlide ? "opacity-100 z-10 pointer-events-auto" : "opacity-0 z-0 pointer-events-none"
-                }`}
-              >
-                <Link
-                  href={slide.href}
-                  className="w-full h-full relative block cursor-pointer"
+            {/* Slide Images with Dynamic 100% Width & Smooth Fade Transitions */}
+            {activeSlides.map((slide, index) => {
+              const isActive = index === currentSlide;
+              return (
+                <div
+                  key={slide.id}
+                  className={`w-full transition-opacity duration-700 ease-in-out ${
+                    isActive
+                      ? "relative opacity-100 z-10 pointer-events-auto"
+                      : "absolute inset-0 opacity-0 z-0 pointer-events-none"
+                  }`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={slide.imageUrl}
-                    alt={slide.title}
-                    className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
-                  />
-                </Link>
-              </div>
-            ))}
-
-
+                  <Link
+                    href={slide.href}
+                    className="w-full block cursor-pointer"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={slide.imageUrl}
+                      alt={slide.title}
+                      className="w-full h-auto block group-hover:scale-[1.005] transition-transform duration-700"
+                    />
+                  </Link>
+                </div>
+              );
+            })}
 
           </div>
         ) : null}
