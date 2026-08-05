@@ -160,7 +160,7 @@ export default function PublicKampanyePage() {
                   {/* Body Content */}
                   <div className="p-6 flex flex-col flex-1">
                     {/* Title */}
-                    <h3 className="font-extrabold text-[#1a1a1a] text-lg sm:text-[19px] leading-snug mb-6 line-clamp-2 min-h-[56px]">
+                    <h3 className="font-bold text-[#112b27] text-lg sm:text-[19px] leading-tight mb-5 line-clamp-2 min-h-[48px]">
                       {item.judul}
                     </h3>
 

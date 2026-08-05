@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { deleteStorageFileByUrl } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 
 function generateSlug(title: string): string {
@@ -109,6 +110,19 @@ export async function updateAnnouncement(formData: FormData) {
 
   if (!id || !title) throw new Error('ID dan judul tidak boleh kosong.');
 
+  // Ambil data pengumuman saat ini untuk cek apakah cover diganti
+  const existingAnnouncement = await prisma.announcement.findUnique({
+    where: { id },
+    select: { coverImageUrl: true },
+  });
+
+  if (
+    existingAnnouncement?.coverImageUrl &&
+    existingAnnouncement.coverImageUrl !== coverImageUrl
+  ) {
+    await deleteStorageFileByUrl(existingAnnouncement.coverImageUrl);
+  }
+
   const baseSlug = generateSlug(title);
   const slug = await uniqueSlug(baseSlug, id);
 
@@ -131,6 +145,15 @@ export async function updateAnnouncement(formData: FormData) {
 }
 
 export async function deleteAnnouncement(id: string) {
+  const existing = await prisma.announcement.findUnique({
+    where: { id },
+    select: { coverImageUrl: true },
+  });
+
+  if (existing?.coverImageUrl) {
+    await deleteStorageFileByUrl(existing.coverImageUrl);
+  }
+
   await prisma.announcement.delete({ where: { id } });
   revalidatePath('/admin/pengumuman');
   revalidatePath('/');

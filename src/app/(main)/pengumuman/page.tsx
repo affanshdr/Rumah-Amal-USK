@@ -173,7 +173,7 @@ export default function PublicAnnouncementListPage() {
 
                   {/* Info Text: Title & Date */}
                   <div className="flex flex-col justify-between flex-1">
-                    <h3 className="font-extrabold text-[#111827] text-sm sm:text-[15px] tracking-tight mb-4 uppercase leading-snug line-clamp-3 group-hover:text-[#0b6330] transition-colors">
+                    <h3 className="font-bold text-[#112b27] text-sm sm:text-base leading-tight mb-3 line-clamp-4 group-hover:text-[#0b6330] transition-colors">
                       {item.title}
                     </h3>
                     <p className="text-xs text-gray-500 font-medium mt-auto">

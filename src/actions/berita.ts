@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { deleteStorageFileByUrl } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 
 function generateSlug(title: string): string {
@@ -110,6 +111,18 @@ export async function updateNews(formData: FormData) {
 
   if (!id || !title) throw new Error('ID dan judul berita tidak boleh kosong.');
 
+  const existingNews = await prisma.news.findUnique({
+    where: { id },
+    select: { coverImageUrl: true },
+  });
+
+  if (
+    existingNews?.coverImageUrl &&
+    existingNews.coverImageUrl !== coverImageUrl
+  ) {
+    await deleteStorageFileByUrl(existingNews.coverImageUrl);
+  }
+
   const baseSlug = generateSlug(title);
   const slug = await uniqueSlug(baseSlug, id);
 
@@ -133,6 +146,15 @@ export async function updateNews(formData: FormData) {
 }
 
 export async function deleteNews(id: string) {
+  const existing = await prisma.news.findUnique({
+    where: { id },
+    select: { coverImageUrl: true },
+  });
+
+  if (existing?.coverImageUrl) {
+    await deleteStorageFileByUrl(existing.coverImageUrl);
+  }
+
   await prisma.news.delete({ where: { id } });
   revalidatePath('/admin/berita');
   revalidatePath('/berita');

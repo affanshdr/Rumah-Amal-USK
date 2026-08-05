@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Poppins, Montserrat } from "next/font/google";
 import "@/app/globals.css";
 
-const jakartaSans = Plus_Jakarta_Sans({
+const poppins = Poppins({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-jakarta",
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-poppins",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-montserrat",
 });
 
 export const metadata: Metadata = {
@@ -21,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className={`${jakartaSans.variable} font-sans antialiased`}>
+    <html lang="id" className={`${poppins.variable} ${montserrat.variable} font-sans antialiased`}>
       <body className="min-h-screen bg-gray-50/50 text-gray-800">
         {children}
       </body>

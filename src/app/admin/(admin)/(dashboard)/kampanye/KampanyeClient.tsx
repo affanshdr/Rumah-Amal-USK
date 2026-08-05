@@ -207,6 +207,7 @@ export default function KampanyeClient({
     try {
       const fd = new FormData();
       fd.append("file", file);
+      fd.append("bucket", "Kampanye");
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       if (!res.ok) { const err = await res.json(); alert(`Upload gagal: ${err.error}`); return; }
       const result = await res.json();
@@ -539,6 +540,7 @@ export default function KampanyeClient({
                     <TipTapEditor
                       content={deskripsiHtml}
                       onChange={(html) => setDeskripsiHtml(html)}
+                      bucket="Kampanye"
                       minHeight="320px"
                     />
                   </div>

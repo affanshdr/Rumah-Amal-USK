@@ -1,6 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import { deleteStorageFileByUrl } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 
 export async function getKampanye() {
@@ -95,6 +96,19 @@ export async function updateKampanye(formData: FormData) {
     throw new Error('ID dan judul kampanye wajib diisi');
   }
 
+  const existingKampanye = await prisma.kampanye.findUnique({
+    where: { id },
+    select: { imageUrl: true },
+  });
+
+  if (
+    existingKampanye?.imageUrl &&
+    imageUrl &&
+    existingKampanye.imageUrl !== imageUrl
+  ) {
+    await deleteStorageFileByUrl(existingKampanye.imageUrl);
+  }
+
   await prisma.kampanye.update({
     where: { id },
     data: {
@@ -116,6 +130,15 @@ export async function updateKampanye(formData: FormData) {
 }
 
 export async function deleteKampanye(id: string) {
+  const existing = await prisma.kampanye.findUnique({
+    where: { id },
+    select: { imageUrl: true },
+  });
+
+  if (existing?.imageUrl) {
+    await deleteStorageFileByUrl(existing.imageUrl);
+  }
+
   await prisma.kampanye.delete({
     where: { id },
   });

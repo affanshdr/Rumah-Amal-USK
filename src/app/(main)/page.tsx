@@ -288,7 +288,7 @@ export default function Home() {
         ) : null}
 
         {/* 3 Action Cards */}
-        <div className="relative z-20 px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-10 md:-mt-12 max-w-[1340px] mx-auto">
+        <div className="relative z-20 px-4 sm:px-6 lg:px-8 mt-6 sm:mt-8 md:mt-10 max-w-[1340px] mx-auto">
 
           {/* 3 Action Cards Container */}
           <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 md:gap-7 max-w-[1240px] mx-auto">
@@ -368,7 +368,7 @@ export default function Home() {
         <RevealOnScroll>
           {/* Section Heading */}
           <div className="flex flex-col items-center mb-8 sm:mb-12">
-            <h2 className="text-[20px] sm:text-[22px] md:text-[26px] font-black text-gray-800 tracking-[0.15em] sm:tracking-[0.18em] uppercase text-center">
+            <h2 className="text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center">
               KAMPANYE UNGGULAN
             </h2>
             <div className="mt-2 sm:mt-2.5 w-12 sm:w-14 h-[3px] sm:h-[3.5px] bg-[#ffc800] rounded-full" />
@@ -425,7 +425,7 @@ export default function Home() {
                     {/* Body Content */}
                     <div className="p-5 sm:p-6 flex flex-col flex-1">
                       {/* Title */}
-                      <h3 className="font-extrabold text-[#1a1a1a] text-base sm:text-lg md:text-[19px] leading-snug mb-4 sm:mb-6 line-clamp-2 min-h-[48px] sm:min-h-[56px] group-hover:text-[#0b6330] transition-colors">
+                      <h3 className="font-bold text-[#112b27] text-base sm:text-lg md:text-[19px] leading-tight mb-3 sm:mb-4 line-clamp-2 min-h-[44px] sm:min-h-[48px] group-hover:text-[#0b6330] transition-colors">
                         {item.judul}
                       </h3>
 
@@ -494,7 +494,7 @@ export default function Home() {
         <RevealOnScroll>
           {/* Section Heading */}
           <div className="flex flex-col items-center mb-8 sm:mb-12">
-            <h2 className="text-[20px] sm:text-[22px] md:text-[26px] font-black text-gray-800 tracking-[0.15em] sm:tracking-[0.18em] uppercase text-center">
+            <h2 className="text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center">
               PROFIL
             </h2>
             <div className="mt-2 sm:mt-2.5 w-12 sm:w-14 h-[3px] sm:h-[3.5px] bg-[#ffc800] rounded-full" />
@@ -576,7 +576,7 @@ export default function Home() {
         <RevealOnScroll>
           {/* Section Heading */}
           <div className="flex flex-col items-center mb-8 sm:mb-12">
-            <h2 className="text-[20px] sm:text-[22px] md:text-[26px] font-black text-gray-800 tracking-[0.15em] sm:tracking-[0.18em] uppercase text-center">
+            <h2 className="text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center">
               PENGUMUMAN
             </h2>
             <div className="mt-2 sm:mt-2.5 w-12 sm:w-14 h-[3px] sm:h-[3.5px] bg-[#ffc800] rounded-full" />
@@ -649,7 +649,7 @@ export default function Home() {
                     </div>
 
                     <div className="flex flex-col justify-between flex-1">
-                      <h3 className="font-extrabold text-[#111827] text-xs sm:text-sm md:text-[15px] tracking-tight mb-3 sm:mb-4 uppercase leading-snug line-clamp-3 group-hover:text-[#0b6330] transition-colors">
+                      <h3 className="font-bold text-[#112b27] text-sm sm:text-[15px] leading-tight mb-2.5 sm:mb-3 line-clamp-4 group-hover:text-[#0b6330] transition-colors">
                         {item.title}
                       </h3>
                       <p className="text-[11px] sm:text-xs text-gray-500 font-medium mt-auto">
@@ -681,7 +681,7 @@ export default function Home() {
         <RevealOnScroll>
           {/* Section Heading */}
           <div className="flex flex-col items-center mb-8 sm:mb-12">
-            <h2 className="text-[20px] sm:text-[22px] md:text-[26px] font-black text-gray-800 tracking-[0.15em] sm:tracking-[0.18em] uppercase text-center">
+            <h2 className="text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center">
               BERITA TERKINI
             </h2>
             <div className="mt-2 sm:mt-2.5 w-12 sm:w-14 h-[3px] sm:h-[3.5px] bg-[#ffc800] rounded-full" />
@@ -754,7 +754,7 @@ export default function Home() {
                     </div>
 
                     <div className="flex flex-col justify-between flex-1">
-                      <h3 className="font-extrabold text-[#111827] text-xs sm:text-sm md:text-[15px] tracking-tight mb-3 sm:mb-4 uppercase leading-snug line-clamp-3 group-hover:text-[#0b6330] transition-colors">
+                      <h3 className="font-bold text-[#112b27] text-sm sm:text-[15px] leading-tight mb-2.5 sm:mb-3 line-clamp-4 group-hover:text-[#0b6330] transition-colors">
                         {item.title}
                       </h3>
                       <p className="text-[11px] sm:text-xs text-gray-500 font-medium mt-auto">
@@ -786,7 +786,7 @@ export default function Home() {
         <RevealOnScroll>
           {/* Section Heading */}
           <div className="flex flex-col items-center mb-8 sm:mb-12">
-            <h2 className="text-[20px] sm:text-[22px] md:text-[26px] font-black text-gray-800 tracking-[0.15em] sm:tracking-[0.18em] uppercase text-center">
+            <h2 className="text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center">
               NEWSLETTER
             </h2>
             <div className="mt-2 sm:mt-2.5 w-12 sm:w-14 h-[3px] sm:h-[3.5px] bg-[#ffc800] rounded-full" />
@@ -831,7 +831,7 @@ export default function Home() {
                   </div>
 
                   <div className="mt-auto px-1">
-                    <h3 className="font-extrabold text-[#111827] text-sm sm:text-base tracking-tight mb-1.5 sm:mb-2 uppercase leading-snug group-hover:text-[#0b6330] transition-colors">
+                    <h3 className="font-bold text-[#112b27] text-sm sm:text-base leading-tight mb-1.5 sm:mb-2 group-hover:text-[#0b6330] transition-colors">
                       NEWSLETTER: {item.judul}
                     </h3>
                     <p className="text-[11px] sm:text-xs text-gray-500 font-medium">

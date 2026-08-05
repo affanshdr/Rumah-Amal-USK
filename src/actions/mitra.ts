@@ -1,6 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import { deleteStorageFileByUrl } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 
 export async function getPaginatedMitra(page: number = 1, limit: number = 5) {
@@ -56,6 +57,15 @@ export async function updateMitra(formData: FormData) {
     throw new Error('Data mitra tidak lengkap');
   }
 
+  const existingMitra = await prisma.mitra.findUnique({
+    where: { id },
+    select: { imageUrl: true },
+  });
+
+  if (existingMitra?.imageUrl && existingMitra.imageUrl !== imageUrl) {
+    await deleteStorageFileByUrl(existingMitra.imageUrl);
+  }
+
   const item = await prisma.mitra.update({
     where: { id },
     data: {
@@ -71,6 +81,15 @@ export async function updateMitra(formData: FormData) {
 }
 
 export async function deleteMitra(id: string) {
+  const existing = await prisma.mitra.findUnique({
+    where: { id },
+    select: { imageUrl: true },
+  });
+
+  if (existing?.imageUrl) {
+    await deleteStorageFileByUrl(existing.imageUrl);
+  }
+
   await prisma.mitra.delete({ where: { id } });
   revalidatePath('/admin/mitra');
   revalidatePath('/upload/mitra');
