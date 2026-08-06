@@ -26,14 +26,20 @@ interface CommentItem {
 interface AnnouncementDetail {
   id: string;
   title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
   slug: string;
   category: string | null;
   coverImageUrl: string | null;
   content: string;
+  contentAr?: string | null;
+  contentEn?: string | null;
   viewsCount: number;
   publishedAt: string;
   tags?: Tag[];
 }
+
+type Language = 'id' | 'en' | 'ar';
 
 export default function PublicAnnouncementDetailPage({
   params,
@@ -46,6 +52,7 @@ export default function PublicAnnouncementDetailPage({
   const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
+  const [lang, setLang] = useState<Language>('id');
 
   // Form State Komentar Utama
   const [commentName, setCommentName] = useState('');
@@ -54,6 +61,18 @@ export default function PublicAnnouncementDetailPage({
 
   const [recentAnnouncements, setRecentAnnouncements] = useState<AnnouncementDetail[]>([]);
   const [sidebarQuery, setSidebarQuery] = useState('');
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem('announcement_lang') as Language;
+    if (savedLang && ['id', 'en', 'ar'].includes(savedLang)) {
+      setLang(savedLang);
+    }
+  }, []);
+
+  const changeLanguage = (newLang: Language) => {
+    setLang(newLang);
+    localStorage.setItem('announcement_lang', newLang);
+  };
 
   // Fetch Announcement & Recent Announcements
   const fetchAnnouncement = useCallback(async () => {
@@ -69,9 +88,7 @@ export default function PublicAnnouncementDetailPage({
         setAnnouncement(data.announcement);
 
         if (data.announcement?.id) {
-          // Increment view count
           fetch(`/api/announcements/${data.announcement.id}/views`, { method: 'POST' }).catch(() => {});
-          // Fetch Comments
           fetchComments(data.announcement.id);
         }
       }
@@ -107,7 +124,6 @@ export default function PublicAnnouncementDetailPage({
     fetchAnnouncement();
   }, [fetchAnnouncement]);
 
-  // Submit Main Comment
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentContent.trim() || !announcement) return;
@@ -139,10 +155,23 @@ export default function PublicAnnouncementDetailPage({
     }
   };
 
+  const getTitle = (item: AnnouncementDetail) => {
+    if (lang === 'en' && item.titleEn) return item.titleEn;
+    if (lang === 'ar' && item.titleAr) return item.titleAr;
+    return item.title;
+  };
+
+  const getContent = (item: AnnouncementDetail) => {
+    if (lang === 'en' && item.contentEn) return item.contentEn;
+    if (lang === 'ar' && item.contentAr) return item.contentAr;
+    return item.content;
+  };
+
   const formatDate = (dateStr: string) => {
     try {
       const d = new Date(dateStr);
-      return d.toLocaleDateString('id-ID', {
+      const localeMap = { id: 'id-ID', en: 'en-US', ar: 'ar-SA' };
+      return d.toLocaleDateString(localeMap[lang] || 'id-ID', {
         day: '2-digit',
         month: 'long',
         year: 'numeric',
@@ -158,11 +187,11 @@ export default function PublicAnnouncementDetailPage({
       const now = new Date();
       const diffMs = now.getTime() - date.getTime();
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      if (diffDays === 0) return 'Hari ini';
-      if (diffDays === 1) return 'Kemarin';
-      if (diffDays < 30) return `${diffDays} hari yang lalu`;
+      if (diffDays === 0) return lang === 'ar' ? 'اليوم' : lang === 'en' ? 'Today' : 'Hari ini';
+      if (diffDays === 1) return lang === 'ar' ? 'أمس' : lang === 'en' ? 'Yesterday' : 'Kemarin';
+      if (diffDays < 30) return `${diffDays} ${lang === 'ar' ? 'أيام مضت' : lang === 'en' ? 'days ago' : 'hari yang lalu'}`;
       const diffMonths = Math.floor(diffDays / 30);
-      return `${diffMonths} bulan yang lalu`;
+      return `${diffMonths} ${lang === 'ar' ? 'أشهر مضت' : lang === 'en' ? 'months ago' : 'bulan yang lalu'}`;
     } catch {
       return formatDate(dateStr);
     }
@@ -204,41 +233,83 @@ export default function PublicAnnouncementDetailPage({
     }
   };
 
+  const displayTitle = getTitle(announcement);
+  const displayContent = getContent(announcement);
+
   return (
-    <div className="min-h-screen bg-[#f8fafc]/50 py-8 px-4 sm:px-6 lg:px-8 font-sans text-gray-800">
+    <div className={`min-h-screen bg-[#f8fafc]/50 py-8 px-4 sm:px-6 lg:px-8 font-sans text-gray-800 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <div className="max-w-[1340px] mx-auto">
 
-        {/* Breadcrumb (Sesuai Web Asli) */}
-        <nav className="text-xs font-semibold mb-6 flex flex-wrap items-center gap-1.5 text-gray-600 leading-relaxed">
-          <Link href="/" className="hover:text-[#0b6330] transition-colors">
-            Beranda
-          </Link>
-          <span className="text-gray-400 font-bold">/</span>
-          <Link href="/pengumuman" className="hover:text-[#0b6330] transition-colors">
-            Pengumuman
-          </Link>
-          <span className="text-gray-400 font-bold">/</span>
-          <span className="text-[#0b6330] font-extrabold uppercase line-clamp-1">{announcement.title}</span>
-        </nav>
+        {/* Top Header: Breadcrumb & Language Switcher */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <nav className="text-xs font-semibold flex flex-wrap items-center gap-1.5 text-gray-600 leading-relaxed">
+            <Link href="/" className="hover:text-[#0b6330] transition-colors">
+              {lang === 'ar' ? 'الرئيسية' : lang === 'en' ? 'Home' : 'Beranda'}
+            </Link>
+            <span className="text-gray-400 font-bold">/</span>
+            <Link href="/pengumuman" className="hover:text-[#0b6330] transition-colors">
+              {lang === 'ar' ? 'الإعلانات' : lang === 'en' ? 'Announcements' : 'Pengumuman'}
+            </Link>
+            <span className="text-gray-400 font-bold">/</span>
+            <span className="text-[#0b6330] font-extrabold uppercase line-clamp-1">{displayTitle}</span>
+          </nav>
 
-        {/* Layout 2 Kolom (Kiri: Artikel Utama, Kanan: Sidebar Pencarian & Postingan Terkini) */}
+          {/* Language Switcher */}
+          <div className="inline-flex rounded-xl p-1 bg-white border border-gray-200 shadow-2xs shrink-0 self-end sm:self-auto">
+            <button
+              onClick={() => changeLanguage('id')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                lang === 'id'
+                  ? 'bg-[#0b6330] text-white shadow-xs'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <span>🇮🇩</span>
+              <span>ID</span>
+            </button>
+            <button
+              onClick={() => changeLanguage('en')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                lang === 'en'
+                  ? 'bg-[#0b6330] text-white shadow-xs'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <span>🇬🇧</span>
+              <span>EN</span>
+            </button>
+            <button
+              onClick={() => changeLanguage('ar')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                lang === 'ar'
+                  ? 'bg-[#0b6330] text-white shadow-xs'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <span>🇸🇦</span>
+              <span>AR</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Layout 2 Kolom */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
           {/* ===== KAMPUS/ARTIKEL UTAMA (Kiri - 8 Kolom) ===== */}
           <div className="lg:col-span-8 bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100/90">
 
-            {/* Judul Besar (Uppercase tebal khas web asli) */}
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 leading-snug mb-6 uppercase">
-              {announcement.title}
+            {/* Judul Besar */}
+            <h1 className={`text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 leading-snug mb-6 uppercase ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+              {displayTitle}
             </h1>
 
-            {/* Gambar Sampul/Banner Artikel */}
+            {/* Gambar Sampul */}
             {announcement.coverImageUrl && (
               <div className="mb-6 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={announcement.coverImageUrl}
-                  alt={announcement.title}
+                  alt={displayTitle}
                   className="w-full h-auto object-cover"
                 />
               </div>
@@ -257,10 +328,13 @@ export default function PublicAnnouncementDetailPage({
                 .public-article-content blockquote { border-left: 4px solid #d1d5db; padding-left: 1rem; color: #6b7280; font-style: italic; margin: 1.25rem 0; }
                 .public-article-content a { color: #2563eb; text-decoration: underline; }
                 .public-article-content img { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1.25rem 0; }
+                .rtl .public-article-content { text-align: right; }
+                .rtl .public-article-content blockquote { border-left: none; border-right: 4px solid #d1d5db; padding-left: 0; padding-right: 1rem; }
+                .rtl .public-article-content ul, .rtl .public-article-content ol { padding-left: 0; padding-right: 1.5rem; }
               `}</style>
               <div
                 className="public-article-content"
-                dangerouslySetInnerHTML={{ __html: announcement.content }}
+                dangerouslySetInnerHTML={{ __html: displayContent }}
               />
             </div>
 
@@ -287,23 +361,27 @@ export default function PublicAnnouncementDetailPage({
                       ))}
                     </div>
                   ) : (
-                    <span className="text-xs text-gray-400 font-normal">Umum</span>
+                    <span className="text-xs text-gray-400 font-normal">
+                      {lang === 'ar' ? 'عام' : lang === 'en' ? 'General' : 'Umum'}
+                    </span>
                   )}
                 </div>
               </div>
 
               <div className="flex items-center gap-3 pt-2">
-                <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Bagikan:</span>
+                <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  {lang === 'ar' ? 'مشاركة:' : lang === 'en' ? 'Share:' : 'Bagikan:'}
+                </span>
                 <button
                   onClick={() => {
                     if (navigator.clipboard) {
                       navigator.clipboard.writeText(window.location.href);
-                      alert('Link pengumuman berhasil disalin!');
+                      alert(lang === 'ar' ? 'تم نسخ رابط الإعلان!' : lang === 'en' ? 'Announcement link copied!' : 'Link pengumuman berhasil disalin!');
                     }
                   }}
                   className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1 rounded-md border border-gray-200 transition-colors cursor-pointer"
                 >
-                  📋 Salin Link
+                  📋 {lang === 'ar' ? 'نسخ الرابط' : lang === 'en' ? 'Copy Link' : 'Salin Link'}
                 </button>
               </div>
             </div>
@@ -311,7 +389,7 @@ export default function PublicAnnouncementDetailPage({
             {/* Seksi Komentar */}
             <div className="mt-8 pt-6 border-t border-gray-200">
               <h3 className="text-xl font-extrabold text-gray-900 mb-6">
-                Komentar ({comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0)})
+                {lang === 'ar' ? 'التعليقات' : lang === 'en' ? 'Comments' : 'Komentar'} ({comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0)})
               </h3>
 
               {/* Form Input Komentar Utama */}
@@ -320,7 +398,7 @@ export default function PublicAnnouncementDetailPage({
                   <div>
                     <input
                       type="text"
-                      placeholder="Nama (optional)"
+                      placeholder={lang === 'ar' ? 'الاسم (اختياري)' : lang === 'en' ? 'Name (optional)' : 'Nama (optional)'}
                       value={commentName}
                       onChange={(e) => setCommentName(e.target.value)}
                       className="w-full sm:w-80 px-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#0b6330] bg-white"
@@ -329,7 +407,7 @@ export default function PublicAnnouncementDetailPage({
                   <div>
                     <textarea
                       rows={3}
-                      placeholder="Tulis komentar Anda..."
+                      placeholder={lang === 'ar' ? 'اكتب تعليقك هنا...' : lang === 'en' ? 'Write your comment here...' : 'Tulis komentar Anda...'}
                       value={commentContent}
                       onChange={(e) => setCommentContent(e.target.value)}
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#0b6330] bg-white"
@@ -342,7 +420,7 @@ export default function PublicAnnouncementDetailPage({
                       disabled={submittingComment}
                       className="px-6 py-2.5 bg-[#0b6330] hover:bg-[#074722] text-white font-bold text-sm rounded-xl transition-colors cursor-pointer disabled:opacity-50 shadow-2xs"
                     >
-                      {submittingComment ? 'Sending…' : 'Kirim Komentar'}
+                      {submittingComment ? 'Sending…' : (lang === 'ar' ? 'إرسال التعليق' : lang === 'en' ? 'Submit Comment' : 'Kirim Komentar')}
                     </button>
                   </div>
                 </form>
@@ -353,7 +431,7 @@ export default function PublicAnnouncementDetailPage({
                 <div className="text-sm text-gray-400 py-4 animate-pulse">Memuat komentar…</div>
               ) : comments.length === 0 ? (
                 <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-sm">
-                  Belum ada komentar. Jadilah yang pertama memberikan komentar!
+                  {lang === 'ar' ? 'لا يوجد تعليقات حتى الآن.' : lang === 'en' ? 'No comments yet. Be the first to comment!' : 'Belum ada komentar. Jadilah yang pertama memberikan komentar!'}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -372,9 +450,9 @@ export default function PublicAnnouncementDetailPage({
                         {comment.content}
                       </p>
 
-                      {/* Child Replies (Balasan dari Admin) */}
+                      {/* Child Replies */}
                       {comment.replies && comment.replies.length > 0 && (
-                        <div className="mt-4 pl-4 border-l-2 border-[#0b6330] space-y-3">
+                        <div className="mt-4 pl-4 border-l-2 border-[#0b6330] space-y-3 rtl:pl-0 rtl:pr-4 rtl:border-l-0 rtl:border-r-2">
                           {comment.replies.map((reply) => (
                             <div key={reply.id} className="bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-100/80">
                               <div className="flex items-center gap-2 mb-1">
@@ -403,24 +481,26 @@ export default function PublicAnnouncementDetailPage({
 
           </div>
 
-          {/* ===== SIDEBAR KANAN (4 Kolom - Pencarian & Postingan Terkini) ===== */}
+          {/* ===== SIDEBAR KANAN (4 Kolom) ===== */}
           <div className="lg:col-span-4 bg-white rounded-2xl p-6 shadow-sm border border-gray-100/90 space-y-8 sticky top-24">
 
-            {/* Box 1: Pencarian (Tombol Kuning Khas Web Asli) */}
+            {/* Box 1: Pencarian */}
             <div>
-              <h3 className="font-extrabold text-base text-gray-900 mb-4 tracking-tight">Pencarian</h3>
+              <h3 className="font-extrabold text-base text-gray-900 mb-4 tracking-tight">
+                {lang === 'ar' ? 'البحث' : lang === 'en' ? 'Search' : 'Pencarian'}
+              </h3>
               <form onSubmit={handleSidebarSearchSubmit} className="flex">
                 <input
                   type="text"
-                  placeholder="Cari pengumuman berdasarkan judul...."
+                  placeholder={lang === 'ar' ? 'ابحث عن الإعلانات...' : lang === 'en' ? 'Search announcements...' : 'Cari pengumuman berdasarkan judul....'}
                   value={sidebarQuery}
                   onChange={(e) => setSidebarQuery(e.target.value)}
-                  className="flex-1 px-3.5 py-2.5 border border-gray-300 rounded-l-lg text-xs focus:outline-none focus:border-[#0b6330] bg-white text-gray-700 shadow-2xs"
+                  className="flex-1 px-3.5 py-2.5 border border-gray-300 rounded-l-lg text-xs focus:outline-none focus:border-[#0b6330] bg-white text-gray-700 shadow-2xs rtl:rounded-l-none rtl:rounded-r-lg"
                 />
                 <button
                   type="submit"
-                  aria-label="Cari"
-                  className="bg-[#ffc800] hover:bg-[#e8b500] text-white px-4 py-2.5 rounded-r-lg flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-2xs"
+                  aria-label="Search"
+                  className="bg-[#ffc800] hover:bg-[#e8b500] text-white px-4 py-2.5 rounded-r-lg flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-2xs rtl:rounded-r-none rtl:rounded-l-lg"
                 >
                   <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
                     <path fillRule="evenodd" clipRule="evenodd" d="M10.5 3.75a6.75 6.75 0 100 13.5 6.75 6.75 0 000-13.5zM2.25 10.5a8.25 8.25 0 1114.59 5.28l4.69 4.69a.75.75 0 11-1.06 1.06l-4.69-4.69A8.25 8.25 0 012.25 10.5z" />
@@ -429,45 +509,50 @@ export default function PublicAnnouncementDetailPage({
               </form>
             </div>
 
-            {/* Box 2: Postingan Terkini (Gambar Mini & Judul) */}
+            {/* Box 2: Postingan Terkini */}
             <div>
-              <h3 className="font-extrabold text-base text-gray-900 mb-4 tracking-tight">Postingan Terkini</h3>
+              <h3 className="font-extrabold text-base text-gray-900 mb-4 tracking-tight">
+                {lang === 'ar' ? 'أحدث الإعلانات' : lang === 'en' ? 'Recent Posts' : 'Postingan Terkini'}
+              </h3>
               <div className="space-y-4">
-                {recentAnnouncements.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/pengumuman/${item.slug}`}
-                    className="flex gap-3 group items-center"
-                  >
-                    <div className="w-20 h-14 bg-gray-50 rounded-lg overflow-hidden shrink-0 border border-gray-100/80">
-                      {item.coverImageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={item.coverImageUrl}
-                          alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#064e26] to-[#0b6330] text-white p-1">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                {recentAnnouncements.map((item) => {
+                  const recTitle = getTitle(item);
+                  return (
+                    <Link
+                      key={item.id}
+                      href={`/pengumuman/${item.slug}`}
+                      className="flex gap-3 group items-center"
+                    >
+                      <div className="w-20 h-14 bg-gray-50 rounded-lg overflow-hidden shrink-0 border border-gray-100/80">
+                        {item.coverImageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src="/logo/rumah-amal.png"
-                            alt="Rumah Amal"
-                            className="h-5 w-auto object-contain brightness-0 invert opacity-90"
+                            src={item.coverImageUrl}
+                            alt={recTitle}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                           />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-xs font-bold text-gray-800 group-hover:text-[#0b6330] line-clamp-2 leading-snug transition-colors uppercase">
-                        {item.title}
-                      </h4>
-                      <p className="text-[11px] text-gray-400 font-medium mt-1">
-                        {formatDate(item.publishedAt)}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#064e26] to-[#0b6330] text-white p-1">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src="/logo/rumah-amal.png"
+                              alt="Rumah Amal"
+                              className="h-5 w-auto object-contain brightness-0 invert opacity-90"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className={`text-xs font-bold text-gray-800 group-hover:text-[#0b6330] line-clamp-2 leading-snug transition-colors uppercase ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+                          {recTitle}
+                        </h4>
+                        <p className="text-[11px] text-gray-400 font-medium mt-1">
+                          {formatDate(item.publishedAt)}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
 

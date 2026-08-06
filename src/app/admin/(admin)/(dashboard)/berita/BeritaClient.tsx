@@ -26,6 +26,8 @@ const TipTapEditor = dynamic(() => import("@/components/TipTapEditor"), {
 type NewsRow = {
   id: string;
   title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
   slug: string;
   excerpt: string | null;
   category: string | null;
@@ -34,6 +36,8 @@ type NewsRow = {
   publishedAt: Date | null;
   viewsCount: number;
   content: string;
+  contentAr?: string | null;
+  contentEn?: string | null;
   createdAt: Date;
 };
 
