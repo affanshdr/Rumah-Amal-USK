@@ -10,6 +10,7 @@ import {
   faFileArrowUp,
 } from '@fortawesome/free-solid-svg-icons';
 import CsvImportModal from '@/components/admin/CsvImportModal';
+import AdminPagination from '@/components/admin/AdminPagination';
 
 type RekapItem = {
   id: string;
@@ -25,6 +26,8 @@ export default function AdminRekapZakatPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   async function loadData() {
     setLoading(true);
@@ -45,6 +48,10 @@ export default function AdminRekapZakatPage() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
   async function handleDelete(id: string) {
     if (!confirm('Hapus data rekap zakat ini?')) return;
     try {
@@ -61,6 +68,12 @@ export default function AdminRekapZakatPage() {
       item.dosenNIP.includes(search) ||
       (item.dosen?.nama && item.dosen.nama.toLowerCase().includes(search.toLowerCase())) ||
       item.tahunRekap.includes(search)
+  );
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedData = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
   );
 
   return (
@@ -126,7 +139,7 @@ export default function AdminRekapZakatPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((item) => (
+                paginatedData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-3.5 px-4 font-mono font-bold text-gray-800">{item.dosenNIP}</td>
                     <td className="py-3.5 px-4 font-semibold text-gray-900">
@@ -166,6 +179,15 @@ export default function AdminRekapZakatPage() {
             </tbody>
           </table>
         </div>
+
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filtered.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+          itemLabel="rekap zakat"
+        />
       </div>
 
       {/* CSV Import Modal */}

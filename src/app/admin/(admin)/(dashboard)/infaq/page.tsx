@@ -15,6 +15,7 @@ import {
   faFileArrowUp,
 } from '@fortawesome/free-solid-svg-icons';
 import CsvImportModal from '@/components/admin/CsvImportModal';
+import AdminPagination from '@/components/admin/AdminPagination';
 
 type DosenInfo = {
   nip: string;
@@ -74,6 +75,8 @@ export default function AdminInfaqPage() {
   const [activeTab, setActiveTab] = useState<'bebas' | 'terikat'>('bebas');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'lunas' | 'ditolak'>('all');
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   // Edit Modal State
   const [editingItem, setEditingItem] = useState<InfaqItem | null>(null);
@@ -108,6 +111,10 @@ export default function AdminInfaqPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, filterStatus, search]);
 
   async function handleAction(id: string, action: 'approve' | 'reject') {
     await fetch(`/api/admin/infaq/${id}/${action}`, { method: 'PATCH' });
@@ -161,6 +168,12 @@ export default function AdminInfaqPage() {
     const matchStatus = filterStatus === 'all' ? true : item.status === filterStatus;
     return matchSearch && matchStatus;
   });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedData = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const bebasCount = data.filter(isInfaqBebas).length;
   const terikatCount = data.filter((i) => !isInfaqBebas(i)).length;
@@ -307,7 +320,7 @@ export default function AdminInfaqPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((item) => (
+                paginatedData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                     {/* Nama Pembayar */}
                     <td className="py-3.5 px-4">
@@ -324,12 +337,15 @@ export default function AdminInfaqPage() {
                     {activeTab === 'terikat' && (
                       <td className="py-3.5 px-4">
                         {item.kampanyeJudul ? (
-                          <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-100 px-2 py-1 rounded-lg font-semibold">
-                            <FontAwesomeIcon icon={faLink} className="w-2.5 h-2.5" />
+                          <span className="inline-flex items-center gap-1 font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
+                            <FontAwesomeIcon icon={faLink} className="w-2.5 h-2.5 text-emerald-600" />
                             {item.kampanyeJudul}
                           </span>
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="inline-flex items-center gap-1 text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100 text-[11px]">
+                            <FontAwesomeIcon icon={faUnlink} className="w-2.5 h-2.5 text-gray-300" />
+                            Bebas
+                          </span>
                         )}
                       </td>
                     )}
@@ -340,7 +356,7 @@ export default function AdminInfaqPage() {
                         <div>
                           <p className="font-semibold text-gray-800">{item.dosen.nama}</p>
                           {item.dosen.unitKerja && (
-                            <p className="text-[10px] text-gray-500 mt-0.5">{item.dosen.unitKerja}</p>
+                            <p className="text-[10px] text-[#063A1E] mt-0.5">{item.dosen.unitKerja}</p>
                           )}
                         </div>
                       ) : (
@@ -409,6 +425,14 @@ export default function AdminInfaqPage() {
             </tbody>
           </table>
         </div>
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filtered.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+          itemLabel="infaq"
+        />
       </div>
 
       {/* Edit Modal */}

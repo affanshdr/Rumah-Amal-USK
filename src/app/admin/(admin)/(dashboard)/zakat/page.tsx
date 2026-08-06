@@ -13,6 +13,7 @@ import {
   faFileArrowUp,
 } from '@fortawesome/free-solid-svg-icons';
 import CsvImportModal from '@/components/admin/CsvImportModal';
+import AdminPagination from '@/components/admin/AdminPagination';
 
 type DosenInfo = {
   nip: string;
@@ -61,6 +62,8 @@ export default function AdminZakatPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'lunas' | 'ditolak'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   // Edit Modal State
   const [editingItem, setEditingItem] = useState<ZakatItem | null>(null);
@@ -84,6 +87,10 @@ export default function AdminZakatPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterStatus]);
 
   async function handleAction(id: string, action: 'approve' | 'reject') {
     await fetch(`/api/admin/zakat/${id}/${action}`, { method: 'PATCH' });
@@ -130,6 +137,12 @@ export default function AdminZakatPage() {
     const matchStatus = filterStatus === 'all' ? true : item.status === filterStatus;
     return matchSearch && matchStatus;
   });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedData = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const counts = {
     all: data.length,
@@ -230,7 +243,7 @@ export default function AdminZakatPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((item) => (
+                paginatedData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                     {/* Muzakki */}
                     <td className="py-3.5 px-4">
@@ -249,7 +262,7 @@ export default function AdminZakatPage() {
                         <div>
                           <p className="font-semibold text-gray-800">{item.dosen.nama}</p>
                           {item.dosen.unitKerja && (
-                            <p className="text-[10px] text-gray-500 mt-0.5">{item.dosen.unitKerja}</p>
+                            <p className="text-[10px] text-[#063A1E] mt-0.5">{item.dosen.unitKerja}</p>
                           )}
                         </div>
                       ) : (
@@ -320,6 +333,14 @@ export default function AdminZakatPage() {
             </tbody>
           </table>
         </div>
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filtered.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+          itemLabel="zakat"
+        />
       </div>
 
       {/* Edit Modal */}

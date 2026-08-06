@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createDosen, updateDosen, deleteDosen } from '@/actions/dosen';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faSearch, faEdit, faTrash, faUserTie, faFileArrowUp } from '@fortawesome/free-solid-svg-icons';
 import CsvImportModal from '@/components/admin/CsvImportModal';
+import AdminPagination from '@/components/admin/AdminPagination';
 
 type DosenItem = {
   nip: string;
@@ -23,6 +24,12 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
   const [editingDosen, setEditingDosen] = useState<DosenItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
 
   // Form states
   const [nip, setNip] = useState('');
@@ -36,6 +43,12 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
       item.nama.toLowerCase().includes(search.toLowerCase()) ||
       item.nip.toLowerCase().includes(search.toLowerCase()) ||
       (item.unitKerja && item.unitKerja.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
   );
 
   function openAddModal() {
@@ -174,7 +187,7 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
                   </td>
                 </tr>
               ) : (
-                filteredData.map((item) => (
+                paginatedData.map((item) => (
                   <tr key={item.nip} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-3.5 px-4 font-mono font-bold text-gray-800">{item.nip}</td>
                     <td className="py-3.5 px-4 font-semibold text-gray-900">{item.nama}</td>
@@ -205,6 +218,15 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
             </tbody>
           </table>
         </div>
+
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filteredData.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+          itemLabel="dosen"
+        />
       </div>
 
       {/* Modal Form Tambah / Edit */}
