@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSave } from "@fortawesome/free-solid-svg-icons";
 import { deleteDocumentAction, updateDocumentAction } from "@/actions/dokumen";
 
 type DocumentRow = {
@@ -333,8 +335,8 @@ export default function DokumenClient({
                 <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer">
                   Batal
                 </button>
-                <button type="submit" disabled={uploading} className="px-6 py-2 text-xs font-bold text-white bg-[#005621] hover:bg-[#004219] rounded-xl transition-colors cursor-pointer disabled:opacity-50">
-                  {uploading ? "Menyimpan…" : editingItem ? "💾 Simpan Perubahan" : "💾 Simpan Dokumen"}
+                <button type="submit" disabled={uploading} className="px-6 py-2 text-xs font-bold text-white bg-[#005621] hover:bg-[#004219] rounded-xl transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                  {uploading ? "Menyimpan…" : <><FontAwesomeIcon icon={faSave} /> {editingItem ? "Simpan Perubahan" : "Simpan Dokumen"}</>}
                 </button>
               </div>
             </form>

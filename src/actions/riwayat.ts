@@ -3,8 +3,14 @@
 import { prisma } from '@/lib/prisma';
 
 export async function cariRiwayat(nip: string) {
+  const cleanNip = nip.trim();
+
+  const dosen = await prisma.dosen.findUnique({
+    where: { nip: cleanNip },
+  });
+
   const riwayatZakat = await prisma.zakat.findMany({
-    where: { nip },
+    where: { nip: cleanNip },
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,
@@ -17,7 +23,7 @@ export async function cariRiwayat(nip: string) {
   });
 
   const riwayatInfaq = await prisma.infaq.findMany({
-    where: { nip },
+    where: { nip: cleanNip },
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,
@@ -25,25 +31,50 @@ export async function cariRiwayat(nip: string) {
       jumlahInfaq: true,
       status: true,
       createdAt: true,
+      kampanye: {
+        select: { judul: true },
+      },
     },
   });
 
-  // Ambil nama dari zakat/infaq pertama yang ditemukan
+  const rekapZakatList = await prisma.rekapZakat.findMany({
+    where: { dosenNIP: cleanNip },
+    orderBy: { tahunRekap: 'desc' },
+    select: {
+      id: true,
+      tahunRekap: true,
+      fileUrl: true,
+      createdAt: true,
+    },
+  });
+
+  // Ambil nama dari Zakat/Infaq jika tidak ada di Dosen
   const zakatWithNama = await prisma.zakat.findFirst({
-    where: { nip },
+    where: { nip: cleanNip },
     select: { nama: true },
   });
 
   const infaqWithNama = await prisma.infaq.findFirst({
-    where: { nip },
+    where: { nip: cleanNip },
     select: { nama: true },
   });
 
-  const nama = zakatWithNama?.nama || infaqWithNama?.nama;
+  const nama = dosen?.nama || zakatWithNama?.nama || infaqWithNama?.nama || null;
+
+  const totalZakatLunas = riwayatZakat
+    .filter((z) => z.status === 'lunas')
+    .reduce((acc, z) => acc + (z.jumlahZakat || 0), 0);
+
+  const totalInfaqLunas = riwayatInfaq
+    .filter((i) => i.status === 'lunas')
+    .reduce((acc, i) => acc + (i.jumlahInfaq || 0), 0);
 
   return {
-    nip,
+    nip: cleanNip,
     nama,
+    unitKerja: dosen?.unitKerja || null,
+    totalZakatLunas,
+    totalInfaqLunas,
     riwayatZakat: riwayatZakat.map((z) => ({
       id: z.id,
       jenis_zakat: z.jenisZakat,
@@ -52,9 +83,16 @@ export async function cariRiwayat(nip: string) {
       status: z.status as 'pending' | 'lunas' | 'ditolak',
       created_at: z.createdAt,
     })),
+    rekapZakat: rekapZakatList.map((r) => ({
+      id: r.id,
+      tahunRekap: r.tahunRekap,
+      fileUrl: r.fileUrl,
+      createdAt: r.createdAt,
+    })),
     riwayatInfaq: riwayatInfaq.map((i) => ({
       id: i.id,
       jenis_infaq: i.jenisInfaq,
+      kampanye_judul: i.kampanye?.judul || null,
       jumlah_infaq: i.jumlahInfaq,
       status: i.status as 'pending' | 'lunas' | 'ditolak',
       created_at: i.createdAt,

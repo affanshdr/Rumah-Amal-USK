@@ -144,7 +144,7 @@ export default function Navbar() {
                 href="/zakat"
                 className="hidden lg:inline-flex items-center justify-center bg-[#ffc800] hover:bg-[#e8b500] text-[#1a1a1a] font-extrabold text-[13px] px-5 py-2.5 rounded-lg transition-all duration-200"
               >
-                Kalkulator Zakat
+                Bayar Zakat
               </Link>
 
               {/* Mobile Menu Button */}

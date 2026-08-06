@@ -510,11 +510,11 @@ export default function TipTapEditor({ content, onChange, onUpload, minHeight = 
           className="flex items-center gap-1.5 h-8 px-2.5 text-[12px] font-semibold text-emerald-900 bg-emerald-100 border border-emerald-300 rounded-md hover:bg-emerald-200 transition-colors cursor-pointer shrink-0"
         >
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor"><path d="M4 10h16v2H4zm0 4h16v2H4zm0-8h16v2H4zm-2-4v18h20V2H2zm18 16H4V4h16v14z"/></svg>
-          🟢 Banner Rekening
+          Banner Rekening
         </button>
 
         {uploading && (
-          <span className="ml-2 text-[11px] text-amber-600 font-semibold animate-pulse">⏳ {uploadLabel}</span>
+          <span className="ml-2 text-[11px] text-amber-600 font-semibold animate-pulse">{uploadLabel}</span>
         )}
       </div>
 
@@ -572,7 +572,7 @@ export default function TipTapEditor({ content, onChange, onUpload, minHeight = 
       {pdfDialogOpen && (
         <div className="flex flex-col gap-2.5 px-3 py-3 bg-emerald-50 border-b border-emerald-200">
           <span className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
-            📄 Sisipkan Tombol Download PDF
+            Sisipkan Tombol Download PDF
           </span>
           <div className="flex items-center gap-2">
             <span className="text-xs text-emerald-700 shrink-0 w-14">Label:</span>
@@ -624,7 +624,7 @@ export default function TipTapEditor({ content, onChange, onUpload, minHeight = 
       {bankBannerDialogOpen && (
         <div className="flex flex-col gap-2.5 px-3 py-3 bg-emerald-50 border-b border-emerald-200">
           <span className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
-            💳 Sisipkan Banner Rekening Donasi
+            Sisipkan Banner Rekening Donasi
           </span>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <input

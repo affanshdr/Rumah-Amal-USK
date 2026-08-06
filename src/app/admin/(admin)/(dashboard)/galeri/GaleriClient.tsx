@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUpload, faSpinner, faSave } from "@fortawesome/free-solid-svg-icons";
 import { addGalleryImage, deleteGalleryImage, uploadGalleryImages } from "@/actions/gallery";
 
 type GalleryRow = {
@@ -56,6 +58,7 @@ export default function GaleriClient({
     try {
       const fd = new FormData();
       fd.append("file", file);
+      fd.append("bucket", "Galeri");
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       if (!res.ok) { const err = await res.json(); alert(`Upload gagal: ${err.error}`); return; }
       const result = await res.json();
@@ -251,8 +254,12 @@ export default function GaleriClient({
                 <div className="flex items-center gap-3">
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
                   <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                    className="px-4 py-2 bg-[#005621] text-white hover:bg-[#004219] rounded-xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-50">
-                    {uploading ? "⏳ Mengupload…" : "📤 Upload File Foto"}
+                    className="px-4 py-2 bg-[#005621] text-white hover:bg-[#004219] rounded-xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                    {uploading ? (
+                      <><FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Mengupload…</>
+                    ) : (
+                      <><FontAwesomeIcon icon={faUpload} /> Upload File Foto</>
+                    )}
                   </button>
                   <span className="text-xs text-gray-400">atau</span>
                   <input
@@ -280,8 +287,8 @@ export default function GaleriClient({
                 <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer">
                   Batal
                 </button>
-                <button type="submit" disabled={uploading || !imageUrlInput.trim()} className="px-6 py-2 text-xs font-bold text-white bg-[#005621] hover:bg-[#004219] rounded-xl transition-colors cursor-pointer disabled:opacity-50">
-                  {uploading ? "Simpan…" : "💾 Simpan Foto"}
+                <button type="submit" disabled={uploading || !imageUrlInput.trim()} className="px-6 py-2 text-xs font-bold text-white bg-[#005621] hover:bg-[#004219] rounded-xl transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                  {uploading ? "Simpan…" : <><FontAwesomeIcon icon={faSave} /> Simpan Foto</>}
                 </button>
               </div>
             </form>

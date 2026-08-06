@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faImage, faUpload, faSync, faSpinner, faSave } from "@fortawesome/free-solid-svg-icons";
 import {
   addAnnouncement,
   updateAnnouncement,
@@ -218,6 +220,7 @@ export default function PengumumanClient({
     try {
       const fd = new FormData();
       fd.append("file", file);
+      fd.append("bucket", "announcements");
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       if (!res.ok) { const err = await res.json(); alert(`Upload gagal: ${err.error}`); return; }
       const result = await res.json();
@@ -486,7 +489,10 @@ export default function PengumumanClient({
 
                   {/* Cover Image */}
                   <div className="rounded-xl border border-gray-200 bg-gray-50/70 p-4 space-y-3">
-                    <label className="block text-xs font-bold text-gray-700">🖼️ Gambar Cover / Header</label>
+                    <label className="block text-xs font-bold text-gray-700">
+                      <FontAwesomeIcon icon={faImage} className="mr-1.5 text-gray-500" />
+                      Gambar Cover / Header
+                    </label>
                     {coverPreview && (
                       <div className="relative rounded-lg overflow-hidden border border-gray-200 bg-white flex justify-center max-h-[200px]">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -496,8 +502,14 @@ export default function PengumumanClient({
                     <div className="flex items-center gap-3">
                       <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
                       <button type="button" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}
-                        className="px-4 py-2 bg-white hover:bg-gray-100 border border-gray-300 rounded-lg text-xs font-bold text-gray-700 transition-colors shadow-sm cursor-pointer disabled:opacity-50">
-                        {uploadingCover ? "⏳ Mengupload…" : coverPreview ? "🔄 Ganti Gambar" : "📤 Upload Gambar"}
+                        className="px-4 py-2 bg-white hover:bg-gray-100 border border-gray-300 rounded-lg text-xs font-bold text-gray-700 transition-colors shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                        {uploadingCover ? (
+                          <><FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Mengupload…</>
+                        ) : coverPreview ? (
+                          <><FontAwesomeIcon icon={faSync} /> Ganti Gambar</>
+                        ) : (
+                          <><FontAwesomeIcon icon={faUpload} /> Upload Gambar</>
+                        )}
                       </button>
                       {coverPreview && (
                         <button type="button" onClick={() => setCoverPreview("")} className="text-xs text-red-500 hover:text-red-700 font-bold cursor-pointer">Hapus</button>
@@ -589,7 +601,7 @@ export default function PengumumanClient({
                     {isSubmitting ? (
                       <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>Menyimpan…</>
                     ) : (
-                      <>💾 {editing ? "Perbarui Pengumuman" : "Simpan Pengumuman"}</>
+                      <><FontAwesomeIcon icon={faSave} /> {editing ? "Perbarui Pengumuman" : "Simpan Pengumuman"}</>
                     )}
                   </button>
                 </div>

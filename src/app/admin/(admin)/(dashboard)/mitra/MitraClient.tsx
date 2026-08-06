@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUpload, faSync, faSpinner, faSave } from "@fortawesome/free-solid-svg-icons";
 import { addMitra, updateMitra, deleteMitra } from "@/actions/mitra";
 
 type MitraRow = {
@@ -85,6 +87,7 @@ export default function MitraClient({
     try {
       const fd = new FormData();
       fd.append("file", file);
+      fd.append("bucket", "Mitra");
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       if (!res.ok) { const err = await res.json(); alert(`Upload gagal: ${err.error}`); return; }
       const result = await res.json();
@@ -305,8 +308,14 @@ export default function MitraClient({
                 <div className="flex items-center gap-3">
                   <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
                   <button type="button" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo}
-                    className="px-4 py-2 bg-white hover:bg-gray-100 border border-gray-300 rounded-xl text-xs font-bold text-gray-700 transition-colors shadow-2xs cursor-pointer disabled:opacity-50">
-                    {uploadingLogo ? "⏳ Uploading…" : logoPreview ? "🔄 Ganti Logo" : "📤 Upload Logo"}
+                    className="px-4 py-2 bg-white hover:bg-gray-100 border border-gray-300 rounded-xl text-xs font-bold text-gray-700 transition-colors shadow-2xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                    {uploadingLogo ? (
+                      <><FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Uploading…</>
+                    ) : logoPreview ? (
+                      <><FontAwesomeIcon icon={faSync} /> Ganti Logo</>
+                    ) : (
+                      <><FontAwesomeIcon icon={faUpload} /> Upload Logo</>
+                    )}
                   </button>
                 </div>
               </div>
@@ -327,8 +336,8 @@ export default function MitraClient({
                 <button type="button" onClick={closeModal} className="px-4 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer">
                   Batal
                 </button>
-                <button type="submit" disabled={isSubmitting || !logoPreview} className="px-6 py-2 text-xs font-bold text-white bg-[#005621] hover:bg-[#004219] rounded-xl transition-colors cursor-pointer disabled:opacity-50">
-                  {isSubmitting ? "Simpan…" : "💾 Simpan Mitra"}
+                <button type="submit" disabled={isSubmitting || !logoPreview} className="px-6 py-2 text-xs font-bold text-white bg-[#005621] hover:bg-[#004219] rounded-xl transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                  {isSubmitting ? "Simpan…" : <><FontAwesomeIcon icon={faSave} /> Simpan Mitra</>}
                 </button>
               </div>
             </form>

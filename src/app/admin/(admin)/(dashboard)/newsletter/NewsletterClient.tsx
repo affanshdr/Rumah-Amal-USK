@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUpload, faSync, faSpinner, faSave } from "@fortawesome/free-solid-svg-icons";
 import { addNewsletter, deleteNewsletter } from "@/actions/newsletter";
 
 type NewsletterRow = {
@@ -62,6 +64,7 @@ export default function NewsletterClient({
     try {
       const fd = new FormData();
       fd.append("file", file);
+      fd.append("bucket", "Newsletter");
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       if (!res.ok) { const err = await res.json(); alert(`Upload gagal: ${err.error}`); return; }
       const result = await res.json();
@@ -286,8 +289,14 @@ export default function NewsletterClient({
                 <div className="flex items-center gap-3">
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                   <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                    className="px-4 py-2 bg-white hover:bg-gray-100 border border-gray-300 rounded-xl text-xs font-bold text-gray-700 transition-colors shadow-2xs cursor-pointer disabled:opacity-50">
-                    {uploading ? "⏳ Uploading…" : imagePreview ? "🔄 Ganti Gambar" : "📤 Upload Gambar"}
+                    className="px-4 py-2 bg-white hover:bg-gray-100 border border-gray-300 rounded-xl text-xs font-bold text-gray-700 transition-colors shadow-2xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                    {uploading ? (
+                      <><FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Uploading…</>
+                    ) : imagePreview ? (
+                      <><FontAwesomeIcon icon={faSync} /> Ganti Gambar</>
+                    ) : (
+                      <><FontAwesomeIcon icon={faUpload} /> Upload Gambar</>
+                    )}
                   </button>
                 </div>
               </div>
@@ -296,8 +305,8 @@ export default function NewsletterClient({
                 <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer">
                   Batal
                 </button>
-                <button type="submit" disabled={uploading || !imagePreview} className="px-6 py-2 text-xs font-bold text-white bg-[#005621] hover:bg-[#004219] rounded-xl transition-colors cursor-pointer disabled:opacity-50">
-                  {uploading ? "Simpan…" : "💾 Simpan Newsletter"}
+                <button type="submit" disabled={uploading || !imagePreview} className="px-6 py-2 text-xs font-bold text-white bg-[#005621] hover:bg-[#004219] rounded-xl transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                  {uploading ? "Simpan…" : <><FontAwesomeIcon icon={faSave} /> Simpan Newsletter</>}
                 </button>
               </div>
             </form>
