@@ -38,6 +38,8 @@ export async function getAnnouncements(page: number = 1, limit: number = 5) {
       select: {
         id: true,
         title: true,
+        titleAr: true,
+        titleEn: true,
         slug: true,
         excerpt: true,
         category: true,
@@ -46,6 +48,8 @@ export async function getAnnouncements(page: number = 1, limit: number = 5) {
         publishedAt: true,
         viewsCount: true,
         content: true,
+        contentAr: true,
+        contentEn: true,
         createdAt: true,
       },
     }),
@@ -69,10 +73,14 @@ export async function getAnnouncements(page: number = 1, limit: number = 5) {
 
 export async function addAnnouncement(formData: FormData) {
   const title = (formData.get('title') as string).trim();
+  const titleAr = (formData.get('titleAr') as string | null)?.trim() || null;
+  const titleEn = (formData.get('titleEn') as string | null)?.trim() || null;
   const excerpt = (formData.get('excerpt') as string | null)?.trim() || null;
   const category = (formData.get('category') as string | null)?.trim() || 'Umum';
   const coverImageUrl = (formData.get('coverImageUrl') as string | null)?.trim() || null;
   const content = (formData.get('content') as string | null)?.trim() || '';
+  const contentAr = (formData.get('contentAr') as string | null)?.trim() || null;
+  const contentEn = (formData.get('contentEn') as string | null)?.trim() || null;
   const publishedAtRaw = formData.get('publishedAt') as string | null;
   const published = formData.get('published') === '1';
 
@@ -84,11 +92,15 @@ export async function addAnnouncement(formData: FormData) {
   await prisma.announcement.create({
     data: {
       title,
+      titleAr,
+      titleEn,
       slug,
       excerpt,
       category,
       coverImageUrl,
       content,
+      contentAr,
+      contentEn,
       published,
       publishedAt: publishedAtRaw ? new Date(publishedAtRaw) : new Date(),
     },
@@ -101,10 +113,14 @@ export async function addAnnouncement(formData: FormData) {
 export async function updateAnnouncement(formData: FormData) {
   const id = formData.get('id') as string;
   const title = (formData.get('title') as string).trim();
+  const titleAr = (formData.get('titleAr') as string | null)?.trim() || null;
+  const titleEn = (formData.get('titleEn') as string | null)?.trim() || null;
   const excerpt = (formData.get('excerpt') as string | null)?.trim() || null;
   const category = (formData.get('category') as string | null)?.trim() || 'Umum';
   const coverImageUrl = (formData.get('coverImageUrl') as string | null)?.trim() || null;
   const content = (formData.get('content') as string | null)?.trim() || '';
+  const contentAr = (formData.get('contentAr') as string | null)?.trim() || null;
+  const contentEn = (formData.get('contentEn') as string | null)?.trim() || null;
   const publishedAtRaw = formData.get('publishedAt') as string | null;
   const published = formData.get('published') === '1';
 
@@ -130,11 +146,15 @@ export async function updateAnnouncement(formData: FormData) {
     where: { id },
     data: {
       title,
+      titleAr,
+      titleEn,
       slug,
       excerpt,
       category,
       coverImageUrl,
       content,
+      contentAr,
+      contentEn,
       published,
       publishedAt: publishedAtRaw ? new Date(publishedAtRaw) : undefined,
     },

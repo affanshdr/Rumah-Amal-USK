@@ -6,6 +6,8 @@ import Link from 'next/link';
 interface AnnouncementItem {
   id: string;
   title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
   slug: string;
   category: string | null;
   coverImageUrl: string | null;
@@ -13,13 +15,28 @@ interface AnnouncementItem {
   createdAt: string;
 }
 
+type Language = 'id' | 'en' | 'ar';
+
 export default function PublicAnnouncementListPage() {
   const [items, setItems] = useState<AnnouncementItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeQuery, setActiveQuery] = useState('');
   const [page, setPage] = useState(1);
+  const [lang, setLang] = useState<Language>('id');
   const ITEMS_PER_PAGE = 9;
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem('announcement_lang') as Language;
+    if (savedLang && ['id', 'en', 'ar'].includes(savedLang)) {
+      setLang(savedLang);
+    }
+  }, []);
+
+  const changeLanguage = (newLang: Language) => {
+    setLang(newLang);
+    localStorage.setItem('announcement_lang', newLang);
+  };
 
   const fetchAnnouncements = useCallback(async () => {
     setLoading(true);
@@ -46,10 +63,17 @@ export default function PublicAnnouncementListPage() {
     setActiveQuery(searchQuery);
   };
 
+  const getTitle = (item: AnnouncementItem) => {
+    if (lang === 'en' && item.titleEn) return item.titleEn;
+    if (lang === 'ar' && item.titleAr) return item.titleAr;
+    return item.title;
+  };
+
   // Filter items based on search query
   const filteredItems = items.filter((item) => {
     if (!activeQuery.trim()) return true;
-    return item.title.toLowerCase().includes(activeQuery.trim().toLowerCase());
+    const titleToSearch = getTitle(item).toLowerCase();
+    return titleToSearch.includes(activeQuery.trim().toLowerCase());
   });
 
   const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE) || 1;
@@ -68,7 +92,8 @@ export default function PublicAnnouncementListPage() {
   const formatDate = (dateStr: string) => {
     try {
       const d = new Date(dateStr);
-      return d.toLocaleDateString('id-ID', {
+      const localeMap = { id: 'id-ID', en: 'en-US', ar: 'ar-SA' };
+      return d.toLocaleDateString(localeMap[lang] || 'id-ID', {
         day: '2-digit',
         month: 'long',
         year: 'numeric',
@@ -78,15 +103,90 @@ export default function PublicAnnouncementListPage() {
     }
   };
 
+  const labels = {
+    id: {
+      searchPlaceholder: 'Cari pengumuman berdasarkan judul...',
+      searchBtn: 'Cari',
+      badge: 'PENGUMUMAN',
+      officialBadge: 'PENGUMUMAN RESMI',
+      notFoundTitle: 'Pengumuman tidak ditemukan',
+      notFoundText: 'Belum ada pengumuman yang dipublikasikan.',
+      prev: '< Sebelumnya',
+      next: 'Berikutnya >',
+    },
+    en: {
+      searchPlaceholder: 'Search announcements by title...',
+      searchBtn: 'Search',
+      badge: 'ANNOUNCEMENT',
+      officialBadge: 'OFFICIAL ANNOUNCEMENT',
+      notFoundTitle: 'No announcements found',
+      notFoundText: 'No announcements published yet.',
+      prev: '< Previous',
+      next: 'Next >',
+    },
+    ar: {
+      searchPlaceholder: 'ابحث عن الإعلانات بالعنوان...',
+      searchBtn: 'بحث',
+      badge: 'إعلان',
+      officialBadge: 'إعلان رسمي',
+      notFoundTitle: 'لم يتم العثور على إعلانات',
+      notFoundText: 'لم يتم نشر أي إعلانات حتى الآن.',
+      prev: '< السابق',
+      next: 'التالي >',
+    },
+  }[lang];
+
   return (
-    <div className="min-h-screen bg-white py-6 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className={`min-h-screen bg-white py-6 px-4 sm:px-6 lg:px-8 font-sans ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <div className="max-w-[1340px] mx-auto">
 
-        {/* Search Bar (Terpusat & Bersih seperti web asli) */}
-        <form onSubmit={handleSearchSubmit} className="max-w-xl mx-auto mb-10 mt-2 flex gap-2.5">
+        {/* Top Bar: Language Switcher */}
+        <div className="flex items-center justify-end gap-2 mb-6">
+          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+            {lang === 'ar' ? 'اللغة:' : lang === 'en' ? 'Language:' : 'Bahasa:'}
+          </span>
+          <div className="inline-flex rounded-xl p-1 bg-gray-100 border border-gray-200 shadow-2xs">
+            <button
+              onClick={() => changeLanguage('id')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                lang === 'id'
+                  ? 'bg-[#0b6330] text-white shadow-xs'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
+              }`}
+            >
+              <span>🇮🇩</span>
+              <span>Indonesia</span>
+            </button>
+            <button
+              onClick={() => changeLanguage('en')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                lang === 'en'
+                  ? 'bg-[#0b6330] text-white shadow-xs'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
+              }`}
+            >
+              <span>🇬🇧</span>
+              <span>English</span>
+            </button>
+            <button
+              onClick={() => changeLanguage('ar')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                lang === 'ar'
+                  ? 'bg-[#0b6330] text-white shadow-xs'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
+              }`}
+            >
+              <span>🇸🇦</span>
+              <span>العربية</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <form onSubmit={handleSearchSubmit} className="max-w-xl mx-auto mb-10 flex gap-2.5">
           <input
             type="text"
-            placeholder="Cari pengumuman berdasarkan judul..."
+            placeholder={labels.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1 px-4 py-2.5 border border-gray-300 rounded-md text-sm text-gray-700 font-medium focus:outline-none focus:border-[#0b6330] focus:ring-1 focus:ring-[#0b6330] transition-colors shadow-2xs"
@@ -95,7 +195,7 @@ export default function PublicAnnouncementListPage() {
             type="submit"
             className="bg-[#0b6330] hover:bg-[#074722] text-white font-bold text-sm px-6 py-2.5 rounded-md transition-colors shadow-2xs cursor-pointer shrink-0"
           >
-            Cari
+            {labels.searchBtn}
           </button>
         </form>
 
@@ -116,73 +216,74 @@ export default function PublicAnnouncementListPage() {
         ) : paginatedItems.length === 0 ? (
           /* Empty State */
           <div className="text-center py-16 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200 mb-12">
-            <p className="text-lg font-semibold mb-2">Pengumuman tidak ditemukan</p>
+            <p className="text-lg font-semibold mb-2">{labels.notFoundTitle}</p>
             <p className="text-sm text-gray-400">
-              {activeQuery ? `Tidak ada hasil untuk "${activeQuery}"` : 'Belum ada pengumuman yang dipublikasikan.'}
+              {activeQuery ? `"${activeQuery}"` : labels.notFoundText}
             </p>
           </div>
         ) : (
-          /* Announcement Grid (3 Kolom persis seperti website asli) */
+          /* Announcement Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
-            {paginatedItems.map((item) => (
-              <Link
-                key={item.id}
-                href={`/pengumuman/${item.slug}`}
-                className="group bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer flex flex-col"
-              >
-                {/* Cover Image 100% Full Width di Bagian Atas Card */}
-                <div className="relative aspect-[16/10] w-full bg-gray-50 overflow-hidden">
-                  {item.coverImageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.coverImageUrl}
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full relative bg-gradient-to-br from-[#064e26] via-[#0b6330] to-[#043319] overflow-hidden flex items-center justify-center p-6">
-                      <div className="absolute -right-8 -top-8 w-36 h-36 bg-emerald-400/20 rounded-full blur-xl pointer-events-none" />
-                      <div className="absolute -left-8 -bottom-8 w-36 h-36 bg-[#ffc800]/15 rounded-full blur-xl pointer-events-none" />
+            {paginatedItems.map((item) => {
+              const displayTitle = getTitle(item);
+              return (
+                <Link
+                  key={item.id}
+                  href={`/pengumuman/${item.slug}`}
+                  className="group bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer flex flex-col"
+                >
+                  {/* Cover Image */}
+                  <div className="relative aspect-[16/10] w-full bg-gray-50 overflow-hidden">
+                    {item.coverImageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.coverImageUrl}
+                        alt={displayTitle}
+                        className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full relative bg-gradient-to-br from-[#064e26] via-[#0b6330] to-[#043319] overflow-hidden flex items-center justify-center p-6">
+                        <div className="absolute -right-8 -top-8 w-36 h-36 bg-emerald-400/20 rounded-full blur-xl pointer-events-none" />
+                        <div className="absolute -left-8 -bottom-8 w-36 h-36 bg-[#ffc800]/15 rounded-full blur-xl pointer-events-none" />
 
-                      <div className="relative z-10 flex flex-col items-center justify-center text-center group-hover:scale-105 transition-transform duration-300">
-                        <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-xl shadow-md border border-white/40 flex items-center justify-center mb-2">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src="/logo/rumah-amal.png"
-                            alt="Rumah Amal USK"
-                            className="h-7 sm:h-8 w-auto object-contain"
-                          />
+                        <div className="relative z-10 flex flex-col items-center justify-center text-center group-hover:scale-105 transition-transform duration-300">
+                          <div className="bg-white/95 backdrop-blur-md px-4 py-2 rounded-xl shadow-md border border-white/40 flex items-center justify-center mb-2">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src="/logo/rumah-amal.png"
+                              alt="Rumah Amal USK"
+                              className="h-7 sm:h-8 w-auto object-contain"
+                            />
+                          </div>
+                          <span className="text-[10px] font-extrabold text-[#ffc800] tracking-widest uppercase mt-0.5 drop-shadow-2xs">
+                            {labels.officialBadge}
+                          </span>
                         </div>
-                        <span className="text-[10px] font-extrabold text-[#ffc800] tracking-widest uppercase mt-0.5 drop-shadow-2xs">
-                          PENGUMUMAN RESMI
-                        </span>
                       </div>
+                    )}
+                  </div>
+
+                  {/* Body Content Card */}
+                  <div className="p-5 flex flex-col flex-1">
+                    <div className="mb-3">
+                      <span className="inline-block bg-[#ffc800] text-[#111827] text-[11px] font-extrabold px-3 py-1 rounded-md uppercase tracking-wider shadow-2xs">
+                        {labels.badge}
+                      </span>
                     </div>
-                  )}
-                </div>
 
-                {/* Body Content Card (Padding khusus untuk teks & badge) */}
-                <div className="p-5 flex flex-col flex-1">
-                  {/* Badge Pengumuman (Selalu PENGUMUMAN warna kuning khas web asli) */}
-                  <div className="mb-3">
-                    <span className="inline-block bg-[#ffc800] text-[#111827] text-[11px] font-extrabold px-3 py-1 rounded-md uppercase tracking-wider shadow-2xs">
-                      PENGUMUMAN
-                    </span>
+                    <div className="flex flex-col justify-between flex-1">
+                      <h3 className={`font-bold text-[#112b27] text-sm sm:text-base leading-tight mb-3 line-clamp-4 group-hover:text-[#0b6330] transition-colors ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+                        {displayTitle}
+                      </h3>
+                      <p className="text-xs text-gray-500 font-medium mt-auto">
+                        {formatDate(item.publishedAt || item.createdAt)}
+                      </p>
+                    </div>
                   </div>
-
-                  {/* Info Text: Title & Date */}
-                  <div className="flex flex-col justify-between flex-1">
-                    <h3 className="font-bold text-[#112b27] text-sm sm:text-base leading-tight mb-3 line-clamp-4 group-hover:text-[#0b6330] transition-colors">
-                      {item.title}
-                    </h3>
-                    <p className="text-xs text-gray-500 font-medium mt-auto">
-                      {formatDate(item.publishedAt || item.createdAt)}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         )}
 
@@ -194,7 +295,7 @@ export default function PublicAnnouncementListPage() {
               disabled={page === 1}
               className="px-3 py-1.5 text-[#0b6330] hover:text-[#084823] disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              &lt; Previous
+              {labels.prev}
             </button>
 
             {(() => {
@@ -241,7 +342,7 @@ export default function PublicAnnouncementListPage() {
               disabled={page === totalPages}
               className="px-3 py-1.5 text-[#0b6330] hover:text-[#084823] disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              Next &gt;
+              {labels.next}
             </button>
           </div>
         )}

@@ -11,11 +11,15 @@ interface TagItem {
 interface NewsDetail {
   id: string;
   title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
   slug: string;
   excerpt: string | null;
   category: string | null;
   coverImageUrl: string | null;
   content: string;
+  contentAr?: string | null;
+  contentEn?: string | null;
   viewsCount: number;
   publishedAt: string;
   createdAt: string;
@@ -25,9 +29,13 @@ interface NewsDetail {
 interface NewsSummary {
   id: string;
   title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
   slug: string;
   publishedAt: string;
 }
+
+type Language = 'id' | 'en' | 'ar';
 
 export default function PublicNewsDetailPage({
   params,
@@ -39,12 +47,25 @@ export default function PublicNewsDetailPage({
   const [recentNews, setRecentNews] = useState<NewsSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [lang, setLang] = useState<Language>('id');
 
   // Comment state
   const [commentName, setCommentName] = useState('');
   const [commentContent, setCommentContent] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
   const [commentSuccessMsg, setCommentSuccessMsg] = useState('');
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem('announcement_lang') as Language;
+    if (savedLang && ['id', 'en', 'ar'].includes(savedLang)) {
+      setLang(savedLang);
+    }
+  }, []);
+
+  const changeLanguage = (newLang: Language) => {
+    setLang(newLang);
+    localStorage.setItem('announcement_lang', newLang);
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -79,10 +100,23 @@ export default function PublicNewsDetailPage({
     fetchData();
   }, [slug]);
 
+  const getTitle = (item: { title: string; titleEn?: string | null; titleAr?: string | null }) => {
+    if (lang === 'en' && item.titleEn) return item.titleEn;
+    if (lang === 'ar' && item.titleAr) return item.titleAr;
+    return item.title;
+  };
+
+  const getContent = (item: NewsDetail) => {
+    if (lang === 'en' && item.contentEn) return item.contentEn;
+    if (lang === 'ar' && item.contentAr) return item.contentAr;
+    return item.content;
+  };
+
   const formatDate = (dateStr: string) => {
     try {
       const d = new Date(dateStr);
-      return d.toLocaleDateString('id-ID', {
+      const localeMap = { id: 'id-ID', en: 'en-US', ar: 'ar-SA' };
+      return d.toLocaleDateString(localeMap[lang] || 'id-ID', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
@@ -100,7 +134,13 @@ export default function PublicNewsDetailPage({
     setSubmittingComment(true);
     setTimeout(() => {
       setSubmittingComment(false);
-      setCommentSuccessMsg('Komentar Anda telah terkirim dan sedang menunggu moderasi!');
+      setCommentSuccessMsg(
+        lang === 'ar'
+          ? 'تم إرسال تعليقك وهو قيد المراجعة!'
+          : lang === 'en'
+          ? 'Your comment has been submitted and is awaiting moderation!'
+          : 'Komentar Anda telah terkirim dan sedang menunggu moderasi!'
+      );
       setCommentContent('');
       setCommentName('');
     }, 600);
@@ -141,18 +181,58 @@ export default function PublicNewsDetailPage({
     );
   }
 
+  const displayTitle = getTitle(news);
+  const displayContent = getContent(news);
+
   return (
-    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className={`min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <div className="max-w-[1240px] mx-auto">
 
-        {/* Back Link */}
-        <div className="mb-6">
+        {/* Back Link & Language Switcher Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <Link
             href="/berita"
             className="inline-flex items-center gap-2 text-xs sm:text-sm font-extrabold text-gray-500 hover:text-[#0b6330] transition-colors"
           >
-            ← Kembali ke Semua Berita
+            ← {lang === 'ar' ? 'العودة إلى جميع الأخبار' : lang === 'en' ? 'Back to all news' : 'Kembali ke Semua Berita'}
           </Link>
+
+          {/* Language Switcher */}
+          <div className="inline-flex rounded-xl p-1 bg-gray-100 border border-gray-200 shadow-2xs shrink-0 self-end sm:self-auto">
+            <button
+              onClick={() => changeLanguage('id')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                lang === 'id'
+                  ? 'bg-[#0b6330] text-white shadow-xs'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
+              }`}
+            >
+              <span>🇮🇩</span>
+              <span>ID</span>
+            </button>
+            <button
+              onClick={() => changeLanguage('en')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                lang === 'en'
+                  ? 'bg-[#0b6330] text-white shadow-xs'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
+              }`}
+            >
+              <span>🇬🇧</span>
+              <span>EN</span>
+            </button>
+            <button
+              onClick={() => changeLanguage('ar')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                lang === 'ar'
+                  ? 'bg-[#0b6330] text-white shadow-xs'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
+              }`}
+            >
+              <span>🇸🇦</span>
+              <span>AR</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -162,15 +242,15 @@ export default function PublicNewsDetailPage({
             {/* Category & Date */}
             <div className="flex items-center gap-2 text-xs font-extrabold text-[#0b6330] uppercase tracking-wider mb-3">
               <span className="bg-[#ffc800] text-[#111827] px-3 py-1 rounded-md text-[11px] font-extrabold uppercase tracking-wider shadow-2xs">
-                BERITA
+                {lang === 'ar' ? 'خبر' : lang === 'en' ? 'NEWS' : 'BERITA'}
               </span>
               <span>•</span>
               <time dateTime={news.publishedAt}>{formatDate(news.publishedAt || news.createdAt)}</time>
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-900 leading-tight mb-6">
-              {news.title}
+            <h1 className={`text-2xl sm:text-4xl font-extrabold text-gray-900 leading-tight mb-6 ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+              {displayTitle}
             </h1>
 
             {/* Cover Image */}
@@ -179,7 +259,7 @@ export default function PublicNewsDetailPage({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={news.coverImageUrl}
-                  alt={news.title}
+                  alt={displayTitle}
                   className="w-full object-cover max-h-[460px]"
                 />
               </div>
@@ -198,10 +278,13 @@ export default function PublicNewsDetailPage({
                 .article-body blockquote { border-left: 4px solid #0b6330; padding-left: 1.25rem; color: #4b5563; font-style: italic; margin: 1.5rem 0; background: #f9fafb; padding: 1rem; border-radius: 0 0.75rem 0.75rem 0; }
                 .article-body a { color: #0b6330; text-decoration: underline; font-weight: 600; }
                 .article-body img { max-width: 100%; height: auto; border-radius: 1rem; margin: 1.5rem 0; shadow: 0 4px 12px rgba(0,0,0,0.05); }
+                .rtl .article-body { text-align: right; }
+                .rtl .article-body blockquote { border-left: none; border-right: 4px solid #0b6330; padding-left: 0; padding-right: 1.25rem; border-radius: 0.75rem 0 0 0.75rem; }
+                .rtl .article-body ul, .rtl .article-body ol { padding-left: 0; padding-right: 1.5rem; }
               `}</style>
               <div
                 className="article-body"
-                dangerouslySetInnerHTML={{ __html: news.content }}
+                dangerouslySetInnerHTML={{ __html: displayContent }}
               />
             </div>
 
@@ -209,7 +292,9 @@ export default function PublicNewsDetailPage({
             <div className="pt-6 border-t border-gray-200 mt-10">
               {news.tags && news.tags.length > 0 && (
                 <div className="flex items-center gap-2 flex-wrap mb-6">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Tags:</span>
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    {lang === 'ar' ? 'وسوم:' : 'Tags:'}
+                  </span>
                   {news.tags.map((tag) => (
                     <span
                       key={tag.id}
@@ -223,16 +308,18 @@ export default function PublicNewsDetailPage({
 
               {/* Share */}
               <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Bagikan Berita:</span>
+                <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  {lang === 'ar' ? 'مشاركة الخبر:' : lang === 'en' ? 'Share News:' : 'Bagikan Berita:'}
+                </span>
                 <button
                   type="button"
                   onClick={() => {
                     navigator.clipboard.writeText(window.location.href);
-                    alert('Link berita berhasil disalin ke clipboard!');
+                    alert(lang === 'ar' ? 'تم نسخ رابط الخبر!' : lang === 'en' ? 'News link copied!' : 'Link berita berhasil disalin ke clipboard!');
                   }}
                   className="px-3.5 py-1.5 bg-white hover:bg-gray-100 text-gray-800 font-extrabold text-xs rounded-lg border border-gray-300 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
                 >
-                  📋 Salin Link
+                  📋 {lang === 'ar' ? 'نسخ الرابط' : lang === 'en' ? 'Copy Link' : 'Salin Link'}
                 </button>
               </div>
             </div>
@@ -240,7 +327,7 @@ export default function PublicNewsDetailPage({
             {/* Comment Section */}
             <section className="mt-12 pt-8 border-t border-gray-200">
               <h3 className="text-xl font-extrabold text-gray-900 mb-6">
-                Tinggalkan Komentar
+                {lang === 'ar' ? 'أترك تعليقا' : lang === 'en' ? 'Leave a Comment' : 'Tinggalkan Komentar'}
               </h3>
 
               {commentSuccessMsg && (
@@ -252,11 +339,11 @@ export default function PublicNewsDetailPage({
               <form onSubmit={handleCommentSubmit} className="bg-gray-50 border border-gray-200 rounded-2xl p-6 mb-8 space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Nama (Opsional)
+                    {lang === 'ar' ? 'الاسم (اختياري)' : lang === 'en' ? 'Name (Optional)' : 'Nama (Opsional)'}
                   </label>
                   <input
                     type="text"
-                    placeholder="Nama Anda"
+                    placeholder={lang === 'ar' ? 'اسمك' : lang === 'en' ? 'Your Name' : 'Nama Anda'}
                     value={commentName}
                     onChange={(e) => setCommentName(e.target.value)}
                     className="w-full sm:w-72 px-3.5 py-2 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:border-[#0b6330]"
@@ -265,11 +352,11 @@ export default function PublicNewsDetailPage({
 
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Komentar <span className="text-red-500">*</span>
+                    {lang === 'ar' ? 'التعليق' : lang === 'en' ? 'Comment' : 'Komentar'} <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     rows={3}
-                    placeholder="Tulis tanggapan atau pertanyaan Anda tentang berita ini..."
+                    placeholder={lang === 'ar' ? 'اكتب تعليقك هنا...' : lang === 'en' ? 'Write your comment here...' : 'Tulis tanggapan atau pertanyaan Anda tentang berita ini...'}
                     value={commentContent}
                     onChange={(e) => setCommentContent(e.target.value)}
                     className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:border-[#0b6330] resize-none"
@@ -282,7 +369,7 @@ export default function PublicNewsDetailPage({
                   disabled={submittingComment || !commentContent.trim()}
                   className="px-6 py-2.5 bg-[#0b6330] hover:bg-[#074722] text-white font-extrabold text-sm rounded-xl transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {submittingComment ? 'Terkirim…' : 'Kirim Komentar'}
+                  {submittingComment ? 'Sending…' : (lang === 'ar' ? 'إرسال التعليق' : lang === 'en' ? 'Submit Comment' : 'Kirim Komentar')}
                 </button>
               </form>
             </section>
@@ -292,27 +379,30 @@ export default function PublicNewsDetailPage({
           <aside className="lg:col-span-4">
             <div className="sticky top-24 bg-gray-50 border border-gray-200 rounded-2xl p-6">
               <h3 className="font-extrabold text-gray-900 text-lg mb-4 border-b border-gray-200 pb-3">
-                Berita Terkini Lainnya
+                {lang === 'ar' ? 'أحدث الأخبار الأخرى' : lang === 'en' ? 'Other Recent News' : 'Berita Terkini Lainnya'}
               </h3>
 
               {recentNews.length === 0 ? (
                 <p className="text-xs text-gray-400 italic">Belum ada berita lainnya.</p>
               ) : (
                 <div className="space-y-4">
-                  {recentNews.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={`/berita/${item.slug}`}
-                      className="group block p-3 rounded-xl bg-white border border-gray-200 hover:border-[#0b6330] transition-colors shadow-2xs"
-                    >
-                      <h4 className="font-bold text-xs sm:text-sm text-gray-900 group-hover:text-[#0b6330] transition-colors line-clamp-2 mb-1.5 leading-snug">
-                        {item.title}
-                      </h4>
-                      <p className="text-[11px] text-gray-400 font-medium">
-                        {formatDate(item.publishedAt)}
-                      </p>
-                    </Link>
-                  ))}
+                  {recentNews.map((item) => {
+                    const recTitle = getTitle(item);
+                    return (
+                      <Link
+                        key={item.id}
+                        href={`/berita/${item.slug}`}
+                        className="group block p-3 rounded-xl bg-white border border-gray-200 hover:border-[#0b6330] transition-colors shadow-2xs"
+                      >
+                        <h4 className={`font-bold text-xs sm:text-sm text-gray-900 group-hover:text-[#0b6330] transition-colors line-clamp-2 mb-1.5 leading-snug ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+                          {recTitle}
+                        </h4>
+                        <p className="text-[11px] text-gray-400 font-medium">
+                          {formatDate(item.publishedAt)}
+                        </p>
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
 
@@ -321,7 +411,7 @@ export default function PublicNewsDetailPage({
                   href="/berita"
                   className="text-xs font-extrabold text-[#0b6330] hover:underline"
                 >
-                  Lihat Semua Berita →
+                  {lang === 'ar' ? 'عرض جميع الأخبار ←' : lang === 'en' ? 'View All News →' : 'Lihat Semua Berita →'}
                 </Link>
               </div>
             </div>

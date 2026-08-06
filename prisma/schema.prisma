@@ -143,11 +143,15 @@ model Tag {
 model Announcement {
   id            String                @id @default(cuid())
   title         String
+  titleAr       String?               @map("title_ar")
+  titleEn       String?               @map("title_en")
   slug          String                @unique
   excerpt       String?
   category      String?               @default("Umum")
   coverImageUrl String?               @map("cover_image_url")
   content       String                @db.Text
+  contentAr     String?               @db.Text @map("content_ar")
+  contentEn     String?               @db.Text @map("content_en")
   viewsCount    Int                   @default(0) @map("views_count")
   published     Boolean               @default(true)
   publishedAt   DateTime?             @default(now()) @map("published_at")
@@ -178,11 +182,15 @@ model AnnouncementComment {
 model News {
   id            String        @id @default(cuid())
   title         String
+  titleAr       String?       @map("title_ar")
+  titleEn       String?       @map("title_en")
   slug          String        @unique
   excerpt       String?
   category      String?       @default("Umum")
   coverImageUrl String?       @map("cover_image_url")
   content       String        @db.Text
+  contentAr     String?       @db.Text @map("content_ar")
+  contentEn     String?       @db.Text @map("content_en")
   viewsCount    Int           @default(0) @map("views_count")
   published     Boolean       @default(true)
   publishedAt   DateTime?     @default(now()) @map("published_at")
