@@ -1,6 +1,12 @@
+"use client";
+
 import Image from "next/image";
+import { useProfilLang } from "./layout";
 
 export default function ProfilPage() {
+  const { dict, lang } = useProfilLang();
+  const pData = dict.profilSingkat;
+
   return (
     <div className="space-y-6">
       {/* Mosque Header Image */}
@@ -16,21 +22,15 @@ export default function ProfilPage() {
       </div>
 
       {/* Title */}
-      <h2 className="text-xl md:text-2xl font-black text-[#0b6330] tracking-wide uppercase mt-2">
-        RUMAH AMAL MASJID JAMIK USK
+      <h2 className={`text-xl md:text-2xl font-black text-[#0b6330] tracking-wide uppercase mt-2 ${lang === 'ar' ? 'font-serif' : ''}`}>
+        {pData.title}
       </h2>
 
       {/* Description Content */}
       <div className="text-gray-700 text-sm md:text-[15px] leading-relaxed space-y-4">
-        <p className="leading-relaxed">
-          Kami menyediakan sistem dan layanan yang memudahkan para muzakki atau donatur dalam menunaikan zakat, infaq, shadaqah, maupun wakaf dengan sebaik-baiknya. Menjadikan masjid sebagai pusat pemberdayaan ekonomi umat, Mendayagunakan dana zakat, infaq shadaqah maupun wakaf melalui program-program yang terasa manfaatnya, Mengangkat martabat mustahik, dan membahagiakan muzakki dan donatur.
-        </p>
-        <p className="leading-relaxed">
-          Rumah Amal Masjid Jamik USK berdiri sebagai wujud kepedulian civitas akademika Universitas Syiah Kuala Banda Aceh terhadap pengelolaan zakat yang profesional, transparan, dan akuntabel di lingkungan kampus dan masyarakat sekitar.
-        </p>
-        <p className="leading-relaxed">
-          Melalui berbagai program unggulan di bidang pendidikan, ekonomi, kesehatan, dan dakwah, Rumah Amal senantiasa berkomitmen untuk menjadi penghubung kebaikan antara muzakki dan mustahik secara berkelanjutan.
-        </p>
+        <p className="leading-relaxed">{pData.p1}</p>
+        <p className="leading-relaxed">{pData.p2}</p>
+        <p className="leading-relaxed">{pData.p3}</p>
       </div>
     </div>
   );

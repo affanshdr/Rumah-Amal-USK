@@ -27,7 +27,7 @@ export default function PublicNewsListPage() {
   const ITEMS_PER_PAGE = 9;
 
   useEffect(() => {
-    const savedLang = localStorage.getItem('announcement_lang') as Language;
+    const savedLang = (localStorage.getItem('app_lang') || localStorage.getItem('announcement_lang')) as Language;
     if (savedLang && ['id', 'en', 'ar'].includes(savedLang)) {
       setLang(savedLang);
     }
@@ -147,48 +147,6 @@ export default function PublicNewsListPage() {
   return (
     <div className={`min-h-screen bg-white py-10 px-4 sm:px-6 lg:px-8 font-sans ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <div className="max-w-[1340px] mx-auto">
-
-        {/* Language Switcher */}
-        <div className="flex items-center justify-end gap-2 mb-6">
-          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-            {lang === 'ar' ? 'اللغة:' : lang === 'en' ? 'Language:' : 'Bahasa:'}
-          </span>
-          <div className="inline-flex rounded-xl p-1 bg-gray-100 border border-gray-200 shadow-2xs">
-            <button
-              onClick={() => changeLanguage('id')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                lang === 'id'
-                  ? 'bg-[#0b6330] text-white shadow-xs'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
-              }`}
-            >
-              <span>🇮🇩</span>
-              <span>Indonesia</span>
-            </button>
-            <button
-              onClick={() => changeLanguage('en')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                lang === 'en'
-                  ? 'bg-[#0b6330] text-white shadow-xs'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
-              }`}
-            >
-              <span>🇬🇧</span>
-              <span>English</span>
-            </button>
-            <button
-              onClick={() => changeLanguage('ar')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                lang === 'ar'
-                  ? 'bg-[#0b6330] text-white shadow-xs'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
-              }`}
-            >
-              <span>🇸🇦</span>
-              <span>العربية</span>
-            </button>
-          </div>
-        </div>
 
         {/* Big Page Title & Breadcrumb */}
         <div className="text-center mb-6">

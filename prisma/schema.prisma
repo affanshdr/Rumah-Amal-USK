@@ -243,11 +243,17 @@ model Document {
 model Program {
   id            String    @id @default(cuid())
   title         String
+  titleAr       String?   @map("title_ar")
+  titleEn       String?   @map("title_en")
   slug          String    @unique
   category      String    @default("PENDIDIKAN")
   excerpt       String?
+  excerptAr     String?   @map("excerpt_ar")
+  excerptEn     String?   @map("excerpt_en")
   coverImageUrl String?   @map("cover_image_url")
   content       String    @db.Text
+  contentAr     String?   @db.Text @map("content_ar")
+  contentEn     String?   @db.Text @map("content_en")
   viewsCount    Int       @default(0) @map("views_count")
   published     Boolean   @default(true)
   publishedAt   DateTime? @default(now()) @map("published_at")

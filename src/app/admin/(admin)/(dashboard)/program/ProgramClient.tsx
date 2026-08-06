@@ -28,17 +28,24 @@ const TipTapEditor = dynamic(() => import("@/components/TipTapEditor"), {
 type ProgramRow = {
   id: string;
   title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
   slug: string;
   excerpt: string | null;
+  excerptAr?: string | null;
+  excerptEn?: string | null;
   category: string;
   coverImageUrl: string | null;
   published: boolean;
   publishedAt: Date | null;
   content: string;
+  contentAr?: string | null;
+  contentEn?: string | null;
   createdAt: Date;
 };
 
 type ModalMode = "add" | "edit" | "preview-only";
+type LangTab = "id" | "en" | "ar";
 
 const CATEGORIES = [
   "PENDIDIKAN",
@@ -49,9 +56,10 @@ const CATEGORIES = [
   "FASILITATOR & RELAWAN",
 ];
 
-function formatTanggal(date: Date | null) {
+function formatTanggal(date: Date | null, lang: LangTab = 'id') {
   if (!date) return "-";
-  return new Date(date).toLocaleDateString("id-ID", {
+  const localeMap = { id: 'id-ID', en: 'en-US', ar: 'ar-SA' };
+  return new Date(date).toLocaleDateString(localeMap[lang] || 'id-ID', {
     day: "numeric", month: "long", year: "numeric",
   });
 }
@@ -61,33 +69,73 @@ function stripHtml(html: string) {
 }
 
 function PreviewPanel({
-  title, excerpt, category, coverImageUrl, content, publishedAt,
+  title, titleEn, titleAr,
+  excerpt, excerptEn, excerptAr,
+  category, coverImageUrl,
+  content, contentEn, contentAr,
+  publishedAt,
 }: {
-  title: string; excerpt: string; category: string;
-  coverImageUrl: string; content: string; publishedAt: string;
+  title: string; titleEn: string; titleAr: string;
+  excerpt: string; excerptEn: string; excerptAr: string;
+  category: string; coverImageUrl: string;
+  content: string; contentEn: string; contentAr: string;
+  publishedAt: string;
 }) {
+  const [prevLang, setPrevLang] = useState<LangTab>('id');
+
+  const displayTitle = prevLang === 'en' ? (titleEn || title) : prevLang === 'ar' ? (titleAr || title) : title;
+  const displayExcerpt = prevLang === 'en' ? (excerptEn || excerpt) : prevLang === 'ar' ? (excerptAr || excerpt) : excerpt;
+  const displayContent = prevLang === 'en' ? (contentEn || content) : prevLang === 'ar' ? (contentAr || content) : content;
+
+  const isRtl = prevLang === 'ar' && Boolean(titleAr || contentAr);
+
   return (
     <div className="flex flex-col h-full overflow-y-auto bg-gray-50 border-l border-gray-200">
-      <div className="px-5 py-3 bg-gray-900 text-white flex items-center gap-2 shrink-0">
-        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-        <span className="text-xs font-bold uppercase tracking-wide text-gray-200">Preview Tampilan Publik</span>
+      <div className="px-5 py-3 bg-gray-900 text-white flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-xs font-bold uppercase tracking-wide text-gray-200">Preview Tampilan Publik</span>
+        </div>
+        <div className="flex items-center gap-1 bg-gray-800 p-1 rounded-lg">
+          <button
+            type="button"
+            onClick={() => setPrevLang('id')}
+            className={`px-2 py-0.5 text-[11px] font-bold rounded transition-colors ${prevLang === 'id' ? 'bg-[#005621] text-white' : 'text-gray-300 hover:text-white'}`}
+          >
+            🇮🇩 ID
+          </button>
+          <button
+            type="button"
+            onClick={() => setPrevLang('en')}
+            className={`px-2 py-0.5 text-[11px] font-bold rounded transition-colors ${prevLang === 'en' ? 'bg-[#005621] text-white' : 'text-gray-300 hover:text-white'}`}
+          >
+            🇬🇧 EN
+          </button>
+          <button
+            type="button"
+            onClick={() => setPrevLang('ar')}
+            className={`px-2 py-0.5 text-[11px] font-bold rounded transition-colors ${prevLang === 'ar' ? 'bg-[#005621] text-white' : 'text-gray-300 hover:text-white'}`}
+          >
+            🇸🇦 AR
+          </button>
+        </div>
       </div>
 
-      <div className="p-5 sm:p-6 overflow-y-auto flex-1 font-sans text-gray-800">
+      <div className={`p-5 sm:p-6 overflow-y-auto flex-1 font-sans text-gray-800 ${isRtl ? 'rtl' : 'ltr'}`} dir={isRtl ? 'rtl' : 'ltr'}>
         <div className="mb-5 pb-4 border-b border-gray-200">
           <div className="flex items-center gap-2 mb-2">
             <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full border border-emerald-100 uppercase">
               {category || "PROGRAM"}
             </span>
             <span className="text-xs text-gray-400">
-              {publishedAt ? formatTanggal(new Date(publishedAt)) : formatTanggal(new Date())}
+              {publishedAt ? formatTanggal(new Date(publishedAt), prevLang) : formatTanggal(new Date(), prevLang)}
             </span>
           </div>
           <h1 className="text-xl font-extrabold text-gray-900 leading-tight">
-            {title || <span className="text-gray-300 italic">(Belum ada judul)</span>}
+            {displayTitle || <span className="text-gray-300 italic">(Belum ada judul)</span>}
           </h1>
-          {excerpt && (
-            <p className="mt-2 text-sm text-gray-500 leading-relaxed text-justify">{excerpt}</p>
+          {displayExcerpt && (
+            <p className="mt-2 text-sm text-gray-500 leading-relaxed">{displayExcerpt}</p>
           )}
         </div>
 
@@ -99,21 +147,23 @@ function PreviewPanel({
         )}
 
         <style>{`
-          .prev-body p { margin-bottom:.9rem; line-height:1.75; text-align:justify; }
+          .prev-body p { margin-bottom:.9rem; line-height:1.75; }
           .prev-body h1 { font-size:1.5rem; font-weight:800; margin:1.2rem 0 .5rem; }
           .prev-body h2 { font-size:1.25rem; font-weight:700; margin:1rem 0 .4rem; }
           .prev-body h3 { font-size:1.05rem; font-weight:700; margin:.8rem 0 .3rem; }
           .prev-body ul { list-style:disc; padding-left:1.4rem; margin-bottom:.9rem; }
           .prev-body ol { list-style:decimal; padding-left:1.4rem; margin-bottom:.9rem; }
-          .prev-body li { margin-bottom:.2rem; text-align:justify; }
+          .prev-body li { margin-bottom:.2rem; }
           .prev-body blockquote { border-left:4px solid #d1d5db; padding-left:1rem; color:#6b7280; font-style:italic; margin:.75rem 0; }
           .prev-body a { color:#005621; text-decoration:underline; }
           .prev-body img { max-width:100%; height:auto; border-radius:.6rem; margin:.75rem 0; }
+          .rtl .prev-body blockquote { border-left:none; border-right:4px solid #d1d5db; padding-left:0; padding-right:1rem; }
+          .rtl .prev-body ul, .rtl .prev-body ol { padding-left:0; padding-right:1.4rem; }
         `}</style>
         <div
           className="prev-body text-sm leading-relaxed text-gray-800"
           dangerouslySetInnerHTML={{
-            __html: content || '<p class="text-gray-400 italic text-center py-8">(Belum ada konten — mulai menulis di editor)</p>',
+            __html: displayContent || '<p class="text-gray-400 italic text-center py-8">(Belum ada konten dalam bahasa ini)</p>',
           }}
         />
       </div>
@@ -152,11 +202,24 @@ export default function ProgramClient({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [coverPreview, setCoverPreview] = useState("");
-  const [contentHtml, setContentHtml] = useState("<p></p>");
   const [showPreviewPanel, setShowPreviewPanel] = useState(false);
 
+  // Language tab inside edit/add form modal
+  const [formTab, setFormTab] = useState<LangTab>("id");
+
+  // Form inputs per language
   const [liveTitle, setLiveTitle] = useState("");
+  const [liveTitleEn, setLiveTitleEn] = useState("");
+  const [liveTitleAr, setLiveTitleAr] = useState("");
+
   const [liveExcerpt, setLiveExcerpt] = useState("");
+  const [liveExcerptEn, setLiveExcerptEn] = useState("");
+  const [liveExcerptAr, setLiveExcerptAr] = useState("");
+
+  const [contentHtml, setContentHtml] = useState("<p></p>");
+  const [contentEnHtml, setContentEnHtml] = useState("");
+  const [contentArHtml, setContentArHtml] = useState("");
+
   const [liveCategory, setLiveCategory] = useState("PENDIDIKAN");
   const [liveDate, setLiveDate] = useState(new Date().toISOString().slice(0, 10));
 
@@ -164,14 +227,19 @@ export default function ProgramClient({
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   const filtered = data.filter((item) =>
-    item.title.toLowerCase().includes(search.toLowerCase())
+    item.title.toLowerCase().includes(search.toLowerCase()) ||
+    (item.titleEn && item.titleEn.toLowerCase().includes(search.toLowerCase())) ||
+    (item.titleAr && item.titleAr.toLowerCase().includes(search.toLowerCase()))
   );
 
   const openAdd = () => {
     setEditing(null);
     setCoverPreview("");
-    setContentHtml("<p></p>");
-    setLiveTitle(""); setLiveExcerpt(""); setLiveCategory("PENDIDIKAN");
+    setFormTab("id");
+    setLiveTitle(""); setLiveTitleEn(""); setLiveTitleAr("");
+    setLiveExcerpt(""); setLiveExcerptEn(""); setLiveExcerptAr("");
+    setContentHtml("<p></p>"); setContentEnHtml(""); setContentArHtml("");
+    setLiveCategory("PENDIDIKAN");
     setLiveDate(new Date().toISOString().slice(0, 10));
     setShowPreviewPanel(false);
     setModalMode("add");
@@ -180,9 +248,19 @@ export default function ProgramClient({
   const openEdit = (item: ProgramRow) => {
     setEditing(item);
     setCoverPreview(item.coverImageUrl || "");
-    setContentHtml(item.content || "<p></p>");
-    setLiveTitle(item.title);
+    setFormTab("id");
+    setLiveTitle(item.title || "");
+    setLiveTitleEn(item.titleEn || "");
+    setLiveTitleAr(item.titleAr || "");
+
     setLiveExcerpt(item.excerpt || "");
+    setLiveExcerptEn(item.excerptEn || "");
+    setLiveExcerptAr(item.excerptAr || "");
+
+    setContentHtml(item.content || "<p></p>");
+    setContentEnHtml(item.contentEn || "");
+    setContentArHtml(item.contentAr || "");
+
     setLiveCategory(item.category || "PENDIDIKAN");
     setLiveDate(item.publishedAt ? new Date(item.publishedAt).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
     setShowPreviewPanel(false);
@@ -222,7 +300,16 @@ export default function ProgramClient({
     try {
       const fd = new FormData(e.currentTarget);
       fd.set("coverImageUrl", coverPreview);
+      fd.set("title", liveTitle);
+      fd.set("titleEn", liveTitleEn);
+      fd.set("titleAr", liveTitleAr);
+      fd.set("excerpt", liveExcerpt);
+      fd.set("excerptEn", liveExcerptEn);
+      fd.set("excerptAr", liveExcerptAr);
       fd.set("content", contentHtml);
+      fd.set("contentEn", contentEnHtml);
+      fd.set("contentAr", contentArHtml);
+
       if (editing) { fd.append("id", editing.id); await updateProgram(fd); }
       else { await addProgram(fd); }
       closeModal();
@@ -293,7 +380,7 @@ export default function ProgramClient({
                       </div>
                     )}
                     {/* Category & Status badges */}
-                    <div className="absolute top-2 left-2">
+                    <div className="absolute top-2 left-2 flex items-center gap-1">
                       <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full border border-emerald-200 uppercase shadow-sm">
                         {item.category || "PENDIDIKAN"}
                       </span>
@@ -312,6 +399,14 @@ export default function ProgramClient({
                     <p className="text-[11px] text-gray-500 line-clamp-2 leading-relaxed">
                       {item.excerpt || stripHtml(item.content)}
                     </p>
+
+                    {/* Multilingual Badges Indicator */}
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-100 text-emerald-800">🇮🇩 ID</span>
+                      {item.titleEn && <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-blue-100 text-blue-800">🇬🇧 EN</span>}
+                      {item.titleAr && <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-100 text-amber-800">🇸🇦 AR</span>}
+                    </div>
+
                     <div className="flex items-center gap-2 text-[11px] text-gray-400 mt-auto pt-1">
                       <span>{formatTanggal(item.publishedAt)}</span>
                     </div>
@@ -425,7 +520,7 @@ export default function ProgramClient({
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-800 text-sm">{editing ? "Edit Program" : "Tambah Program Baru"}</h3>
-                  <p className="text-xs text-gray-400">{editing ? "Perbarui konten program" : "Tulis dan publikasikan program baru"}</p>
+                  <p className="text-xs text-gray-400">{editing ? "Perbarui konten program dalam 3 bahasa" : "Tulis dan publikasikan program baru"}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -448,6 +543,7 @@ export default function ProgramClient({
                 style={{ width: showPreviewPanel ? "55%" : "100%", transition: "width 0.3s ease" }}
               >
                 <div className="p-6 space-y-5 flex-1">
+                  {/* Cover Image Upload */}
                   <div className="rounded-xl border border-gray-200 bg-gray-50/70 p-4 space-y-3">
                     <label className="block text-xs font-bold text-gray-700">
                       <FontAwesomeIcon icon={faImage} className="mr-1.5 text-gray-500" />
@@ -477,17 +573,8 @@ export default function ProgramClient({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Judul Program <span className="text-red-500">*</span></label>
-                      <input
-                        type="text" name="title" required
-                        value={liveTitle}
-                        onChange={(e) => setLiveTitle(e.target.value)}
-                        placeholder="Masukkan judul program…"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
-                      />
-                    </div>
+                  {/* General Configs: Date, Category, Published */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50/80 p-4 rounded-xl border border-gray-200">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5">Tanggal <span className="text-red-500">*</span></label>
                       <input
@@ -497,9 +584,6 @@ export default function ProgramClient({
                         className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
                       />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5">Kategori</label>
                       <select name="category" value={liveCategory} onChange={(e) => setLiveCategory(e.target.value)}
@@ -507,7 +591,7 @@ export default function ProgramClient({
                         {CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
                       </select>
                     </div>
-                    <div className="flex flex-col justify-end pb-1">
+                    <div className="flex flex-col justify-end pb-2">
                       <div className="flex items-center gap-2.5">
                         <input type="checkbox" id="published" name="published" value="1"
                           defaultChecked={editing ? editing.published : true}
@@ -517,30 +601,214 @@ export default function ProgramClient({
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                      Kutipan / Ringkasan <span className="text-gray-400 font-normal">(opsional, maks. 200 karakter)</span>
-                    </label>
-                    <textarea
-                      name="excerpt" rows={2}
-                      value={liveExcerpt}
-                      onChange={(e) => setLiveExcerpt(e.target.value)}
-                      maxLength={200}
-                      placeholder="Ringkasan singkat program…"
-                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] resize-none leading-relaxed text-justify"
-                    />
-                    <p className="text-right text-[10px] text-gray-400 mt-1">{liveExcerpt.length}/200</p>
-                  </div>
+                  {/* 🌐 Multilingual Tabs (ID, EN, AR) */}
+                  <div className="border border-gray-200 rounded-2xl p-4 bg-white space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 pb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-extrabold text-gray-700 uppercase tracking-wide">
+                          🌐 Konten 3 Bahasa (Multilingual)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!liveTitle.trim()) {
+                              alert("Silakan isi Judul Program (Indonesia) terlebih dahulu!");
+                              return;
+                            }
+                            setIsSubmitting(true);
+                            try {
+                              const res = await fetch("/api/translate", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  title: liveTitle,
+                                  excerpt: liveExcerpt,
+                                  content: contentHtml,
+                                }),
+                              });
+                              if (res.ok) {
+                                const data = await res.json();
+                                if (data.titleEn) setLiveTitleEn(data.titleEn);
+                                if (data.titleAr) setLiveTitleAr(data.titleAr);
+                                if (data.excerptEn) setLiveExcerptEn(data.excerptEn);
+                                if (data.excerptAr) setLiveExcerptAr(data.excerptAr);
+                                if (data.contentEn) setContentEnHtml(data.contentEn);
+                                if (data.contentAr) setContentArHtml(data.contentAr);
+                                alert("✨ Berhasil menerjemahkan konten ke Bahasa Inggris (EN) & Arab (AR)!");
+                              } else {
+                                alert("Gagal melakukan terjemahan otomatis.");
+                              }
+                            } catch (e: any) {
+                              alert("Error terjemahan: " + e.message);
+                            } finally {
+                              setIsSubmitting(false);
+                            }
+                          }}
+                          className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                        >
+                          <span>✨</span>
+                          <span>Auto Translate ke EN & AR</span>
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
+                        <button
+                          type="button"
+                          onClick={() => setFormTab("id")}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${formTab === "id" ? "bg-[#005621] text-white shadow-xs" : "text-gray-600 hover:bg-gray-200"}`}
+                        >
+                          <span>🇮🇩</span>
+                          <span>Bahasa Indonesia</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormTab("en")}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${formTab === "en" ? "bg-[#005621] text-white shadow-xs" : "text-gray-600 hover:bg-gray-200"}`}
+                        >
+                          <span>🇬🇧</span>
+                          <span>English</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormTab("ar")}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${formTab === "ar" ? "bg-[#005621] text-white shadow-xs" : "text-gray-600 hover:bg-gray-200"}`}
+                        >
+                          <span>🇸🇦</span>
+                          <span>العربية</span>
+                        </button>
+                      </div>
+                    </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                      Isi Program <span className="text-red-500">*</span>
-                    </label>
-                    <TipTapEditor
-                      content={contentHtml}
-                      onChange={(html) => setContentHtml(html)}
-                      minHeight="320px"
-                    />
+                    {/* TAB INDONESIA */}
+                    {formTab === "id" && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Judul Program (Indonesia) <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text" required
+                            value={liveTitle}
+                            onChange={(e) => setLiveTitle(e.target.value)}
+                            placeholder="Judul program dalam Bahasa Indonesia…"
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Ringkasan / Excerpt (Indonesia) <span className="text-gray-400 font-normal">(opsional)</span>
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={liveExcerpt}
+                            onChange={(e) => setLiveExcerpt(e.target.value)}
+                            maxLength={200}
+                            placeholder="Ringkasan singkat program…"
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] resize-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Isi Program (Indonesia) <span className="text-red-500">*</span>
+                          </label>
+                          <TipTapEditor
+                            key="editor-id"
+                            content={contentHtml}
+                            onChange={(html) => setContentHtml(html)}
+                            minHeight="300px"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB ENGLISH */}
+                    {formTab === "en" && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Program Title (English)
+                          </label>
+                          <input
+                            type="text"
+                            value={liveTitleEn}
+                            onChange={(e) => setLiveTitleEn(e.target.value)}
+                            placeholder="Enter program title in English…"
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Excerpt (English) <span className="text-gray-400 font-normal">(optional)</span>
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={liveExcerptEn}
+                            onChange={(e) => setLiveExcerptEn(e.target.value)}
+                            maxLength={200}
+                            placeholder="Short summary in English…"
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] resize-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Program Content (English)
+                          </label>
+                          <TipTapEditor
+                            key="editor-en"
+                            content={contentEnHtml}
+                            onChange={(html) => setContentEnHtml(html)}
+                            minHeight="300px"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB ARABIC */}
+                    {formTab === "ar" && (
+                      <div className="space-y-4 rtl" dir="rtl">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            عنوان البرنامج (العربية)
+                          </label>
+                          <input
+                            type="text"
+                            value={liveTitleAr}
+                            onChange={(e) => setLiveTitleAr(e.target.value)}
+                            placeholder="أدخل عنوان البرنامج بالعربية..."
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white font-serif"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            الملخص (العربية) <span className="text-gray-400 font-normal">(اختياري)</span>
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={liveExcerptAr}
+                            onChange={(e) => setLiveExcerptAr(e.target.value)}
+                            maxLength={200}
+                            placeholder="ملخص قصير للبرنامج بالعربية..."
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] resize-none font-serif"
+                          />
+                        </div>
+
+                        <div dir="ltr" className="ltr">
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5 text-right rtl" dir="rtl">
+                            محتوى البرنامج (العربية)
+                          </label>
+                          <TipTapEditor
+                            key="editor-ar"
+                            content={contentArHtml}
+                            onChange={(html) => setContentArHtml(html)}
+                            minHeight="300px"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -564,10 +832,16 @@ export default function ProgramClient({
                 <div className="flex-1 flex flex-col overflow-hidden border-l border-gray-200">
                   <PreviewPanel
                     title={liveTitle}
+                    titleEn={liveTitleEn}
+                    titleAr={liveTitleAr}
                     excerpt={liveExcerpt}
+                    excerptEn={liveExcerptEn}
+                    excerptAr={liveExcerptAr}
                     category={liveCategory}
                     coverImageUrl={coverPreview}
                     content={contentHtml}
+                    contentEn={contentEnHtml}
+                    contentAr={contentArHtml}
                     publishedAt={liveDate}
                   />
                 </div>
@@ -580,53 +854,20 @@ export default function ProgramClient({
       {modalMode === "preview-only" && previewingItem && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6" onClick={closeModal}>
           <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[92vh]" onClick={(e) => e.stopPropagation()}>
-            <div className="bg-gray-900 text-white px-6 py-4 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                <h3 className="font-extrabold text-sm tracking-wide uppercase text-gray-200">Preview Tampilan Publik</h3>
-              </div>
-              <button type="button" onClick={closeModal} className="text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 w-8 h-8 rounded-lg flex items-center justify-center font-bold transition-all cursor-pointer text-lg">×</button>
-            </div>
-
-            <div className="p-6 sm:p-10 overflow-y-auto flex-1 font-sans text-gray-800">
-              <div className="mb-6 pb-5 border-b border-gray-100">
-                <div className="flex items-center gap-2 mb-2.5">
-                  <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full border border-emerald-100 uppercase">
-                    {previewingItem.category || "PROGRAM"}
-                  </span>
-                  <span className="text-gray-400 text-xs">{formatTanggal(previewingItem.publishedAt)}</span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">{previewingItem.title}</h1>
-                {previewingItem.excerpt && (
-                  <p className="mt-3 text-base text-gray-500 leading-relaxed text-justify">{previewingItem.excerpt}</p>
-                )}
-              </div>
-
-              {previewingItem.coverImageUrl && (
-                <div className="mb-8 rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 flex justify-center max-h-[360px]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={previewingItem.coverImageUrl} alt="Cover" className="w-full object-contain max-h-[360px]" />
-                </div>
-              )}
-
-              <style>{`
-                .prev-full p { margin-bottom:1rem; line-height:1.8; text-align:justify; }
-                .prev-full h1 { font-size:1.7rem; font-weight:800; margin:1.4rem 0 .6rem; }
-                .prev-full h2 { font-size:1.35rem; font-weight:700; margin:1.2rem 0 .5rem; }
-                .prev-full h3 { font-size:1.1rem; font-weight:700; margin:1rem 0 .4rem; }
-                .prev-full ul { list-style:disc; padding-left:1.5rem; margin-bottom:1rem; }
-                .prev-full ol { list-style:decimal; padding-left:1.5rem; margin-bottom:1rem; }
-                .prev-full li { margin-bottom:.3rem; text-align:justify; }
-                .prev-full blockquote { border-left:4px solid #d1d5db; padding-left:1rem; color:#6b7280; font-style:italic; margin:1rem 0; }
-                .prev-full a { color:#005621; text-decoration:underline; }
-                .prev-full img { max-width:100%; height:auto; border-radius:.75rem; margin:1rem 0; }
-              `}</style>
-              <div className="prev-full text-base leading-relaxed text-gray-800"
-                dangerouslySetInnerHTML={{
-                  __html: previewingItem.content || '<p class="text-gray-400 italic text-center">(Belum ada konten)</p>',
-                }}
-              />
-            </div>
+            <PreviewPanel
+              title={previewingItem.title}
+              titleEn={previewingItem.titleEn || ""}
+              titleAr={previewingItem.titleAr || ""}
+              excerpt={previewingItem.excerpt || ""}
+              excerptEn={previewingItem.excerptEn || ""}
+              excerptAr={previewingItem.excerptAr || ""}
+              category={previewingItem.category}
+              coverImageUrl={previewingItem.coverImageUrl || ""}
+              content={previewingItem.content}
+              contentEn={previewingItem.contentEn || ""}
+              contentAr={previewingItem.contentAr || ""}
+              publishedAt={previewingItem.publishedAt ? new Date(previewingItem.publishedAt).toISOString().slice(0, 10) : ""}
+            />
 
             <div className="bg-gray-50 px-6 py-3 flex items-center justify-between border-t border-gray-200 shrink-0">
               <div className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full ${previewingItem.published ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>

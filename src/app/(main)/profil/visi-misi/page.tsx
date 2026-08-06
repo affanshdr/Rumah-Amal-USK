@@ -1,10 +1,16 @@
+"use client";
+
 import Image from "next/image";
+import { useProfilLang } from "../layout";
 
 export default function VisiMisiPage() {
+  const { dict, lang } = useProfilLang();
+  const vm = dict.visiMisi;
+
   return (
     <div className="space-y-6">
       
-      {/* Mosque Header Image (WebP) */}
+      {/* Mosque Header Image */}
       <div className="rounded-2xl overflow-hidden shadow-md border border-gray-100 relative w-full h-[300px] sm:h-[360px] md:h-[400px]">
         <Image
           src="/profil/mesjid-jamik2.webp"
@@ -21,18 +27,18 @@ export default function VisiMisiPage() {
         
         {/* ===== VISI SECTION ===== */}
         <div className="text-center space-y-4">
-          <h3 className="text-2xl md:text-3xl font-black text-[#0b6330] tracking-widest uppercase">
-            VISI
+          <h3 className={`text-2xl md:text-3xl font-black text-[#0b6330] tracking-widest uppercase ${lang === 'ar' ? 'font-serif' : ''}`}>
+            {vm.visiTitle}
           </h3>
           <p className="text-gray-700 text-sm md:text-[15px] leading-relaxed max-w-2xl mx-auto font-medium">
-            Menjadi Lembaga Amil Zakat dan pemberdayaan ekonomi umat yang inovatif, responsif, profesional dan terkemuka untuk kemaslahatan bersama yang berbasis masjid.
+            {vm.visiText}
           </p>
         </div>
 
         {/* ===== MISI SECTION ===== */}
         <div className="space-y-8 pt-2">
-          <h3 className="text-2xl md:text-3xl font-black text-[#0b6330] tracking-widest uppercase text-center">
-            MISI
+          <h3 className={`text-2xl md:text-3xl font-black text-[#0b6330] tracking-widest uppercase text-center ${lang === 'ar' ? 'font-serif' : ''}`}>
+            {vm.misiTitle}
           </h3>
 
           {/* 2x2 Grid of Misi Items */}
@@ -46,7 +52,7 @@ export default function VisiMisiPage() {
                 </svg>
               </div>
               <p className="text-xs sm:text-[13px] md:text-sm text-gray-700 leading-relaxed font-medium">
-                Menyediakan sistem dan layanan yang memudahkan para muzakki atau donatur dalam menunaikan zakat, infaq, shadaqah, maupun wakaf dengan sebaik-baiknya.
+                {vm.misi1}
               </p>
             </div>
 
@@ -58,7 +64,7 @@ export default function VisiMisiPage() {
                 </svg>
               </div>
               <p className="text-xs sm:text-[13px] md:text-sm text-gray-700 leading-relaxed font-medium">
-                Mendayagunakan dana zakat, infaq, shadaqah maupun wakaf melalui program-program yang terasa manfaatnya.
+                {vm.misi2}
               </p>
             </div>
 
@@ -70,7 +76,7 @@ export default function VisiMisiPage() {
                 </svg>
               </div>
               <p className="text-xs sm:text-[13px] md:text-sm text-gray-700 leading-relaxed font-medium">
-                Menjadikan masjid sebagai pusat pemberdayaan ekonomi umat.
+                {vm.misi3}
               </p>
             </div>
 
@@ -82,7 +88,7 @@ export default function VisiMisiPage() {
                 </svg>
               </div>
               <p className="text-xs sm:text-[13px] md:text-sm text-gray-700 leading-relaxed font-medium">
-                Mengangkat martabat mustahik dan membahagiakan muzakki serta donatur.
+                {vm.misi4}
               </p>
             </div>
 

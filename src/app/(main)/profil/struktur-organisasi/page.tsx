@@ -1,13 +1,19 @@
+"use client";
+
 import Image from "next/image";
+import { useProfilLang } from "../layout";
 
 export default function StrukturOrganisasiPage() {
+  const { dict, lang } = useProfilLang();
+  const so = dict.strukturOrganisasi;
+
   return (
     <div className="flex flex-col items-center gap-6">
       
       {/* Title */}
       <div className="flex flex-col items-center mb-4">
-        <h3 className="text-2xl md:text-3xl font-black text-gray-800 tracking-wide uppercase text-center leading-tight">
-          STRUKTUR ORGANISASI RUMAH AMAL USK
+        <h3 className={`text-2xl md:text-3xl font-black text-gray-800 tracking-wide uppercase text-center leading-tight ${lang === 'ar' ? 'font-serif' : ''}`}>
+          {so.title}
         </h3>
         <div className="mt-2.5 w-14 h-[3.5px] bg-[#ffc800] rounded-full" />
       </div>

@@ -6,6 +6,8 @@ import { useState, useEffect, useRef } from "react";
 import MitraSection from "@/components/MitraSection";
 import MediaSocialSection from "@/components/MediaSocialSection";
 
+import { homeDictionary, HomeLanguage } from "@/lib/i18n/home";
+
 interface KampanyeItem {
   id: string;
   judul: string;
@@ -21,6 +23,8 @@ interface KampanyeItem {
 interface AnnouncementSlide {
   id: string;
   title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
   slug: string;
   category: string | null;
   coverImageUrl: string | null;
@@ -31,6 +35,8 @@ interface AnnouncementSlide {
 interface NewsItem {
   id: string;
   title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
   slug: string;
   category: string | null;
   coverImageUrl: string | null;
@@ -86,6 +92,7 @@ function RevealOnScroll({
 }
 
 export default function Home() {
+  const [lang, setLang] = useState<HomeLanguage>('id');
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const [kampanyes, setKampanyes] = useState<KampanyeItem[]>([]);
@@ -99,6 +106,20 @@ export default function Home() {
 
   const [newsletters, setNewsletters] = useState<NewsletterItem[]>([]);
   const [loadingNewsletters, setLoadingNewsletters] = useState(true);
+
+  useEffect(() => {
+    const readLang = () => {
+      const saved = (localStorage.getItem('app_lang') || localStorage.getItem('program_lang')) as HomeLanguage;
+      if (saved && ['id', 'en', 'ar'].includes(saved)) {
+        setLang(saved);
+      }
+    };
+    readLang();
+    window.addEventListener('languageChange', readLang);
+    return () => window.removeEventListener('languageChange', readLang);
+  }, []);
+
+  const dict = homeDictionary[lang] || homeDictionary.id;
 
   useEffect(() => {
     async function loadData() {
@@ -141,10 +162,17 @@ export default function Home() {
     loadData();
   }, []);
 
+  const getItemTitle = (item: { title: string; titleEn?: string | null; titleAr?: string | null }) => {
+    if (lang === 'en' && item.titleEn) return item.titleEn;
+    if (lang === 'ar' && item.titleAr) return item.titleAr;
+    return item.title;
+  };
+
   const formatDate = (dateStr: string) => {
     try {
       const d = new Date(dateStr);
-      return d.toLocaleDateString('id-ID', {
+      const localeMap = { id: 'id-ID', en: 'en-US', ar: 'ar-SA' };
+      return d.toLocaleDateString(localeMap[lang] || 'id-ID', {
         day: '2-digit',
         month: 'long',
         year: 'numeric',
@@ -166,8 +194,8 @@ export default function Home() {
       const now = new Date();
       const diffTime = targetDate.getTime() - now.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays <= 0) return 'Selesai';
-      return `${diffDays} hari`;
+      if (diffDays <= 0) return lang === 'ar' ? 'مكتمل' : lang === 'en' ? 'Finished' : 'Selesai';
+      return lang === 'ar' ? `${diffDays} أيام` : lang === 'en' ? `${diffDays} days` : `${diffDays} hari`;
     } catch {
       return '-';
     }
@@ -178,7 +206,7 @@ export default function Home() {
     .filter((item) => Boolean(item.coverImageUrl && item.coverImageUrl.trim() !== ''))
     .map((item) => ({
       id: `ann-${item.id}`,
-      title: item.title,
+      title: getItemTitle(item),
       imageUrl: item.coverImageUrl!,
       href: item.slug ? `/pengumuman/${item.slug}` : '/pengumuman',
     }));
@@ -219,7 +247,7 @@ export default function Home() {
   const isLoadingBanner = loadingAnnouncements && loadingKampanye;
 
   return (
-    <main className="min-h-screen bg-gray-50/50 pb-16 sm:pb-24 relative overflow-x-hidden">
+    <main className={`min-h-screen bg-gray-50/50 pb-16 sm:pb-24 relative overflow-x-hidden ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
 
       {/* Hero Section - Full 100vw Banner */}
       <section className="w-full pt-3 sm:pt-5">
@@ -297,11 +325,11 @@ export default function Home() {
             {/* CARD 1: INFAK */}
             <div className="bg-[#f6f8fa] rounded-[18px] sm:rounded-[22px] md:rounded-[26px] p-5 sm:p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[190px] sm:min-h-[220px] transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl group">
               <div>
-                <h3 className="text-lg sm:text-xl md:text-[22px] font-black text-[#2d2d2d] mb-2 sm:mb-3 tracking-wider group-hover:text-[#197814] transition-colors">
-                  INFAK
+                <h3 className={`text-lg sm:text-xl md:text-[22px] font-black text-[#2d2d2d] mb-2 sm:mb-3 tracking-wider group-hover:text-[#197814] transition-colors ${lang === 'ar' ? 'font-serif' : ''}`}>
+                  {dict.cards.infakTitle}
                 </h3>
                 <p className="text-xs sm:text-[13px] text-[#555555] leading-relaxed max-w-[280px] mx-auto font-medium">
-                  Bersyukur atas rizki, berbagi kebahagian dengan sesama muslim.
+                  {dict.cards.infakDesc}
                 </p>
               </div>
 
@@ -310,7 +338,7 @@ export default function Home() {
                   href="/infaq"
                   className="w-32 sm:w-36 md:w-40 py-2 sm:py-2.5 px-4 rounded-full border border-[#197814] text-[#197814] font-bold text-xs sm:text-sm bg-transparent hover:bg-[#197814] hover:text-white hover:scale-105 active:scale-95 transition-all duration-200 shadow-2xs inline-block text-center cursor-pointer"
                 >
-                  Infak
+                  {dict.cards.infakBtn}
                 </Link>
               </div>
             </div>
@@ -318,11 +346,11 @@ export default function Home() {
             {/* CARD 2: ZAKAT */}
             <div className="bg-[#f6f8fa] rounded-[18px] sm:rounded-[22px] md:rounded-[26px] p-5 sm:p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[190px] sm:min-h-[220px] transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl group">
               <div>
-                <h3 className="text-lg sm:text-xl md:text-[22px] font-black text-[#2d2d2d] mb-2 sm:mb-3 tracking-wider group-hover:text-[#197814] transition-colors">
-                  ZAKAT
+                <h3 className={`text-lg sm:text-xl md:text-[22px] font-black text-[#2d2d2d] mb-2 sm:mb-3 tracking-wider group-hover:text-[#197814] transition-colors ${lang === 'ar' ? 'font-serif' : ''}`}>
+                  {dict.cards.zakatTitle}
                 </h3>
                 <p className="text-xs sm:text-[13px] text-[#555555] leading-relaxed max-w-[280px] mx-auto font-medium">
-                  Menyempurnakan rukun islam, mensucikan harta dan mententramkan jiwa.
+                  {dict.cards.zakatDesc}
                 </p>
               </div>
 
@@ -331,7 +359,7 @@ export default function Home() {
                   href="/zakat"
                   className="w-32 sm:w-36 md:w-40 py-2 sm:py-2.5 px-4 rounded-full border border-[#197814] text-[#197814] font-bold text-xs sm:text-sm bg-transparent hover:bg-[#197814] hover:text-white hover:scale-105 active:scale-95 transition-all duration-200 shadow-2xs inline-block text-center cursor-pointer"
                 >
-                  Zakat
+                  {dict.cards.zakatBtn}
                 </Link>
               </div>
             </div>
@@ -339,11 +367,11 @@ export default function Home() {
             {/* CARD 3: PROGRAM */}
             <div className="bg-[#f6f8fa] rounded-[18px] sm:rounded-[22px] md:rounded-[26px] p-5 sm:p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[190px] sm:min-h-[220px] transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl group">
               <div>
-                <h3 className="text-lg sm:text-xl md:text-[22px] font-black text-[#2d2d2d] mb-2 sm:mb-3 tracking-wider group-hover:text-[#197814] transition-colors">
-                  PROGRAM
+                <h3 className={`text-lg sm:text-xl md:text-[22px] font-black text-[#2d2d2d] mb-2 sm:mb-3 tracking-wider group-hover:text-[#197814] transition-colors ${lang === 'ar' ? 'font-serif' : ''}`}>
+                  {dict.cards.programTitle}
                 </h3>
                 <p className="text-xs sm:text-[13px] text-[#555555] leading-relaxed max-w-[280px] mx-auto font-medium">
-                  Rumah amal masjid jamik USK menyediakan beberapa program donasi.
+                  {dict.cards.programDesc}
                 </p>
               </div>
 
@@ -352,7 +380,7 @@ export default function Home() {
                   href="/program"
                   className="w-32 sm:w-36 md:w-40 py-2 sm:py-2.5 px-4 rounded-full border border-[#197814] text-[#197814] font-bold text-xs sm:text-sm bg-transparent hover:bg-[#197814] hover:text-white hover:scale-105 active:scale-95 transition-all duration-200 shadow-2xs inline-block text-center cursor-pointer"
                 >
-                  Program
+                  {dict.cards.programBtn}
                 </Link>
               </div>
             </div>
@@ -369,8 +397,8 @@ export default function Home() {
         <RevealOnScroll>
           {/* Section Heading */}
           <div className="flex flex-col items-center mb-8 sm:mb-12">
-            <h2 className="text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center">
-              KAMPANYE UNGGULAN
+            <h2 className={`text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center ${lang === 'ar' ? 'font-serif' : ''}`}>
+              {dict.sections.kampanye}
             </h2>
             <div className="mt-2 sm:mt-2.5 w-12 sm:w-14 h-[3px] sm:h-[3.5px] bg-[#ffc800] rounded-full" />
           </div>
@@ -396,7 +424,7 @@ export default function Home() {
             </div>
           ) : displayedKampanye.length === 0 ? (
             <div className="text-center py-10 sm:py-12 text-gray-500 bg-white rounded-2xl border border-dashed border-gray-200 mb-8 shadow-xs">
-              <p className="text-sm sm:text-base font-semibold">Belum ada kampanye aktif saat ini</p>
+              <p className="text-sm sm:text-base font-semibold">{dict.sections.noKampanye}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
@@ -433,7 +461,7 @@ export default function Home() {
                       {/* Durasi */}
                       <div className="flex justify-end items-center mb-3">
                         <div className="text-right">
-                          <span className="block text-xs font-semibold text-gray-500">Durasi</span>
+                          <span className="block text-xs font-semibold text-gray-500">{dict.sections.durasi}</span>
                           <span className="block text-xs sm:text-sm font-semibold text-gray-600">{durasiText}</span>
                         </div>
                       </div>
@@ -449,13 +477,13 @@ export default function Home() {
                       {/* Terkumpul vs Dana Dibutuhkan */}
                       <div className="flex justify-between items-end mb-5 sm:mb-6 text-xs sm:text-sm">
                         <div>
-                          <span className="block text-xs font-semibold text-gray-700">Terkumpul</span>
+                          <span className="block text-xs font-semibold text-gray-700">{dict.sections.terkumpul}</span>
                           <span className="font-extrabold text-[#0b6330]">
                             Rp. {formatRupiah(current)}
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="block text-xs font-semibold text-gray-700">Dana dibutuhkan</span>
+                          <span className="block text-xs font-semibold text-gray-700">{dict.sections.danaDibutuhkan}</span>
                           <span className="font-extrabold text-[#0b6330]">
                             Rp. {formatRupiah(target)}
                           </span>
@@ -467,7 +495,7 @@ export default function Home() {
                         href={`/infaq?kampanyeId=${item.id}`}
                         className="w-full bg-[#0b6330] hover:bg-[#074722] text-white font-extrabold py-3 sm:py-3.5 rounded-xl text-xs sm:text-sm transition-all duration-200 text-center tracking-wider uppercase block shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] mt-auto"
                       >
-                        INFAQ SEKARANG
+                        {dict.sections.infaqSekarang}
                       </Link>
                     </div>
                   </div>
@@ -482,7 +510,7 @@ export default function Home() {
               href="/kampanye"
               className="bg-[#0b6330] hover:bg-[#084823] text-white font-extrabold text-xs sm:text-sm px-8 sm:px-10 py-2.5 sm:py-3 rounded-xl shadow-md hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 inline-flex items-center justify-center cursor-pointer tracking-wide"
             >
-              Selengkapnya
+              {dict.sections.viewMore}
             </Link>
           </div>
         </RevealOnScroll>
@@ -495,8 +523,8 @@ export default function Home() {
         <RevealOnScroll>
           {/* Section Heading */}
           <div className="flex flex-col items-center mb-8 sm:mb-12">
-            <h2 className="text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center">
-              PROFIL
+            <h2 className={`text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center ${lang === 'ar' ? 'font-serif' : ''}`}>
+              {dict.sections.profil}
             </h2>
             <div className="mt-2 sm:mt-2.5 w-12 sm:w-14 h-[3px] sm:h-[3.5px] bg-[#ffc800] rounded-full" />
           </div>
@@ -520,23 +548,19 @@ export default function Home() {
 
               {/* Upper Content */}
               <div>
-                <h3 className="text-base sm:text-[17px] md:text-[19px] font-black text-[#0b6330] tracking-wide uppercase mb-2.5 sm:mb-3 leading-snug">
-                  Rumah Amal Masjid Jamik USK
+                <h3 className={`text-base sm:text-[17px] md:text-[19px] font-black text-[#0b6330] tracking-wide uppercase mb-2.5 sm:mb-3 leading-snug ${lang === 'ar' ? 'font-serif' : ''}`}>
+                  {dict.sections.profilSub}
                 </h3>
 
                 <p className="text-xs sm:text-[13.5px] md:text-[14px] text-gray-600 leading-relaxed mb-4">
-                  Kami menyediakan sistem dan layanan yang memudahkan para muzakki atau donatur dalam
-                  menunaikan zakat, infaq, shadaqah, maupun wakaf dengan sebaik-baiknya. Menjadikan masjid
-                  sebagai pusat pemberdayaan ekonomi umat, Mendayagunakan dana zakat, infaq shadaqah
-                  maupun wakaf melalui program-program yang terasa manfaatnya, Mengangkat martabat
-                  mustahik, dan membahagiakan muzakki dan donatur.
+                  {dict.sections.profilText}
                 </p>
 
                 <Link
                   href="/profil"
                   className="text-[#c49a00] hover:text-[#a07d00] font-semibold text-xs sm:text-[13.5px] underline underline-offset-2 transition-colors inline-block"
                 >
-                  Selengkapnya
+                  {dict.sections.viewMore}
                 </Link>
               </div>
 
@@ -577,8 +601,8 @@ export default function Home() {
         <RevealOnScroll>
           {/* Section Heading */}
           <div className="flex flex-col items-center mb-8 sm:mb-12">
-            <h2 className="text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center">
-              PENGUMUMAN
+            <h2 className={`text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center ${lang === 'ar' ? 'font-serif' : ''}`}>
+              {dict.sections.pengumuman}
             </h2>
             <div className="mt-2 sm:mt-2.5 w-12 sm:w-14 h-[3px] sm:h-[3.5px] bg-[#ffc800] rounded-full" />
           </div>
@@ -599,7 +623,7 @@ export default function Home() {
             </div>
           ) : displayedAnnouncements.length === 0 ? (
             <div className="text-center py-10 sm:py-12 text-gray-500 bg-white rounded-2xl border border-dashed border-gray-200 mb-8 shadow-xs">
-              <p className="text-sm sm:text-base font-semibold">Belum ada pengumuman yang dipublikasikan</p>
+              <p className="text-sm sm:text-base font-semibold">{dict.sections.noPengumuman}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
@@ -615,7 +639,7 @@ export default function Home() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={item.coverImageUrl}
-                        alt={item.title}
+                        alt={getItemTitle(item)}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                       />
@@ -634,7 +658,7 @@ export default function Home() {
                             />
                           </div>
                           <span className="text-[10px] font-extrabold text-[#ffc800] tracking-widest uppercase mt-0.5 drop-shadow-2xs">
-                            PENGUMUMAN RESMI
+                            {lang === 'ar' ? 'إعلان رسمي' : lang === 'en' ? 'OFFICIAL ANNOUNCEMENT' : 'PENGUMUMAN RESMI'}
                           </span>
                         </div>
                       </div>
@@ -645,13 +669,13 @@ export default function Home() {
                   <div className="p-4 sm:p-5 flex flex-col flex-1">
                     <div className="mb-2.5 sm:mb-3">
                       <span className="inline-block bg-[#ffc800] text-[#111827] text-[10px] sm:text-[11px] font-extrabold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-md uppercase tracking-wider shadow-2xs">
-                        {item.category && item.category !== 'Umum' && item.category !== 'UMUM' ? item.category : 'PENGUMUMAN'}
+                        {item.category && item.category !== 'Umum' && item.category !== 'UMUM' ? item.category : (lang === 'ar' ? 'إعلان' : lang === 'en' ? 'ANNOUNCEMENT' : 'PENGUMUMAN')}
                       </span>
                     </div>
 
                     <div className="flex flex-col justify-between flex-1">
-                      <h3 className="font-bold text-[#112b27] text-sm sm:text-[15px] leading-tight mb-2.5 sm:mb-3 line-clamp-4 group-hover:text-[#0b6330] transition-colors">
-                        {item.title}
+                      <h3 className={`font-bold text-[#112b27] text-sm sm:text-[15px] leading-tight mb-2.5 sm:mb-3 line-clamp-4 group-hover:text-[#0b6330] transition-colors ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+                        {getItemTitle(item)}
                       </h3>
                       <p className="text-[11px] sm:text-xs text-gray-500 font-medium mt-auto">
                         {formatDate(item.publishedAt || item.createdAt || '')}
@@ -669,7 +693,7 @@ export default function Home() {
               href="/pengumuman"
               className="bg-[#0b6330] hover:bg-[#084823] text-white font-extrabold text-xs sm:text-sm px-8 sm:px-10 py-2.5 sm:py-3 rounded-xl shadow-md hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 inline-flex items-center justify-center cursor-pointer tracking-wide"
             >
-              Selengkapnya
+              {dict.sections.viewMore}
             </Link>
           </div>
         </RevealOnScroll>
@@ -682,8 +706,8 @@ export default function Home() {
         <RevealOnScroll>
           {/* Section Heading */}
           <div className="flex flex-col items-center mb-8 sm:mb-12">
-            <h2 className="text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center">
-              BERITA TERKINI
+            <h2 className={`text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center ${lang === 'ar' ? 'font-serif' : ''}`}>
+              {dict.sections.berita}
             </h2>
             <div className="mt-2 sm:mt-2.5 w-12 sm:w-14 h-[3px] sm:h-[3.5px] bg-[#ffc800] rounded-full" />
           </div>
@@ -704,7 +728,7 @@ export default function Home() {
             </div>
           ) : displayedNews.length === 0 ? (
             <div className="text-center py-10 sm:py-12 text-gray-500 bg-white rounded-2xl border border-dashed border-gray-200 mb-8 shadow-xs">
-              <p className="text-sm sm:text-base font-semibold">Belum ada berita yang dipublikasikan</p>
+              <p className="text-sm sm:text-base font-semibold">{dict.sections.noBerita}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
@@ -720,7 +744,7 @@ export default function Home() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={item.coverImageUrl}
-                        alt={item.title}
+                        alt={getItemTitle(item)}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                       />
@@ -739,7 +763,7 @@ export default function Home() {
                             />
                           </div>
                           <span className="text-[10px] font-extrabold text-[#ffc800] tracking-widest uppercase mt-0.5 drop-shadow-2xs">
-                            BERITA RESMI
+                            {lang === 'ar' ? 'خبر رسمي' : lang === 'en' ? 'OFFICIAL NEWS' : 'BERITA RESMI'}
                           </span>
                         </div>
                       </div>
@@ -750,13 +774,13 @@ export default function Home() {
                   <div className="p-4 sm:p-5 flex flex-col flex-1">
                     <div className="mb-2.5 sm:mb-3">
                       <span className="inline-block bg-[#ffc800] text-[#111827] text-[10px] sm:text-[11px] font-extrabold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-md uppercase tracking-wider shadow-2xs">
-                        BERITA
+                        {lang === 'ar' ? 'خبر' : lang === 'en' ? 'NEWS' : 'BERITA'}
                       </span>
                     </div>
 
                     <div className="flex flex-col justify-between flex-1">
-                      <h3 className="font-bold text-[#112b27] text-sm sm:text-[15px] leading-tight mb-2.5 sm:mb-3 line-clamp-4 group-hover:text-[#0b6330] transition-colors">
-                        {item.title}
+                      <h3 className={`font-bold text-[#112b27] text-sm sm:text-[15px] leading-tight mb-2.5 sm:mb-3 line-clamp-4 group-hover:text-[#0b6330] transition-colors ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+                        {getItemTitle(item)}
                       </h3>
                       <p className="text-[11px] sm:text-xs text-gray-500 font-medium mt-auto">
                         {formatDate(item.publishedAt || item.createdAt)}
@@ -774,7 +798,71 @@ export default function Home() {
               href="/berita"
               className="bg-[#0b6330] hover:bg-[#084823] text-white font-extrabold text-xs sm:text-sm px-8 sm:px-10 py-2.5 sm:py-3 rounded-xl shadow-md hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 inline-flex items-center justify-center cursor-pointer tracking-wide"
             >
-              Selengkapnya
+              {dict.sections.viewMore}
+            </Link>
+          </div>
+        </RevealOnScroll>
+
+      </section>
+
+      {/* ===== SECTION 5: NEWSLETTER ===== */}
+      <section id="newsletter" className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
+
+        <RevealOnScroll>
+          {/* Section Heading */}
+          <div className="flex flex-col items-center mb-8 sm:mb-12">
+            <h2 className={`text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center ${lang === 'ar' ? 'font-serif' : ''}`}>
+              {dict.sections.newsletter}
+            </h2>
+            <div className="mt-2 sm:mt-2.5 w-12 sm:w-14 h-[3px] sm:h-[3.5px] bg-[#ffc800] rounded-full" />
+          </div>
+
+          {/* Content */}
+          {loadingNewsletters ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 animate-pulse mb-8">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-2xs">
+                  <div className="bg-gray-200 aspect-[3/4] w-full rounded-xl mb-3" />
+                  <div className="bg-gray-200 h-4 w-3/4 rounded-md" />
+                </div>
+              ))}
+            </div>
+          ) : newsletters.length === 0 ? (
+            <div className="text-center py-10 sm:py-12 text-gray-500 bg-white rounded-2xl border border-dashed border-gray-200 mb-8 shadow-xs">
+              <p className="text-sm sm:text-base font-semibold">{dict.sections.noNewsletter}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
+              {newsletters.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/newsletter/${item.id}`}
+                  className="group bg-white rounded-2xl border border-gray-100 p-4 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 flex flex-col cursor-pointer"
+                >
+                  <div className="relative aspect-[3/4] w-full bg-gray-100 rounded-xl overflow-hidden mb-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.imageUrl}
+                      alt={item.judul}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <h3 className="font-bold text-gray-900 text-sm line-clamp-2 mb-1 group-hover:text-[#0b6330] transition-colors">
+                    {item.judul}
+                  </h3>
+                  <p className="text-xs text-gray-400 mt-auto">{formatDate(item.tanggal)}</p>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {/* Button Selengkapnya */}
+          <div className="mt-8 sm:mt-12 flex justify-center">
+            <Link
+              href="/newsletter"
+              className="bg-[#0b6330] hover:bg-[#084823] text-white font-extrabold text-xs sm:text-sm px-8 sm:px-10 py-2.5 sm:py-3 rounded-xl shadow-md hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 inline-flex items-center justify-center cursor-pointer tracking-wide"
+            >
+              {dict.sections.viewMore}
             </Link>
           </div>
         </RevealOnScroll>

@@ -68,13 +68,19 @@ export async function getPaginatedPrograms(page: number = 1, limit: number = 5) 
       select: {
         id: true,
         title: true,
+        titleAr: true,
+        titleEn: true,
         slug: true,
         excerpt: true,
+        excerptAr: true,
+        excerptEn: true,
         category: true,
         coverImageUrl: true,
         published: true,
         publishedAt: true,
         content: true,
+        contentAr: true,
+        contentEn: true,
         createdAt: true,
       },
     }),
@@ -98,10 +104,16 @@ export async function getPaginatedPrograms(page: number = 1, limit: number = 5) 
 
 export async function addProgram(formData: FormData) {
   const title = (formData.get('title') as string).trim();
+  const titleAr = (formData.get('titleAr') as string | null)?.trim() || null;
+  const titleEn = (formData.get('titleEn') as string | null)?.trim() || null;
   const category = (formData.get('category') as string | null)?.trim() || 'PENDIDIKAN';
   const excerpt = (formData.get('excerpt') as string | null)?.trim() || null;
+  const excerptAr = (formData.get('excerptAr') as string | null)?.trim() || null;
+  const excerptEn = (formData.get('excerptEn') as string | null)?.trim() || null;
   const coverImageUrl = (formData.get('coverImageUrl') as string | null)?.trim() || null;
   const content = (formData.get('content') as string | null)?.trim() || '';
+  const contentAr = (formData.get('contentAr') as string | null)?.trim() || null;
+  const contentEn = (formData.get('contentEn') as string | null)?.trim() || null;
   const publishedAtRaw = formData.get('publishedAt') as string | null;
   const published = formData.get('published') === '1';
 
@@ -113,11 +125,17 @@ export async function addProgram(formData: FormData) {
   const program = await prisma.program.create({
     data: {
       title,
+      titleAr,
+      titleEn,
       slug,
       category,
       excerpt,
+      excerptAr,
+      excerptEn,
       coverImageUrl,
       content,
+      contentAr,
+      contentEn,
       published,
       publishedAt: publishedAtRaw ? new Date(publishedAtRaw) : new Date(),
     },
@@ -132,10 +150,16 @@ export async function addProgram(formData: FormData) {
 export async function updateProgram(formData: FormData) {
   const id = formData.get('id') as string;
   const title = (formData.get('title') as string).trim();
+  const titleAr = (formData.get('titleAr') as string | null)?.trim() || null;
+  const titleEn = (formData.get('titleEn') as string | null)?.trim() || null;
   const category = (formData.get('category') as string | null)?.trim() || 'PENDIDIKAN';
   const excerpt = (formData.get('excerpt') as string | null)?.trim() || null;
+  const excerptAr = (formData.get('excerptAr') as string | null)?.trim() || null;
+  const excerptEn = (formData.get('excerptEn') as string | null)?.trim() || null;
   const coverImageUrl = (formData.get('coverImageUrl') as string | null)?.trim() || null;
   const content = (formData.get('content') as string | null)?.trim() || '';
+  const contentAr = (formData.get('contentAr') as string | null)?.trim() || null;
+  const contentEn = (formData.get('contentEn') as string | null)?.trim() || null;
   const publishedAtRaw = formData.get('publishedAt') as string | null;
   const published = formData.get('published') === '1';
 
@@ -160,11 +184,17 @@ export async function updateProgram(formData: FormData) {
     where: { id },
     data: {
       title,
+      titleAr,
+      titleEn,
       slug,
       category,
       excerpt,
+      excerptAr,
+      excerptEn,
       coverImageUrl,
       content,
+      contentAr,
+      contentEn,
       published,
       publishedAt: publishedAtRaw ? new Date(publishedAtRaw) : undefined,
     },

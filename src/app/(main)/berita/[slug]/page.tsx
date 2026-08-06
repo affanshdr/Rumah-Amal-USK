@@ -181,14 +181,20 @@ export default function PublicNewsDetailPage({
     );
   }
 
+  const hasArabicTitle = Boolean(news.titleAr && news.titleAr.trim() !== '');
+  const hasArabicContent = Boolean(news.contentAr && news.contentAr.trim() !== '');
+
+  const isTitleRtl = lang === 'ar' && hasArabicTitle;
+  const isContentRtl = lang === 'ar' && hasArabicContent;
+
   const displayTitle = getTitle(news);
   const displayContent = getContent(news);
 
   return (
-    <div className={`min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-[1240px] mx-auto">
 
-        {/* Back Link & Language Switcher Header */}
+        {/* Back Link Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <Link
             href="/berita"
@@ -196,43 +202,6 @@ export default function PublicNewsDetailPage({
           >
             ← {lang === 'ar' ? 'العودة إلى جميع الأخبار' : lang === 'en' ? 'Back to all news' : 'Kembali ke Semua Berita'}
           </Link>
-
-          {/* Language Switcher */}
-          <div className="inline-flex rounded-xl p-1 bg-gray-100 border border-gray-200 shadow-2xs shrink-0 self-end sm:self-auto">
-            <button
-              onClick={() => changeLanguage('id')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                lang === 'id'
-                  ? 'bg-[#0b6330] text-white shadow-xs'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
-              }`}
-            >
-              <span>🇮🇩</span>
-              <span>ID</span>
-            </button>
-            <button
-              onClick={() => changeLanguage('en')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                lang === 'en'
-                  ? 'bg-[#0b6330] text-white shadow-xs'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
-              }`}
-            >
-              <span>🇬🇧</span>
-              <span>EN</span>
-            </button>
-            <button
-              onClick={() => changeLanguage('ar')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                lang === 'ar'
-                  ? 'bg-[#0b6330] text-white shadow-xs'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
-              }`}
-            >
-              <span>🇸🇦</span>
-              <span>AR</span>
-            </button>
-          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -249,7 +218,7 @@ export default function PublicNewsDetailPage({
             </div>
 
             {/* Title */}
-            <h1 className={`text-2xl sm:text-4xl font-extrabold text-gray-900 leading-tight mb-6 ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+            <h1 className={`text-2xl sm:text-4xl font-extrabold text-gray-900 leading-tight mb-6 ${isTitleRtl ? 'font-serif text-right' : ''}`} dir={isTitleRtl ? 'rtl' : 'ltr'}>
               {displayTitle}
             </h1>
 
@@ -278,12 +247,13 @@ export default function PublicNewsDetailPage({
                 .article-body blockquote { border-left: 4px solid #0b6330; padding-left: 1.25rem; color: #4b5563; font-style: italic; margin: 1.5rem 0; background: #f9fafb; padding: 1rem; border-radius: 0 0.75rem 0.75rem 0; }
                 .article-body a { color: #0b6330; text-decoration: underline; font-weight: 600; }
                 .article-body img { max-width: 100%; height: auto; border-radius: 1rem; margin: 1.5rem 0; shadow: 0 4px 12px rgba(0,0,0,0.05); }
-                .rtl .article-body { text-align: right; }
-                .rtl .article-body blockquote { border-left: none; border-right: 4px solid #0b6330; padding-left: 0; padding-right: 1.25rem; border-radius: 0.75rem 0 0 0.75rem; }
-                .rtl .article-body ul, .rtl .article-body ol { padding-left: 0; padding-right: 1.5rem; }
+                .rtl-body { text-align: right; direction: rtl; font-family: serif, sans-serif; }
+                .rtl-body blockquote { border-left: none; border-right: 4px solid #0b6330; padding-left: 0; padding-right: 1.25rem; border-radius: 0.75rem 0 0 0.75rem; }
+                .rtl-body ul, .rtl-body ol { padding-left: 0; padding-right: 1.5rem; }
               `}</style>
               <div
-                className="article-body"
+                className={`article-body ${isContentRtl ? 'rtl-body' : 'ltr-body'}`}
+                dir={isContentRtl ? 'rtl' : 'ltr'}
                 dangerouslySetInnerHTML={{ __html: displayContent }}
               />
             </div>

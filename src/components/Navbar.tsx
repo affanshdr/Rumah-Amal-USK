@@ -5,13 +5,75 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 
+type Language = "id" | "en" | "ar";
+
+const NAV_LABELS: Record<Language, Record<string, string>> = {
+  id: {
+    Beranda: "Beranda",
+    Profil: "Profil",
+    Program: "Program",
+    Kampanye: "Kampanye",
+    Berita: "Berita",
+    Pengumuman: "Pengumuman",
+    Newsletter: "Newsletter",
+    Dokumen: "Dokumen",
+    Galeri: "Galeri",
+    BayarZakat: "Bayar Zakat",
+  },
+  en: {
+    Beranda: "Home",
+    Profil: "Profile",
+    Program: "Programs",
+    Kampanye: "Campaigns",
+    Berita: "News",
+    Pengumuman: "Announcements",
+    Newsletter: "Newsletter",
+    Dokumen: "Documents",
+    Galeri: "Gallery",
+    BayarZakat: "Pay Zakat",
+  },
+  ar: {
+    Beranda: "الرئيسية",
+    Profil: "الملف التعريفي",
+    Program: "البرامج",
+    Kampanye: "الحملات",
+    Berita: "الأخبار",
+    Pengumuman: "الإعلانات",
+    Newsletter: "النشرة الإخبارية",
+    Dokumen: "الوثائق",
+    Galeri: "المعرض",
+    BayarZakat: "دفع الزكاة",
+  },
+};
+
 export default function Navbar() {
   const pathname = usePathname();
   const [programDropdownOpen, setProgramDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileProgramOpen, setMobileProgramOpen] = useState(false);
+  const [currentLang, setCurrentLang] = useState<Language>("id");
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const saved = (localStorage.getItem("app_lang") ||
+      localStorage.getItem("program_lang") ||
+      localStorage.getItem("profil_lang") ||
+      localStorage.getItem("announcement_lang")) as Language;
+    if (saved && ["id", "en", "ar"].includes(saved)) {
+      setCurrentLang(saved);
+    }
+  }, []);
+
+  const changeGlobalLanguage = (newLang: Language) => {
+    setCurrentLang(newLang);
+    localStorage.setItem("app_lang", newLang);
+    localStorage.setItem("program_lang", newLang);
+    localStorage.setItem("profil_lang", newLang);
+    localStorage.setItem("announcement_lang", newLang);
+    window.dispatchEvent(new Event("languageChange"));
+    window.location.reload();
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -25,15 +87,17 @@ export default function Navbar() {
     };
   }, []);
 
+  const t = NAV_LABELS[currentLang] || NAV_LABELS.id;
+
   const navLinks = [
-    { href: "/", label: "Beranda" },
-    { href: "/profil", label: "Profil" },
-    { href: "#program", label: "Program", hasDropdown: true },
-    { href: "/berita", label: "Berita" },
-    { href: "/pengumuman", label: "Pengumuman" },
-    { href: "/newsletter", label: "Newsletter" },
-    { href: "/dokumen", label: "Dokumen" },
-    { href: "/galeri", label: "Galeri" },
+    { href: "/", label: t.Beranda },
+    { href: "/profil", label: t.Profil },
+    { href: "#program", label: t.Program, hasDropdown: true },
+    { href: "/berita", label: t.Berita },
+    { href: "/pengumuman", label: t.Pengumuman },
+    { href: "/newsletter", label: t.Newsletter },
+    { href: "/dokumen", label: t.Dokumen },
+    { href: "/galeri", label: t.Galeri },
   ];
 
   return (
@@ -41,6 +105,7 @@ export default function Navbar() {
       <header
         className={`border-b sticky top-0 z-50 transition-colors duration-200 ${mobileMenuOpen ? "bg-[#383d42] border-transparent" : "bg-white border-gray-200"
           }`}
+        dir={currentLang === 'ar' ? 'rtl' : 'ltr'}
       >
         <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-[68px]">
@@ -59,7 +124,7 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center justify-between flex-1 mx-6 xl:mx-12 text-[13.5px] font-semibold">
+            <nav className="hidden lg:flex items-center justify-between flex-1 mx-6 xl:mx-12 text-[13.5px] font-semibold" dir="ltr">
               {navLinks.map((link) => {
                 const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
 
@@ -93,7 +158,6 @@ export default function Navbar() {
                         <span className="absolute bottom-0 left-0 h-[2.5px] bg-[#0b6330] w-0 group-hover:w-full transition-all duration-300 ease-out" />
                       </button>
 
-                      {/* Dropdown Menu Container with invisible top hover bridge */}
                       <div
                         className={`absolute top-full left-0 w-44 pt-1.5 z-50 transition-all duration-200 ease-out transform before:content-[''] before:absolute before:-top-4 before:inset-x-0 before:h-4 ${programDropdownOpen
                           ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
@@ -106,14 +170,14 @@ export default function Navbar() {
                             onClick={() => setProgramDropdownOpen(false)}
                             className="block px-4 py-2 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
                           >
-                            Program
+                            {t.Program}
                           </Link>
                           <Link
                             href="/kampanye"
                             onClick={() => setProgramDropdownOpen(false)}
                             className="block px-4 py-2 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
                           >
-                            Kampanye
+                            {t.Kampanye}
                           </Link>
                         </div>
                       </div>
@@ -138,13 +202,54 @@ export default function Navbar() {
               })}
             </nav>
 
-            {/* Right Group: Pembayaran Zakat Button & Mobile Toggle */}
-            <div className="flex items-center gap-4 shrink-0">
+            {/* Right Group: Bayar Zakat Button & Language Switcher & Mobile Toggle */}
+            <div className="flex items-center gap-3 shrink-0" dir="ltr">
+              {/* Global Language Switcher */}
+              <div className="hidden lg:inline-flex rounded-xl p-1 bg-gray-100 border border-gray-200 shadow-2xs items-center gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => changeGlobalLanguage("id")}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    currentLang === "id"
+                      ? "bg-[#0b6330] text-white shadow-xs"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
+                  }`}
+                >
+                  <span>🇮🇩</span>
+                  <span>ID</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => changeGlobalLanguage("en")}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    currentLang === "en"
+                      ? "bg-[#0b6330] text-white shadow-xs"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
+                  }`}
+                >
+                  <span>🇬🇧</span>
+                  <span>EN</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => changeGlobalLanguage("ar")}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    currentLang === "ar"
+                      ? "bg-[#0b6330] text-white shadow-xs"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
+                  }`}
+                >
+                  <span>🇸🇦</span>
+                  <span>AR</span>
+                </button>
+              </div>
+
+              {/* Bayar Zakat Button */}
               <Link
                 href="/zakat"
-                className="hidden lg:inline-flex items-center justify-center bg-[#ffc800] hover:bg-[#e8b500] text-[#1a1a1a] font-extrabold text-[13px] px-5 py-2.5 rounded-lg transition-all duration-200"
+                className="hidden lg:inline-flex items-center justify-center bg-[#ffc800] hover:bg-[#e8b500] text-[#1a1a1a] font-extrabold text-[13px] px-4 py-2 rounded-lg transition-all duration-200 shadow-2xs"
               >
-                Bayar Zakat
+                {t.BayarZakat}
               </Link>
 
               {/* Mobile Menu Button */}
@@ -172,13 +277,56 @@ export default function Navbar() {
           <div className="lg:hidden fixed inset-x-0 top-[68px] bottom-0 bg-[#383d42]/90 backdrop-blur-xs z-50 overflow-y-auto px-4 py-4 sm:px-6">
             <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-lg mx-auto flex flex-col gap-2 border border-gray-100">
 
+              {/* Mobile Language Switcher */}
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-2">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Pilih Bahasa / Language</span>
+                <div className="inline-flex rounded-xl p-1 bg-gray-100 border border-gray-200 items-center gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => changeGlobalLanguage("id")}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      currentLang === "id"
+                        ? "bg-[#0b6330] text-white shadow-xs"
+                        : "text-gray-600 hover:bg-gray-200/60"
+                    }`}
+                  >
+                    <span>🇮🇩</span>
+                    <span>ID</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => changeGlobalLanguage("en")}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      currentLang === "en"
+                        ? "bg-[#0b6330] text-white shadow-xs"
+                        : "text-gray-600 hover:bg-gray-200/60"
+                    }`}
+                  >
+                    <span>🇬🇧</span>
+                    <span>EN</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => changeGlobalLanguage("ar")}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      currentLang === "ar"
+                        ? "bg-[#0b6330] text-white shadow-xs"
+                        : "text-gray-600 hover:bg-gray-200/60"
+                    }`}
+                  >
+                    <span>🇸🇦</span>
+                    <span>AR</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Beranda */}
               <Link
                 href="/"
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-2.5 text-[17px] font-bold text-[#0b6330] transition-colors"
               >
-                Beranda
+                {t.Beranda}
               </Link>
 
               {/* Profil */}
@@ -187,7 +335,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-2.5 text-[17px] font-medium text-gray-500 hover:text-[#0b6330] transition-colors"
               >
-                Profil
+                {t.Profil}
               </Link>
 
               {/* Program */}
@@ -196,7 +344,7 @@ export default function Navbar() {
                   onClick={() => setMobileProgramOpen(!mobileProgramOpen)}
                   className="py-2.5 text-[17px] font-bold text-[#0b6330] flex items-center justify-between cursor-pointer"
                 >
-                  <span>Program</span>
+                  <span>{t.Program}</span>
                   <div className="w-8 h-8 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700">
                     <svg
                       className={`w-4 h-4 transition-transform duration-200 ${mobileProgramOpen ? "rotate-180" : ""
@@ -217,14 +365,14 @@ export default function Navbar() {
                       onClick={() => setMobileMenuOpen(false)}
                       className="py-1.5 text-base font-semibold text-gray-700 hover:text-[#0b6330]"
                     >
-                      Program
+                      {t.Program}
                     </Link>
                     <Link
                       href="/kampanye"
                       onClick={() => setMobileMenuOpen(false)}
                       className="py-1.5 text-base font-semibold text-gray-700 hover:text-[#0b6330]"
                     >
-                      Kampanye
+                      {t.Kampanye}
                     </Link>
                   </div>
                 )}
@@ -236,7 +384,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-2.5 text-[17px] font-bold text-[#0b6330] transition-colors"
               >
-                Berita
+                {t.Berita}
               </Link>
 
               {/* Pengumuman */}
@@ -245,7 +393,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-2.5 text-[17px] font-bold text-[#0b6330] transition-colors"
               >
-                Pengumuman
+                {t.Pengumuman}
               </Link>
 
               {/* Newsletter */}
@@ -254,7 +402,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-2.5 text-[17px] font-bold text-[#0b6330] transition-colors"
               >
-                Newsletter
+                {t.Newsletter}
               </Link>
 
               {/* Dokumen */}
@@ -263,7 +411,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-2.5 text-[17px] font-bold text-[#0b6330] transition-colors"
               >
-                Dokumen
+                {t.Dokumen}
               </Link>
 
               {/* Galeri */}
@@ -272,7 +420,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="py-2.5 text-[17px] font-bold text-[#0b6330] transition-colors mb-1"
               >
-                Galeri
+                {t.Galeri}
               </Link>
 
               {/* Pembayaran Zakat */}
@@ -281,7 +429,7 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="bg-[#ffc800] hover:bg-[#e8b500] text-[#111111] font-bold text-[16px] text-left px-5 py-3.5 rounded-xl shadow-xs transition-all block mt-2"
               >
-                Kalkulator Zakat
+                {t.BayarZakat}
               </Link>
 
             </div>

@@ -6,14 +6,20 @@ import Link from 'next/link';
 interface ProgramDetail {
   id: string;
   title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
   slug: string;
   category: string;
   coverImageUrl: string | null;
   content: string;
+  contentAr?: string | null;
+  contentEn?: string | null;
   viewsCount: number;
   publishedAt: string | null;
   createdAt: string;
 }
+
+type Language = 'id' | 'en' | 'ar';
 
 export default function PublicProgramDetailPage({
   params,
@@ -24,6 +30,26 @@ export default function PublicProgramDetailPage({
 
   const [program, setProgram] = useState<ProgramDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lang, setLang] = useState<Language>('id');
+
+  // Client-side auto translation state for missing DB translations
+  const [translating, setTranslating] = useState(false);
+  const [autoArTitle, setAutoArTitle] = useState('');
+  const [autoArContent, setAutoArContent] = useState('');
+  const [autoEnTitle, setAutoEnTitle] = useState('');
+  const [autoEnContent, setAutoEnContent] = useState('');
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem('program_lang') as Language;
+    if (savedLang && ['id', 'en', 'ar'].includes(savedLang)) {
+      setLang(savedLang);
+    }
+  }, []);
+
+  const changeLanguage = (newLang: Language) => {
+    setLang(newLang);
+    localStorage.setItem('program_lang', newLang);
+  };
 
   const fetchProgramDetail = useCallback(async () => {
     setLoading(true);
@@ -48,6 +74,75 @@ export default function PublicProgramDetailPage({
     fetchProgramDetail();
   }, [fetchProgramDetail]);
 
+  // Handle on-the-fly auto translation when DB fields are missing
+  useEffect(() => {
+    if (!program) return;
+
+    async function triggerAutoTranslate() {
+      if (!program) return;
+
+      if (lang === 'ar' && !program.titleAr && !autoArTitle && !translating) {
+        setTranslating(true);
+        try {
+          const res = await fetch('/api/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: program.title,
+              content: program.content,
+              targetLang: 'ar',
+            }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.title) setAutoArTitle(data.title);
+            if (data.content) setAutoArContent(data.content);
+          }
+        } catch (e) {
+          console.error('Auto translate AR error:', e);
+        } finally {
+          setTranslating(false);
+        }
+      } else if (lang === 'en' && !program.titleEn && !autoEnTitle && !translating) {
+        setTranslating(true);
+        try {
+          const res = await fetch('/api/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: program.title,
+              content: program.content,
+              targetLang: 'en',
+            }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.title) setAutoEnTitle(data.title);
+            if (data.content) setAutoEnContent(data.content);
+          }
+        } catch (e) {
+          console.error('Auto translate EN error:', e);
+        } finally {
+          setTranslating(false);
+        }
+      }
+    }
+
+    triggerAutoTranslate();
+  }, [lang, program, autoArTitle, autoEnTitle, translating]);
+
+  const getDisplayTitle = (item: ProgramDetail) => {
+    if (lang === 'en') return item.titleEn || autoEnTitle || item.title;
+    if (lang === 'ar') return item.titleAr || autoArTitle || item.title;
+    return item.title;
+  };
+
+  const getDisplayContent = (item: ProgramDetail) => {
+    if (lang === 'en') return item.contentEn || autoEnContent || item.content;
+    if (lang === 'ar') return item.contentAr || autoArContent || item.content;
+    return item.content;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 font-sans">
@@ -68,37 +163,71 @@ export default function PublicProgramDetailPage({
   if (!program) {
     return (
       <div className="min-h-screen bg-white py-16 px-4 text-center font-sans">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Program Tidak Ditemukan</h2>
-        <p className="text-gray-500 mb-6">Program yang Anda cari tidak tersedia atau telah dihapus.</p>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          {lang === 'ar' ? 'البرنامج غير موجود' : lang === 'en' ? 'Program Not Found' : 'Program Tidak Ditemukan'}
+        </h2>
+        <p className="text-gray-500 mb-6">
+          {lang === 'ar'
+            ? 'البرنامج الذي تبحث عنه غير متوفر أو تم حذفه.'
+            : lang === 'en'
+            ? 'The program you are looking for is unavailable or has been removed.'
+            : 'Program yang Anda cari tidak tersedia atau telah dihapus.'}
+        </p>
         <Link href="/program" className="px-5 py-2.5 bg-[#0b6330] text-white font-bold rounded-xl text-sm">
-          Kembali ke Daftar Program
+          {lang === 'ar' ? 'العودة إلى قائمة البرامج' : lang === 'en' ? 'Back to Program List' : 'Kembali ke Daftar Program'}
         </Link>
       </div>
     );
   }
 
+  const displayTitle = getDisplayTitle(program);
+  const displayContent = getDisplayContent(program);
+
+  const isTitleRtl = lang === 'ar';
+  const isContentRtl = lang === 'ar';
+
   return (
     <div className="min-h-screen bg-[#f8fafc]/40 py-8 px-4 sm:px-6 lg:px-8 font-sans text-gray-800">
       <div className="max-w-5xl mx-auto">
 
-        {/* 1. Main Title (Centered, Bold Uppercase) */}
-        <div className="text-center my-6">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#333333] tracking-tight uppercase max-w-4xl mx-auto leading-tight mb-4">
-            {program.title}
+        {/* Top bar with Back Link */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <Link
+            href="/program"
+            className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#0b6330] hover:underline"
+          >
+            ← {lang === 'ar' ? 'العودة إلى جميع البرامج' : lang === 'en' ? 'Back to all programs' : 'Kembali ke Semua Program'}
+          </Link>
+
+          {translating && (
+            <span className="text-[11px] text-[#0b6330] font-bold animate-pulse px-2 flex items-center gap-1 self-end sm:self-auto">
+              <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              {lang === 'ar' ? 'جاري الترجمة…' : 'Translating…'}
+            </span>
+          )}
+        </div>
+
+        {/* 1. Main Title */}
+        <div className="text-center my-6" dir={isTitleRtl ? 'rtl' : 'ltr'}>
+          <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#333333] tracking-tight uppercase max-w-4xl mx-auto leading-tight mb-4 ${isTitleRtl ? 'font-serif' : ''}`}>
+            {displayTitle}
           </h1>
 
-          {/* 2. Breadcrumb (Left-aligned under Title) */}
-          <nav className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 mb-8 max-w-4xl mx-auto">
+          {/* 2. Breadcrumb */}
+          <nav className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 mb-8 max-w-4xl mx-auto justify-center" dir="ltr">
             <Link href="/" className="hover:text-[#0b6330] transition-colors">
-              Home
+              {lang === 'ar' ? 'الرئيسية' : lang === 'en' ? 'Home' : 'Beranda'}
             </Link>
             <span>/</span>
             <Link href="/program" className="hover:text-[#0b6330] transition-colors">
-              Program
+              {lang === 'ar' ? 'البرامج' : lang === 'en' ? 'Program' : 'Program'}
             </Link>
             <span>/</span>
             <span className="text-[#0b6330] font-bold uppercase truncate max-w-xs sm:max-w-md">
-              {program.title}
+              {displayTitle}
             </span>
           </nav>
         </div>
@@ -109,13 +238,13 @@ export default function PublicProgramDetailPage({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={program.coverImageUrl}
-              alt={program.title}
+              alt={displayTitle}
               className="w-full h-auto object-cover rounded-[28px]"
             />
           </div>
         ) : null}
 
-        {/* 4. Rounded White Container for Content (Exact Match to Web Original) */}
+        {/* 4. Rounded White Container for Content */}
         <div className="max-w-4xl mx-auto bg-white rounded-3xl p-6 sm:p-10 lg:p-12 shadow-sm border border-gray-100/90 mb-12">
           <div className="prose max-w-none text-gray-800">
             <style>{`
@@ -130,10 +259,14 @@ export default function PublicProgramDetailPage({
               .program-detail-content a { color: #0b6330; text-decoration: underline; font-weight: 600; }
               .program-detail-content img { max-width: 100%; height: auto; border-radius: 1rem; margin: 1.25rem 0; }
               .program-detail-content strong { font-weight: 800; color: #111827; }
+              .rtl-body { direction: rtl; text-align: right; font-family: serif, sans-serif; }
+              .rtl-body blockquote { border-left: none; border-right: 4px solid #0b6330; padding-left: 0; padding-right: 1rem; }
+              .rtl-body ul, .rtl-body ol { padding-left: 0; padding-right: 1.5rem; }
             `}</style>
             <div
-              className="program-detail-content"
-              dangerouslySetInnerHTML={{ __html: program.content }}
+              className={`program-detail-content ${isContentRtl ? 'rtl-body' : 'ltr-body'}`}
+              dir={isContentRtl ? 'rtl' : 'ltr'}
+              dangerouslySetInnerHTML={{ __html: displayContent || '<p class="text-gray-400 italic text-center py-4">(Belum ada konten dalam bahasa ini)</p>' }}
             />
           </div>
 
@@ -143,19 +276,25 @@ export default function PublicProgramDetailPage({
               href="/program"
               className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#0b6330] hover:underline"
             >
-              ← Kembali ke Daftar Program
+              ← {lang === 'ar' ? 'العودة إلى قائمة البرامج' : lang === 'en' ? 'Back to Program List' : 'Kembali ke Daftar Program'}
             </Link>
 
             <button
               onClick={() => {
                 if (navigator.clipboard) {
                   navigator.clipboard.writeText(window.location.href);
-                  alert('Link program berhasil disalin!');
+                  alert(
+                    lang === 'ar'
+                      ? 'تم نسخ رابط البرنامج!'
+                      : lang === 'en'
+                      ? 'Program link copied!'
+                      : 'Link program berhasil disalin!'
+                  );
                 }
               }}
               className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3.5 py-1.5 rounded-lg border border-gray-200 transition-colors cursor-pointer"
             >
-              📋 Salin Link
+              📋 {lang === 'ar' ? 'نسخ الرابط' : lang === 'en' ? 'Copy Link' : 'Salin Link'}
             </button>
           </div>
         </div>

@@ -233,16 +233,22 @@ export default function PublicAnnouncementDetailPage({
     }
   };
 
+  const hasArabicTitle = Boolean(announcement.titleAr && announcement.titleAr.trim() !== '');
+  const hasArabicContent = Boolean(announcement.contentAr && announcement.contentAr.trim() !== '');
+
+  const isTitleRtl = lang === 'ar' && hasArabicTitle;
+  const isContentRtl = lang === 'ar' && hasArabicContent;
+
   const displayTitle = getTitle(announcement);
   const displayContent = getContent(announcement);
 
   return (
-    <div className={`min-h-screen bg-[#f8fafc]/50 py-8 px-4 sm:px-6 lg:px-8 font-sans text-gray-800 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-[#f8fafc]/50 py-8 px-4 sm:px-6 lg:px-8 font-sans text-gray-800">
       <div className="max-w-[1340px] mx-auto">
 
-        {/* Top Header: Breadcrumb & Language Switcher */}
+        {/* Top Header: Breadcrumb */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <nav className="text-xs font-semibold flex flex-wrap items-center gap-1.5 text-gray-600 leading-relaxed">
+          <nav className="text-xs font-semibold flex flex-wrap items-center gap-1.5 text-gray-600 leading-relaxed" dir="ltr">
             <Link href="/" className="hover:text-[#0b6330] transition-colors">
               {lang === 'ar' ? 'الرئيسية' : lang === 'en' ? 'Home' : 'Beranda'}
             </Link>
@@ -253,43 +259,6 @@ export default function PublicAnnouncementDetailPage({
             <span className="text-gray-400 font-bold">/</span>
             <span className="text-[#0b6330] font-extrabold uppercase line-clamp-1">{displayTitle}</span>
           </nav>
-
-          {/* Language Switcher */}
-          <div className="inline-flex rounded-xl p-1 bg-white border border-gray-200 shadow-2xs shrink-0 self-end sm:self-auto">
-            <button
-              onClick={() => changeLanguage('id')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                lang === 'id'
-                  ? 'bg-[#0b6330] text-white shadow-xs'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              <span>🇮🇩</span>
-              <span>ID</span>
-            </button>
-            <button
-              onClick={() => changeLanguage('en')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                lang === 'en'
-                  ? 'bg-[#0b6330] text-white shadow-xs'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              <span>🇬🇧</span>
-              <span>EN</span>
-            </button>
-            <button
-              onClick={() => changeLanguage('ar')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                lang === 'ar'
-                  ? 'bg-[#0b6330] text-white shadow-xs'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              <span>🇸🇦</span>
-              <span>AR</span>
-            </button>
-          </div>
         </div>
 
         {/* Layout 2 Kolom */}
@@ -299,7 +268,7 @@ export default function PublicAnnouncementDetailPage({
           <div className="lg:col-span-8 bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100/90">
 
             {/* Judul Besar */}
-            <h1 className={`text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 leading-snug mb-6 uppercase ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+            <h1 className={`text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900 leading-snug mb-6 uppercase ${isTitleRtl ? 'font-serif text-right' : ''}`} dir={isTitleRtl ? 'rtl' : 'ltr'}>
               {displayTitle}
             </h1>
 
@@ -328,12 +297,13 @@ export default function PublicAnnouncementDetailPage({
                 .public-article-content blockquote { border-left: 4px solid #d1d5db; padding-left: 1rem; color: #6b7280; font-style: italic; margin: 1.25rem 0; }
                 .public-article-content a { color: #2563eb; text-decoration: underline; }
                 .public-article-content img { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1.25rem 0; }
-                .rtl .public-article-content { text-align: right; }
-                .rtl .public-article-content blockquote { border-left: none; border-right: 4px solid #d1d5db; padding-left: 0; padding-right: 1rem; }
-                .rtl .public-article-content ul, .rtl .public-article-content ol { padding-left: 0; padding-right: 1.5rem; }
+                .rtl-body { text-align: right; direction: rtl; font-family: serif, sans-serif; }
+                .rtl-body blockquote { border-left: none; border-right: 4px solid #d1d5db; padding-left: 0; padding-right: 1rem; }
+                .rtl-body ul, .rtl-body ol { padding-left: 0; padding-right: 1.5rem; }
               `}</style>
               <div
-                className="public-article-content"
+                className={`public-article-content ${isContentRtl ? 'rtl-body' : 'ltr-body'}`}
+                dir={isContentRtl ? 'rtl' : 'ltr'}
                 dangerouslySetInnerHTML={{ __html: displayContent }}
               />
             </div>

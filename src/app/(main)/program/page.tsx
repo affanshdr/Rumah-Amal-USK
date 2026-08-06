@@ -6,15 +6,21 @@ import Link from 'next/link';
 interface ProgramItem {
   id: string;
   title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
   slug: string;
   category: string;
   excerpt: string | null;
+  excerptAr?: string | null;
+  excerptEn?: string | null;
   coverImageUrl: string | null;
   publishedAt: string | null;
   createdAt: string;
 }
 
-const CATEGORIES = [
+type Language = 'id' | 'en' | 'ar';
+
+const CATEGORIES_RAW = [
   'SEMUA',
   'PENDIDIKAN',
   'PEMBERDAYAAN',
@@ -24,12 +30,55 @@ const CATEGORIES = [
   'FASILITATOR & RELAWAN',
 ];
 
+const CATEGORIES_TRANSLATED: Record<Language, Record<string, string>> = {
+  id: {
+    'SEMUA': 'SEMUA',
+    'PENDIDIKAN': 'PENDIDIKAN',
+    'PEMBERDAYAAN': 'PEMBERDAYAAN',
+    'SOSIAL & KEMANUSIAAN': 'SOSIAL & KEMANUSIAAN',
+    'SYIAR & QURBAN': 'SYIAR & QURBAN',
+    'KEMITRAAN': 'KEMITRAAN',
+    'FASILITATOR & RELAWAN': 'FASILITATOR & RELAWAN',
+  },
+  en: {
+    'SEMUA': 'ALL CATEGORIES',
+    'PENDIDIKAN': 'EDUCATION',
+    'PEMBERDAYAAN': 'EMPOWERMENT',
+    'SOSIAL & KEMANUSIAAN': 'SOCIAL & HUMANITARIAN',
+    'SYIAR & QURBAN': 'DAW\'AH & QURBAN',
+    'KEMITRAAN': 'PARTNERSHIP',
+    'FASILITATOR & RELAWAN': 'FACILITATOR & VOLUNTEER',
+  },
+  ar: {
+    'SEMUA': 'جميع الفئات',
+    'PENDIDIKAN': 'التعليم',
+    'PEMBERDAYAAN': 'التمكين',
+    'SOSIAL & KEMANUSIAAN': 'اجتماعي وإنساني',
+    'SYIAR & QURBAN': 'الدعوة والأضاحي',
+    'KEMITRAAN': 'الشراكة',
+    'FASILITATOR & RELAWAN': 'الميسرون والمتطوعون',
+  },
+};
+
 export default function PublicProgramPage() {
   const [items, setItems] = useState<ProgramItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('SEMUA');
   const [page, setPage] = useState(1);
+  const [lang, setLang] = useState<Language>('id');
   const ITEMS_PER_PAGE = 10;
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem('program_lang') as Language;
+    if (savedLang && ['id', 'en', 'ar'].includes(savedLang)) {
+      setLang(savedLang);
+    }
+  }, []);
+
+  const changeLanguage = (newLang: Language) => {
+    setLang(newLang);
+    localStorage.setItem('program_lang', newLang);
+  };
 
   const fetchPrograms = useCallback(async () => {
     setLoading(true);
@@ -69,48 +118,49 @@ export default function PublicProgramPage() {
     }
   };
 
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '';
-    try {
-      const d = new Date(dateStr);
-      return d.toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-      });
-    } catch {
-      return dateStr;
-    }
+  const getItemTitle = (item: ProgramItem) => {
+    if (lang === 'en' && item.titleEn) return item.titleEn;
+    if (lang === 'ar' && item.titleAr) return item.titleAr;
+    return item.title;
   };
 
   return (
-    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className={`min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <div className="max-w-[1340px] mx-auto">
 
-        {/* Header & Breadcrumb */}
+        {/* Header & Breadcrumb & Language Switcher */}
         <div className="my-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <nav className="flex items-center gap-2 text-sm text-gray-500 font-medium" dir="ltr">
+              <Link href="/" className="hover:text-[#0b6330] transition-colors">
+                {lang === 'ar' ? 'الرئيسية' : lang === 'en' ? 'Home' : 'Beranda'}
+              </Link>
+              <span>/</span>
+              <span className="text-[#0b6330] font-bold">
+                {lang === 'ar' ? 'البرامج' : lang === 'en' ? 'Programs' : 'Program'}
+              </span>
+            </nav>
+          </div>
+
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[#333333] tracking-tight uppercase mb-4 text-center">
-            PROGRAM RUMAH AMAL USK
+            {lang === 'ar'
+              ? 'برامج Rumah Amal USK'
+              : lang === 'en'
+              ? 'RUMAH AMAL USK PROGRAMS'
+              : 'PROGRAM RUMAH AMAL USK'}
           </h1>
-          <nav className="flex items-center gap-2 text-sm text-gray-500 font-medium mb-6">
-            <Link href="/" className="hover:text-[#0b6330] transition-colors">
-              Beranda
-            </Link>
-            <span>/</span>
-            <span className="text-[#0b6330] font-bold">Program</span>
-          </nav>
         </div>
 
-        {/* Filter Kategori Dropdown (100% Persis Screenshot Web Asli) */}
+        {/* Filter Kategori Dropdown */}
         <div className="w-full mb-8 mt-4">
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="w-full px-4 py-3 border border-[#0b6330] rounded-md text-sm text-gray-800 font-semibold focus:outline-none focus:ring-1 focus:ring-[#0b6330] bg-white cursor-pointer tracking-wider uppercase shadow-2xs"
           >
-            {CATEGORIES.map((cat) => (
+            {CATEGORIES_RAW.map((cat) => (
               <option key={cat} value={cat}>
-                {cat}
+                {CATEGORIES_TRANSLATED[lang]?.[cat] || cat}
               </option>
             ))}
           </select>
@@ -133,18 +183,29 @@ export default function PublicProgramPage() {
         ) : paginatedItems.length === 0 ? (
           /* Empty State */
           <div className="text-center py-16 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200 mb-12">
-            <p className="text-lg font-semibold mb-2">Program tidak ditemukan</p>
+            <p className="text-lg font-semibold mb-2">
+              {lang === 'ar' ? 'لم يتم العثور على برامج' : lang === 'en' ? 'No programs found' : 'Program tidak ditemukan'}
+            </p>
             <p className="text-sm text-gray-400">
               {selectedCategory !== 'SEMUA'
-                ? `Belum ada program untuk kategori "${selectedCategory}".`
-                : 'Belum ada program yang dipublikasikan.'}
+                ? (lang === 'ar'
+                    ? `لا توجد برامج متوفرة لهذه الفئة.`
+                    : lang === 'en'
+                    ? `No programs available for this category.`
+                    : `Belum ada program untuk kategori "${selectedCategory}".`)
+                : (lang === 'ar'
+                    ? 'لم يتم نشر أي برامج بعد.'
+                    : lang === 'en'
+                    ? 'No programs have been published yet.'
+                    : 'Belum ada program yang dipublikasikan.')}
             </p>
           </div>
         ) : (
-          /* Program Cards Grid (5 Columns - Pure Image Cards) */
+          /* Program Cards Grid */
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5 lg:gap-6 mb-12">
             {paginatedItems.map((item) => {
               if (!item.coverImageUrl) return null;
+              const displayTitle = getItemTitle(item);
               return (
                 <Link
                   key={item.id}
@@ -154,7 +215,7 @@ export default function PublicProgramPage() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={item.coverImageUrl}
-                    alt={item.title}
+                    alt={displayTitle}
                     className="w-full h-full object-cover rounded-[24px] group-hover:scale-103 transition-transform duration-300"
                     loading="lazy"
                   />
@@ -172,7 +233,7 @@ export default function PublicProgramPage() {
               disabled={page === 1}
               className="px-3 py-1.5 text-[#0b6330] hover:text-[#084823] disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              &lt; Previous
+              {lang === 'ar' ? 'التالي >' : '< Previous'}
             </button>
 
             {(() => {
@@ -219,7 +280,7 @@ export default function PublicProgramPage() {
               disabled={page === totalPages}
               className="px-3 py-1.5 text-[#0b6330] hover:text-[#084823] disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              Next &gt;
+              {lang === 'ar' ? '< السابق' : 'Next >'}
             </button>
           </div>
         )}
