@@ -1,0 +1,187 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faFileText,
+  faSearch,
+  faExternalLinkAlt,
+  faTrash,
+  faFileArrowUp,
+} from '@fortawesome/free-solid-svg-icons';
+import CsvImportModal from '@/components/admin/CsvImportModal';
+
+type RekapItem = {
+  id: string;
+  dosenNIP: string;
+  dosen: { nama: string; unitKerja: string | null } | null;
+  tahunRekap: string;
+  fileUrl: string;
+  createdAt: string;
+};
+
+export default function AdminRekapZakatPage() {
+  const [data, setData] = useState<RekapItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
+
+  async function loadData() {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/rekap-zakat');
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+      }
+    } catch (err) {
+      console.error('Error loading rekap zakat:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  async function handleDelete(id: string) {
+    if (!confirm('Hapus data rekap zakat ini?')) return;
+    try {
+      const res = await fetch(`/api/admin/rekap-zakat/${id}`, { method: 'DELETE' });
+      if (res.ok) loadData();
+      else alert('Gagal menghapus data');
+    } catch {
+      alert('Terjadi kesalahan');
+    }
+  }
+
+  const filtered = data.filter(
+    (item) =>
+      item.dosenNIP.includes(search) ||
+      (item.dosen?.nama && item.dosen.nama.toLowerCase().includes(search.toLowerCase())) ||
+      item.tahunRekap.includes(search)
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+            <FontAwesomeIcon icon={faFileText} className="text-[#063A1E] w-6 h-6" />
+            Rekap Zakat
+          </h1>
+          <p className="text-xs text-gray-500 mt-1">
+            Kelola rekap tahunan zakat dosen — link file PDF/Drive per NIP per tahun.
+          </p>
+        </div>
+        <button
+          onClick={() => setIsCsvModalOpen(true)}
+          className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-[#063A1E] border border-[#063A1E]/30 hover:border-[#063A1E] px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer shrink-0"
+        >
+          <FontAwesomeIcon icon={faFileArrowUp} className="w-3.5 h-3.5" />
+          Import CSV
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="relative max-w-md">
+        <FontAwesomeIcon icon={faSearch} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <input
+          type="text"
+          placeholder="Cari NIP, nama dosen, atau tahun..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
+        />
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase tracking-wider font-bold">
+                <th className="py-3.5 px-4">NIP</th>
+                <th className="py-3.5 px-4">Nama Dosen</th>
+                <th className="py-3.5 px-4">Unit Kerja</th>
+                <th className="py-3.5 px-4">Tahun Rekap</th>
+                <th className="py-3.5 px-4">File</th>
+                <th className="py-3.5 px-4">Tanggal Input</th>
+                <th className="py-3.5 px-4 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-10 text-gray-400">
+                    <div className="w-5 h-5 border-2 border-[#063A1E] border-t-transparent rounded-full animate-spin mx-auto" />
+                  </td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-10 text-gray-400">
+                    Tidak ada data rekap zakat ditemukan.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="py-3.5 px-4 font-mono font-bold text-gray-800">{item.dosenNIP}</td>
+                    <td className="py-3.5 px-4 font-semibold text-gray-900">
+                      {item.dosen?.nama || <span className="text-gray-400 italic">—</span>}
+                    </td>
+                    <td className="py-3.5 px-4 text-gray-600 max-w-[150px] truncate">
+                      {item.dosen?.unitKerja || '—'}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className="inline-block bg-[#063A1E]/10 text-[#063A1E] font-bold px-2.5 py-1 rounded-lg text-[10px]">
+                        {item.tahunRekap}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <a
+                        href={item.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[#063A1E] underline underline-offset-2 font-semibold hover:text-emerald-700 transition-colors"
+                      >
+                        Buka File <FontAwesomeIcon icon={faExternalLinkAlt} className="w-2.5 h-2.5" />
+                      </a>
+                    </td>
+                    <td className="py-3.5 px-4 text-gray-600">{item.createdAt}</td>
+                    <td className="py-3.5 px-4 text-center">
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        title="Hapus Rekap Zakat"
+                      >
+                        <FontAwesomeIcon icon={faTrash} className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* CSV Import Modal */}
+      <CsvImportModal
+        isOpen={isCsvModalOpen}
+        onClose={() => setIsCsvModalOpen(false)}
+        onSuccess={() => loadData()}
+        title="Import Rekap Zakat"
+        endpoint="/api/admin/import/rekap-zakat"
+        requiredColumns={['nip', 'tahun_rekap', 'file_url']}
+        optionalColumns={[]}
+        templateRows={[
+          ['198501012010121001', '2024', 'https://drive.google.com/file/d/example1'],
+          ['197803152005011002', '2024', 'https://drive.google.com/file/d/example2'],
+        ]}
+      />
+    </div>
+  );
+}

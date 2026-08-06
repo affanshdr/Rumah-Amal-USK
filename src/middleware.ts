@@ -1,9 +1,8 @@
 import { NextResponse, NextRequest } from 'next/server';
+import { auth } from '@/lib/auth';
 
 export default async function middleware(request: NextRequest) {
-    // TEMPORARY: Commented out auth check for easy admin page review
-    // return auth(request as any);
-    return NextResponse.next();
+    return auth(request as any);
 }
 
 export const config = {

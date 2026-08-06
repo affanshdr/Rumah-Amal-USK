@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { createDosen, updateDosen, deleteDosen } from '@/actions/dosen';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faSearch, faEdit, faTrash, faUserTie } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faSearch, faEdit, faTrash, faUserTie, faFileArrowUp } from '@fortawesome/free-solid-svg-icons';
+import CsvImportModal from '@/components/admin/CsvImportModal';
 
 type DosenItem = {
   nip: string;
@@ -18,6 +19,7 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
   const [data, setData] = useState<DosenItem[]>(initialData);
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [editingDosen, setEditingDosen] = useState<DosenItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -120,13 +122,22 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
           </p>
         </div>
 
-        <button
-          onClick={openAddModal}
-          className="inline-flex items-center justify-center gap-2 bg-[#063A1E] hover:bg-[#042814] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer shrink-0"
-        >
-          <FontAwesomeIcon icon={faPlus} className="w-3.5 h-3.5" />
-          Tambah Dosen
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsCsvModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-[#063A1E] border border-[#063A1E]/30 hover:border-[#063A1E] px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer shrink-0"
+          >
+            <FontAwesomeIcon icon={faFileArrowUp} className="w-3.5 h-3.5" />
+            Import CSV
+          </button>
+          <button
+            onClick={openAddModal}
+            className="inline-flex items-center justify-center gap-2 bg-[#063A1E] hover:bg-[#042814] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer shrink-0"
+          >
+            <FontAwesomeIcon icon={faPlus} className="w-3.5 h-3.5" />
+            Tambah Dosen
+          </button>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -301,6 +312,28 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
           </div>
         </div>
       )}
+
+      {/* CSV Import Modal */}
+      <CsvImportModal
+        isOpen={isCsvModalOpen}
+        onClose={() => setIsCsvModalOpen(false)}
+        onSuccess={async () => {
+          // Reload data dari server
+          const res = await fetch('/api/admin/dosen');
+          if (res.ok) {
+            const json = await res.json();
+            setData(json);
+          }
+        }}
+        title="Import Data Dosen"
+        endpoint="/api/admin/import/dosen"
+        requiredColumns={['nip', 'nama']}
+        optionalColumns={['npwp', 'alamat', 'unit_kerja']}
+        templateRows={[
+          ['198501012010121001', 'Dr. Ahmad Subagyo, M.T.', '12.345.678.9-012.000', 'Jl. Kampus No.1 Banda Aceh', 'Fakultas Teknik'],
+          ['197803152005011002', 'Prof. Dr. Siti Rahma, M.Sc.', '', 'Jl. Darussalam No.5', 'Fakultas MIPA'],
+        ]}
+      />
     </div>
   );
 }

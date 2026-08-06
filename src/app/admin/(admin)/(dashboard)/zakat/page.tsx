@@ -10,7 +10,9 @@ import {
   faTimesCircle,
   faExternalLinkAlt,
   faEdit,
+  faFileArrowUp,
 } from '@fortawesome/free-solid-svg-icons';
+import CsvImportModal from '@/components/admin/CsvImportModal';
 
 type DosenInfo = {
   nip: string;
@@ -69,6 +71,7 @@ export default function AdminZakatPage() {
   const [editStatus, setEditStatus] = useState('pending');
   const [editPesan, setEditPesan] = useState('');
   const [saving, setSaving] = useState(false);
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
 
   async function loadData() {
     setLoading(true);
@@ -138,14 +141,23 @@ export default function AdminZakatPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-          <FontAwesomeIcon icon={faCoins} className="text-[#063A1E] w-6 h-6" />
-          Data Zakat
-        </h1>
-        <p className="text-xs text-gray-500 mt-1">
-          Kelola & verifikasi data pembayaran zakat dari Dosen/Pegawai maupun Masyarakat USK.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+            <FontAwesomeIcon icon={faCoins} className="text-[#063A1E] w-6 h-6" />
+            Data Zakat
+          </h1>
+          <p className="text-xs text-gray-500 mt-1">
+            Kelola & verifikasi data pembayaran zakat dari Dosen/Pegawai maupun Masyarakat USK.
+          </p>
+        </div>
+        <button
+          onClick={() => setIsCsvModalOpen(true)}
+          className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-[#063A1E] border border-[#063A1E]/30 hover:border-[#063A1E] px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer shrink-0"
+        >
+          <FontAwesomeIcon icon={faFileArrowUp} className="w-3.5 h-3.5" />
+          Import CSV
+        </button>
       </div>
 
       {/* Summary Cards */}
@@ -409,6 +421,21 @@ export default function AdminZakatPage() {
           </div>
         </div>
       )}
+
+      {/* CSV Import Modal */}
+      <CsvImportModal
+        isOpen={isCsvModalOpen}
+        onClose={() => setIsCsvModalOpen(false)}
+        onSuccess={() => loadData()}
+        title="Import Zakat Dosen"
+        endpoint="/api/admin/import/zakat"
+        requiredColumns={['nip', 'jumlah_zakat', 'jenis_zakat']}
+        optionalColumns={['no_hp', 'sumber_dana', 'pesan', 'tanggal']}
+        templateRows={[
+          ['198501012010121001', '500000', 'profesi', '0812-0001-0001', 'gaji', '', '2025-01-15'],
+          ['197803152005011002', '250000', 'maal', '0813-0002-0002', '', 'Zakat bulan Januari', '2025-01-20'],
+        ]}
+      />
     </div>
   );
 }
