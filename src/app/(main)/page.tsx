@@ -77,9 +77,8 @@ function RevealOnScroll({
   return (
     <div
       ref={ref}
-      className={`transition-all duration-700 ease-out ${
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none"
-      } ${className}`}
+      className={`transition-all duration-700 ease-out ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none"
+        } ${className}`}
     >
       {children}
     </div>
@@ -221,10 +220,10 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-50/50 pb-16 sm:pb-24 relative overflow-x-hidden">
-      
+
       {/* Hero Section - Full 100vw Banner */}
       <section className="w-full pt-3 sm:pt-5">
-        
+
         {/* Main Banner Slider with Smooth Transitions */}
         {isLoadingBanner ? (
           <div className="w-full aspect-[16/6] bg-gray-200 animate-pulse" />
@@ -233,7 +232,7 @@ export default function Home() {
             className="relative bg-gray-950 overflow-hidden w-full shadow-md group mx-auto"
             style={{ maxWidth: '100vw' }}
           >
-            
+
             {/* Left Arrow Button */}
             {activeSlides.length > 1 && (
               <button
@@ -266,11 +265,10 @@ export default function Home() {
               return (
                 <div
                   key={slide.id}
-                  className={`w-full transition-opacity duration-700 ease-in-out ${
-                    isActive
-                      ? "relative opacity-100 z-10 pointer-events-auto"
-                      : "absolute inset-0 opacity-0 z-0 pointer-events-none"
-                  }`}
+                  className={`w-full transition-opacity duration-700 ease-in-out ${isActive
+                    ? "relative opacity-100 z-10 pointer-events-auto"
+                    : "absolute inset-0 opacity-0 z-0 pointer-events-none"
+                    }`}
                 >
                   <Link
                     href={slide.href}
@@ -295,7 +293,7 @@ export default function Home() {
 
           {/* 3 Action Cards Container */}
           <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 md:gap-7 max-w-[1240px] mx-auto">
-            
+
             {/* CARD 1: INFAK */}
             <div className="bg-[#f6f8fa] rounded-[18px] sm:rounded-[22px] md:rounded-[26px] p-5 sm:p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[190px] sm:min-h-[220px] transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl group">
               <div>
@@ -367,7 +365,7 @@ export default function Home() {
 
       {/* ===== SECTION 1: KAMPANYE UNGGULAN ===== */}
       <section id="kampanye" className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
-        
+
         <RevealOnScroll>
           {/* Section Heading */}
           <div className="flex flex-col items-center mb-8 sm:mb-12">
@@ -562,7 +560,7 @@ export default function Home() {
                     No. Rekening: <span className="text-[#0b6330]">7099400409</span>
                   </span>
                   <span className="font-bold">
-                    A.N. <span className="text-[#0b6330]">Rumah Amal Masjid Jamik USK</span>
+                    A.N. <span className="text-[#0b6330]">Rumah Amal Mesjid Unsyiah</span>
                   </span>
                 </div>
               </div>
@@ -575,7 +573,7 @@ export default function Home() {
 
       {/* ===== SECTION 3: PENGUMUMAN ===== */}
       <section id="pengumuman" className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
-        
+
         <RevealOnScroll>
           {/* Section Heading */}
           <div className="flex flex-col items-center mb-8 sm:mb-12">
@@ -680,7 +678,7 @@ export default function Home() {
 
       {/* ===== SECTION 4: BERITA TERKINI ===== */}
       <section id="berita" className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
-        
+
         <RevealOnScroll>
           {/* Section Heading */}
           <div className="flex flex-col items-center mb-8 sm:mb-12">
@@ -785,7 +783,7 @@ export default function Home() {
 
       {/* ===== SECTION 5: NEWSLETTER ===== */}
       <section id="newsletter" className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
-        
+
         <RevealOnScroll>
           {/* Section Heading */}
           <div className="flex flex-col items-center mb-8 sm:mb-12">

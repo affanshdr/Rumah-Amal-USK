@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { submitInfaq } from "@/actions/infaq";
+import Image from "next/image";
 
 type KampanyeOption = {
   id: string;
@@ -349,30 +350,19 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
             </h3>
 
             {/* Card Scan QRIS */}
-            <div className="text-center py-5 px-4 bg-amber-50/50 rounded-2xl border border-dashed border-amber-200">
-              <p className="text-xs font-extrabold text-gray-700 mb-3 tracking-wider uppercase">
-                Scan QRIS Rumah Amal USK
-              </p>
-              <div className="w-40 h-40 mx-auto bg-white p-3 border border-gray-100 rounded-xl shadow-xs flex items-center justify-center">
-                <svg className="w-36 h-36" viewBox="0 0 100 100">
-                  <rect x="5" y="5" width="25" height="25" fill="none" stroke="#005621" strokeWidth="6" />
-                  <rect x="70" y="5" width="25" height="25" fill="none" stroke="#005621" strokeWidth="6" />
-                  <rect x="5" y="70" width="25" height="25" fill="none" stroke="#005621" strokeWidth="6" />
-                  <rect x="12" y="12" width="11" height="11" fill="#005621" />
-                  <rect x="77" y="12" width="11" height="11" fill="#005621" />
-                  <rect x="12" y="77" width="11" height="11" fill="#005621" />
-                  <rect x="38" y="10" width="8" height="8" fill="#111" />
-                  <rect x="52" y="18" width="12" height="6" fill="#111" />
-                  <rect x="38" y="32" width="15" height="8" fill="#111" />
-                  <rect x="10" y="45" width="25" height="12" fill="#111" />
-                  <rect x="42" y="48" width="18" height="18" fill="#111" />
-                  <rect x="70" y="40" width="22" height="10" fill="#111" />
-                  <rect x="75" y="60" width="12" height="25" fill="#111" />
-                  <rect x="38" y="75" width="20" height="15" fill="#111" />
-                </svg>
+            <div className="text-center py-5 px-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+              <div className="w-48 h-48 mx-auto bg-white p-3 border border-gray-100 rounded-xl shadow-xs flex items-center justify-center">
+                <Image
+                  src="/Qris/qris-bsi-ra.png"
+                  alt="QRIS BSI Rumah Amal Masjid Jamik USK"
+                  width={97.2}
+                  height={112.2}
+                  priority
+                  className={`h-48 sm:h-52 w-auto object-contain transition-all`}
+                />
               </div>
               <p className="text-[11px] text-gray-500 mt-3">
-                Transfer via Bank BSI No. Rek <strong>7099400409</strong> a.n. Rumah Amal USK
+                Transfer via Bank BSI No. Rek <strong>7099400409</strong> a.n. Rumah Amal Mesjid Unsyiah
               </p>
             </div>
 
