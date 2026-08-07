@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { newsletterDictionary, NewsletterLanguage } from '@/lib/i18n/newsletter';
 
 interface NewsletterItem {
   id: string;
@@ -12,6 +13,7 @@ interface NewsletterItem {
 }
 
 export default function NewsletterPage() {
+  const [lang, setLang] = useState<NewsletterLanguage>('id');
   const [items, setItems] = useState<NewsletterItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,6 +23,20 @@ export default function NewsletterPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const ITEMS_PER_PAGE = 6;
+
+  useEffect(() => {
+    const readLang = () => {
+      const saved = (localStorage.getItem('app_lang') || localStorage.getItem('program_lang')) as NewsletterLanguage;
+      if (saved && ['id', 'en', 'ar'].includes(saved)) {
+        setLang(saved);
+      }
+    };
+    readLang();
+    window.addEventListener('languageChange', readLang);
+    return () => window.removeEventListener('languageChange', readLang);
+  }, []);
+
+  const dict = newsletterDictionary[lang] || newsletterDictionary.id;
 
   const fetchNewsletters = useCallback(async (p: number, q: string) => {
     setLoading(true);
@@ -59,7 +75,8 @@ export default function NewsletterPage() {
   const formatDate = (dateStr: string) => {
     try {
       const d = new Date(dateStr);
-      return d.toLocaleDateString('id-ID', {
+      const locale = lang === 'ar' ? 'ar-SA' : lang === 'en' ? 'en-US' : 'id-ID';
+      return d.toLocaleDateString(locale, {
         day: '2-digit',
         month: 'long',
         year: 'numeric',
@@ -70,37 +87,37 @@ export default function NewsletterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8">
+    <div className={`min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <div className="max-w-[1340px] mx-auto">
 
         {/* Title */}
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-center text-[#2d3238] tracking-tight mb-8">
-          NEWSLETTER
+        <h1 className={`text-3xl sm:text-4xl font-extrabold text-center text-[#2d3238] tracking-tight mb-8 uppercase ${lang === 'ar' ? 'font-serif' : ''}`}>
+          {dict.title}
         </h1>
 
         {/* Breadcrumb */}
         <nav className="text-[13.5px] font-semibold mb-8 flex items-center gap-1.5">
           <Link href="/" className="text-gray-700 hover:text-[#0b6330] transition-colors">
-            Beranda
+            {dict.breadcrumbHome}
           </Link>
           <span className="text-[#0b6330] font-bold">/</span>
-          <span className="text-[#0b6330] font-bold">Newsletter</span>
+          <span className="text-[#0b6330] font-bold">{dict.breadcrumbCurrent}</span>
         </nav>
 
         {/* Form Search Bar */}
         <form onSubmit={handleSearchSubmit} className="max-w-2xl mx-auto mb-12 flex gap-3">
           <input
             type="text"
-            placeholder="Cari news letter berdasarkan judul..."
+            placeholder={dict.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#0b6330] transition-colors shadow-2xs"
           />
           <button
             type="submit"
-            className="bg-[#0b6330] hover:bg-[#084823] text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors shadow-2xs cursor-pointer"
+            className="bg-[#0b6330] hover:bg-[#084823] text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors shadow-2xs cursor-pointer shrink-0"
           >
-            Cari
+            {dict.searchBtn}
           </button>
         </form>
 
@@ -118,9 +135,9 @@ export default function NewsletterPage() {
         ) : items.length === 0 ? (
           /* Empty State */
           <div className="text-center py-16 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200 mb-12">
-            <p className="text-lg font-semibold mb-2">Newsletter tidak ditemukan</p>
+            <p className="text-lg font-semibold mb-2">{dict.emptyTitle}</p>
             <p className="text-sm text-gray-400">
-              {activeQuery ? `Tidak ada hasil untuk "${activeQuery}"` : 'Belum ada newsletter yang diupload.'}
+              {activeQuery ? `${dict.noResultFor} "${activeQuery}"` : dict.emptyDesc}
             </p>
           </div>
         ) : (
@@ -143,7 +160,7 @@ export default function NewsletterPage() {
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300 flex items-center justify-center">
                     <span className="opacity-0 group-hover:opacity-100 bg-white/90 text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow-xs transition-opacity duration-300">
-                      📖 Baca Newsletter
+                      {dict.readBadge}
                     </span>
                   </div>
                 </div>
@@ -151,7 +168,7 @@ export default function NewsletterPage() {
                 {/* Info Text */}
                 <div className="mt-auto px-1">
                   <h3 className="font-extrabold text-[#111827] text-base tracking-tight mb-2 uppercase leading-snug">
-                    NEWSLETTER: {item.judul}
+                    {dict.prefixTitle}{item.judul}
                   </h3>
                   <p className="text-xs text-gray-500 font-medium">
                     {formatDate(item.tanggal)}
@@ -170,7 +187,7 @@ export default function NewsletterPage() {
               disabled={page === 1}
               className="px-3 py-1.5 text-[#0b6330] hover:text-[#084823] disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              &lt; Previous
+              {dict.prevBtn}
             </button>
 
             {(() => {
@@ -217,7 +234,7 @@ export default function NewsletterPage() {
               disabled={page === totalPages}
               className="px-3 py-1.5 text-[#0b6330] hover:text-[#084823] disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              Next &gt;
+              {dict.nextBtn}
             </button>
           </div>
         )}
@@ -235,8 +252,8 @@ export default function NewsletterPage() {
           >
             <button
               onClick={() => setSelectedImage(null)}
-              className="absolute -top-3 -right-3 bg-white text-gray-700 hover:text-black w-8 h-8 rounded-full shadow-lg border border-gray-200 flex items-center justify-center text-sm font-bold transition-all hover:scale-110 z-20"
-              aria-label="Tutup Modal"
+              className="absolute -top-3 -right-3 bg-white text-gray-700 hover:text-black w-8 h-8 rounded-full shadow-lg border border-gray-200 flex items-center justify-center text-sm font-bold transition-all hover:scale-110 z-20 cursor-pointer"
+              aria-label={dict.closeModal}
             >
               ✕
             </button>
@@ -252,3 +269,4 @@ export default function NewsletterPage() {
     </div>
   );
 }
+

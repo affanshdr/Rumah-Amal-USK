@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { galeriDictionary, GaleriLanguage } from '@/lib/i18n/galeri';
 
 interface GalleryItem {
   id: string;
@@ -10,6 +11,7 @@ interface GalleryItem {
 }
 
 export default function GaleriPage() {
+  const [lang, setLang] = useState<GaleriLanguage>('id');
   const [images, setImages] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -17,6 +19,20 @@ export default function GaleriPage() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const ITEMS_PER_PAGE = 8;
+
+  useEffect(() => {
+    const readLang = () => {
+      const saved = (localStorage.getItem('app_lang') || localStorage.getItem('program_lang')) as GaleriLanguage;
+      if (saved && ['id', 'en', 'ar'].includes(saved)) {
+        setLang(saved);
+      }
+    };
+    readLang();
+    window.addEventListener('languageChange', readLang);
+    return () => window.removeEventListener('languageChange', readLang);
+  }, []);
+
+  const dict = galeriDictionary[lang] || galeriDictionary.id;
 
   const fetchImages = useCallback(async (p: number) => {
     setLoading(true);
@@ -74,21 +90,21 @@ export default function GaleriPage() {
   }, [handleKeyDown]);
 
   return (
-    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8">
+    <div className={`min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <div className="max-w-[1340px] mx-auto">
 
         {/* Title */}
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-center text-[#2d3238] tracking-tight mb-8">
-          DOKUMENTASI
+        <h1 className={`text-3xl sm:text-4xl font-extrabold text-center text-[#2d3238] tracking-tight mb-8 uppercase ${lang === 'ar' ? 'font-serif' : ''}`}>
+          {dict.title}
         </h1>
 
         {/* Breadcrumb */}
         <nav className="text-[13.5px] font-semibold mb-8 flex items-center gap-1.5">
           <Link href="/" className="text-gray-700 hover:text-[#0b6330] transition-colors">
-            Beranda
+            {dict.breadcrumbHome}
           </Link>
           <span className="text-[#0b6330] font-bold">/</span>
-          <span className="text-[#0b6330] font-bold">Dokumentasi</span>
+          <span className="text-[#0b6330] font-bold">{dict.breadcrumbCurrent}</span>
         </nav>
 
         {/* Loading State */}
@@ -101,8 +117,8 @@ export default function GaleriPage() {
         ) : images.length === 0 ? (
           /* Empty State */
           <div className="text-center py-16 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-            <p className="text-lg font-semibold mb-2">Belum ada foto dokumentasi</p>
-            <p className="text-sm text-gray-400">Silakan upload foto terlebih dahulu dari halaman admin.</p>
+            <p className="text-lg font-semibold mb-2">{dict.emptyTitle}</p>
+            <p className="text-sm text-gray-400">{dict.emptyDesc}</p>
           </div>
         ) : (
           /*
@@ -137,7 +153,7 @@ export default function GaleriPage() {
               disabled={page === 1}
               className="px-3 py-1.5 text-[#0b6330] hover:text-[#084823] disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              &lt; Previous
+              {dict.prevBtn}
             </button>
 
             {(() => {
@@ -184,7 +200,7 @@ export default function GaleriPage() {
               disabled={page === totalPages}
               className="px-3 py-1.5 text-[#0b6330] hover:text-[#084823] disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              Next &gt;
+              {dict.nextBtn}
             </button>
           </div>
         )}
@@ -203,8 +219,8 @@ export default function GaleriPage() {
                 e.stopPropagation();
                 handlePrev();
               }}
-              className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 text-white/80 hover:text-white transition-colors p-2 text-4xl font-light select-none z-10"
-              aria-label="Foto Sebelumnya"
+              className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 text-white/80 hover:text-white transition-colors p-2 text-4xl font-light select-none z-10 cursor-pointer"
+              aria-label={dict.prevPhoto}
             >
               ‹
             </button>
@@ -218,8 +234,8 @@ export default function GaleriPage() {
             {/* Tombol Close (X) di Pojok Kanan Atas Card */}
             <button
               onClick={() => setSelectedIndex(null)}
-              className="absolute -top-3 -right-3 bg-white text-gray-700 hover:text-black w-8 h-8 rounded-full shadow-lg border border-gray-200 flex items-center justify-center text-sm font-bold transition-all hover:scale-110 z-20"
-              aria-label="Tutup Modal"
+              className="absolute -top-3 -right-3 bg-white text-gray-700 hover:text-black w-8 h-8 rounded-full shadow-lg border border-gray-200 flex items-center justify-center text-sm font-bold transition-all hover:scale-110 z-20 cursor-pointer"
+              aria-label={dict.closeModal}
             >
               ✕
             </button>
@@ -240,8 +256,8 @@ export default function GaleriPage() {
                 e.stopPropagation();
                 handleNext();
               }}
-              className="absolute right-4 sm:left-auto sm:right-8 top-1/2 -translate-y-1/2 text-white/80 hover:text-white transition-colors p-2 text-4xl font-light select-none z-10"
-              aria-label="Foto Selanjutnya"
+              className="absolute right-4 sm:left-auto sm:right-8 top-1/2 -translate-y-1/2 text-white/80 hover:text-white transition-colors p-2 text-4xl font-light select-none z-10 cursor-pointer"
+              aria-label={dict.nextPhoto}
             >
               ›
             </button>
@@ -251,3 +267,4 @@ export default function GaleriPage() {
     </div>
   );
 }
+
