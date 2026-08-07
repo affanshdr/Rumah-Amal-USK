@@ -12,7 +12,10 @@ import {
   faLink,
   faUnlink,
   faEdit,
+  faFileArrowUp,
 } from '@fortawesome/free-solid-svg-icons';
+import CsvImportModal from '@/components/admin/CsvImportModal';
+import AdminPagination from '@/components/admin/AdminPagination';
 
 type DosenInfo = {
   nip: string;
@@ -72,6 +75,8 @@ export default function AdminInfaqPage() {
   const [activeTab, setActiveTab] = useState<'bebas' | 'terikat'>('bebas');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'lunas' | 'ditolak'>('all');
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   // Edit Modal State
   const [editingItem, setEditingItem] = useState<InfaqItem | null>(null);
@@ -83,6 +88,7 @@ export default function AdminInfaqPage() {
   const [editStatus, setEditStatus] = useState('pending');
   const [editPesan, setEditPesan] = useState('');
   const [saving, setSaving] = useState(false);
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
 
   async function loadData() {
     setLoading(true);
@@ -105,6 +111,10 @@ export default function AdminInfaqPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, filterStatus, search]);
 
   async function handleAction(id: string, action: 'approve' | 'reject') {
     await fetch(`/api/admin/infaq/${id}/${action}`, { method: 'PATCH' });
@@ -159,6 +169,12 @@ export default function AdminInfaqPage() {
     return matchSearch && matchStatus;
   });
 
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedData = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const bebasCount = data.filter(isInfaqBebas).length;
   const terikatCount = data.filter((i) => !isInfaqBebas(i)).length;
 
@@ -172,14 +188,23 @@ export default function AdminInfaqPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-          <FontAwesomeIcon icon={faHandHoldingHeart} className="text-[#063A1E] w-6 h-6" />
-          Data Infaq
-        </h1>
-        <p className="text-xs text-gray-500 mt-1">
-          Kelola data pembayaran infaq. Infaq Bebas tidak terikat kampanye; Infaq Terikat terhubung ke Kampanye tertentu.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+            <FontAwesomeIcon icon={faHandHoldingHeart} className="text-[#063A1E] w-6 h-6" />
+            Data Infaq
+          </h1>
+          <p className="text-xs text-gray-500 mt-1">
+            Kelola data pembayaran infaq. Infaq Bebas tidak terikat kampanye; Infaq Terikat terhubung ke Kampanye tertentu.
+          </p>
+        </div>
+        <button
+          onClick={() => setIsCsvModalOpen(true)}
+          className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-[#063A1E] border border-[#063A1E]/30 hover:border-[#063A1E] px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer shrink-0"
+        >
+          <FontAwesomeIcon icon={faFileArrowUp} className="w-3.5 h-3.5" />
+          Import CSV
+        </button>
       </div>
 
       {/* Tab Bebas / Terikat */}
@@ -295,7 +320,7 @@ export default function AdminInfaqPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((item) => (
+                paginatedData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                     {/* Nama Pembayar */}
                     <td className="py-3.5 px-4">
@@ -312,12 +337,15 @@ export default function AdminInfaqPage() {
                     {activeTab === 'terikat' && (
                       <td className="py-3.5 px-4">
                         {item.kampanyeJudul ? (
-                          <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-100 px-2 py-1 rounded-lg font-semibold">
-                            <FontAwesomeIcon icon={faLink} className="w-2.5 h-2.5" />
+                          <span className="inline-flex items-center gap-1 font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
+                            <FontAwesomeIcon icon={faLink} className="w-2.5 h-2.5 text-emerald-600" />
                             {item.kampanyeJudul}
                           </span>
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="inline-flex items-center gap-1 text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100 text-[11px]">
+                            <FontAwesomeIcon icon={faUnlink} className="w-2.5 h-2.5 text-gray-300" />
+                            Bebas
+                          </span>
                         )}
                       </td>
                     )}
@@ -328,7 +356,7 @@ export default function AdminInfaqPage() {
                         <div>
                           <p className="font-semibold text-gray-800">{item.dosen.nama}</p>
                           {item.dosen.unitKerja && (
-                            <p className="text-[10px] text-gray-500 mt-0.5">{item.dosen.unitKerja}</p>
+                            <p className="text-[10px] text-[#063A1E] mt-0.5">{item.dosen.unitKerja}</p>
                           )}
                         </div>
                       ) : (
@@ -397,6 +425,14 @@ export default function AdminInfaqPage() {
             </tbody>
           </table>
         </div>
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filtered.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+          itemLabel="infaq"
+        />
       </div>
 
       {/* Edit Modal */}
@@ -515,6 +551,21 @@ export default function AdminInfaqPage() {
           </div>
         </div>
       )}
+
+      {/* CSV Import Modal */}
+      <CsvImportModal
+        isOpen={isCsvModalOpen}
+        onClose={() => setIsCsvModalOpen(false)}
+        onSuccess={() => loadData()}
+        title="Import Infaq Dosen"
+        endpoint="/api/admin/import/infaq"
+        requiredColumns={['nip', 'jumlah_infaq', 'jenis_infaq']}
+        optionalColumns={['no_hp', 'pesan', 'tanggal']}
+        templateRows={[
+          ['198501012010121001', '150000', 'umum', '0812-0001-0001', 'Infaq rutin', '2025-01-15'],
+          ['197803152005011002', '100000', 'umum', '', '', '2025-01-20'],
+        ]}
+      />
     </div>
   );
 }

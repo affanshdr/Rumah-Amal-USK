@@ -10,7 +10,10 @@ import {
   faTimesCircle,
   faExternalLinkAlt,
   faEdit,
+  faFileArrowUp,
 } from '@fortawesome/free-solid-svg-icons';
+import CsvImportModal from '@/components/admin/CsvImportModal';
+import AdminPagination from '@/components/admin/AdminPagination';
 
 type DosenInfo = {
   nip: string;
@@ -59,6 +62,8 @@ export default function AdminZakatPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'lunas' | 'ditolak'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   // Edit Modal State
   const [editingItem, setEditingItem] = useState<ZakatItem | null>(null);
@@ -69,6 +74,7 @@ export default function AdminZakatPage() {
   const [editStatus, setEditStatus] = useState('pending');
   const [editPesan, setEditPesan] = useState('');
   const [saving, setSaving] = useState(false);
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
 
   async function loadData() {
     setLoading(true);
@@ -81,6 +87,10 @@ export default function AdminZakatPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterStatus]);
 
   async function handleAction(id: string, action: 'approve' | 'reject') {
     await fetch(`/api/admin/zakat/${id}/${action}`, { method: 'PATCH' });
@@ -128,6 +138,12 @@ export default function AdminZakatPage() {
     return matchSearch && matchStatus;
   });
 
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedData = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const counts = {
     all: data.length,
     pending: data.filter((d) => d.status === 'pending').length,
@@ -138,14 +154,23 @@ export default function AdminZakatPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-          <FontAwesomeIcon icon={faCoins} className="text-[#063A1E] w-6 h-6" />
-          Data Zakat
-        </h1>
-        <p className="text-xs text-gray-500 mt-1">
-          Kelola & verifikasi data pembayaran zakat dari Dosen/Pegawai maupun Masyarakat USK.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+            <FontAwesomeIcon icon={faCoins} className="text-[#063A1E] w-6 h-6" />
+            Data Zakat
+          </h1>
+          <p className="text-xs text-gray-500 mt-1">
+            Kelola & verifikasi data pembayaran zakat dari Dosen/Pegawai maupun Masyarakat USK.
+          </p>
+        </div>
+        <button
+          onClick={() => setIsCsvModalOpen(true)}
+          className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-[#063A1E] border border-[#063A1E]/30 hover:border-[#063A1E] px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer shrink-0"
+        >
+          <FontAwesomeIcon icon={faFileArrowUp} className="w-3.5 h-3.5" />
+          Import CSV
+        </button>
       </div>
 
       {/* Summary Cards */}
@@ -218,7 +243,7 @@ export default function AdminZakatPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((item) => (
+                paginatedData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                     {/* Muzakki */}
                     <td className="py-3.5 px-4">
@@ -237,7 +262,7 @@ export default function AdminZakatPage() {
                         <div>
                           <p className="font-semibold text-gray-800">{item.dosen.nama}</p>
                           {item.dosen.unitKerja && (
-                            <p className="text-[10px] text-gray-500 mt-0.5">{item.dosen.unitKerja}</p>
+                            <p className="text-[10px] text-[#063A1E] mt-0.5">{item.dosen.unitKerja}</p>
                           )}
                         </div>
                       ) : (
@@ -308,6 +333,14 @@ export default function AdminZakatPage() {
             </tbody>
           </table>
         </div>
+        <AdminPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filtered.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setCurrentPage}
+          itemLabel="zakat"
+        />
       </div>
 
       {/* Edit Modal */}
@@ -409,6 +442,21 @@ export default function AdminZakatPage() {
           </div>
         </div>
       )}
+
+      {/* CSV Import Modal */}
+      <CsvImportModal
+        isOpen={isCsvModalOpen}
+        onClose={() => setIsCsvModalOpen(false)}
+        onSuccess={() => loadData()}
+        title="Import Zakat Dosen"
+        endpoint="/api/admin/import/zakat"
+        requiredColumns={['nip', 'jumlah_zakat', 'jenis_zakat']}
+        optionalColumns={['no_hp', 'sumber_dana', 'pesan', 'tanggal']}
+        templateRows={[
+          ['198501012010121001', '500000', 'profesi', '0812-0001-0001', 'gaji', '', '2025-01-15'],
+          ['197803152005011002', '250000', 'maal', '0813-0002-0002', '', 'Zakat bulan Januari', '2025-01-20'],
+        ]}
+      />
     </div>
   );
 }

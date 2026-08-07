@@ -16,6 +16,7 @@ import {
   faCoins,
   faHandHoldingHeart,
   faUserTie,
+  faFileText,
 } from '@fortawesome/free-solid-svg-icons';
 import { logoutAdmin } from '@/actions/admin-auth';
 import { useTransition } from 'react';
@@ -38,6 +39,7 @@ const menuGroups = [
     label: 'Data Master',
     items: [
       { href: '/admin/dosen', label: 'Data Dosen', icon: faUserTie },
+      { href: '/admin/rekap-zakat', label: 'Rekap Zakat', icon: faFileText },
     ],
   },
   {
