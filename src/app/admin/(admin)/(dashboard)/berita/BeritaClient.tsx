@@ -147,14 +147,23 @@ export default function BeritaClient({
   const [editing, setEditing] = useState<NewsRow | null>(null);
   const [previewingItem, setPreviewingItem] = useState<NewsRow | null>(null);
 
+  // Multilingual Form State
+  const [formTab, setFormTab] = useState<"id" | "en" | "ar">("id");
+  const [liveTitle, setLiveTitle] = useState("");
+  const [liveTitleEn, setLiveTitleEn] = useState("");
+  const [liveTitleAr, setLiveTitleAr] = useState("");
+  const [liveExcerpt, setLiveExcerpt] = useState("");
+  const [liveExcerptEn, setLiveExcerptEn] = useState("");
+  const [liveExcerptAr, setLiveExcerptAr] = useState("");
+  const [contentHtml, setContentHtml] = useState("<p></p>");
+  const [contentEnHtml, setContentEnHtml] = useState("<p></p>");
+  const [contentArHtml, setContentArHtml] = useState("<p></p>");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [coverPreview, setCoverPreview] = useState("");
-  const [contentHtml, setContentHtml] = useState("<p></p>");
   const [showPreviewPanel, setShowPreviewPanel] = useState(false);
 
-  const [liveTitle, setLiveTitle] = useState("");
-  const [liveExcerpt, setLiveExcerpt] = useState("");
   const [liveCategory, setLiveCategory] = useState("Berita");
   const [liveDate, setLiveDate] = useState(new Date().toISOString().slice(0, 10));
 
@@ -167,9 +176,14 @@ export default function BeritaClient({
 
   const openAdd = () => {
     setEditing(null);
+    setFormTab("id");
     setCoverPreview("");
     setContentHtml("<p></p>");
-    setLiveTitle(""); setLiveExcerpt(""); setLiveCategory("Berita");
+    setContentEnHtml("<p></p>");
+    setContentArHtml("<p></p>");
+    setLiveTitle(""); setLiveTitleEn(""); setLiveTitleAr("");
+    setLiveExcerpt(""); setLiveExcerptEn(""); setLiveExcerptAr("");
+    setLiveCategory("Berita");
     setLiveDate(new Date().toISOString().slice(0, 10));
     setShowPreviewPanel(false);
     setModalMode("add");
@@ -177,10 +191,17 @@ export default function BeritaClient({
 
   const openEdit = (item: NewsRow) => {
     setEditing(item);
+    setFormTab("id");
     setCoverPreview(item.coverImageUrl || "");
     setContentHtml(item.content || "<p></p>");
+    setContentEnHtml(item.contentEn || "<p></p>");
+    setContentArHtml(item.contentAr || "<p></p>");
     setLiveTitle(item.title);
+    setLiveTitleEn(item.titleEn || "");
+    setLiveTitleAr(item.titleAr || "");
     setLiveExcerpt(item.excerpt || "");
+    setLiveExcerptEn("");
+    setLiveExcerptAr("");
     setLiveCategory(item.category || "Berita");
     setLiveDate(item.publishedAt ? new Date(item.publishedAt).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
     setShowPreviewPanel(false);
@@ -221,6 +242,17 @@ export default function BeritaClient({
       const fd = new FormData(e.currentTarget);
       fd.set("coverImageUrl", coverPreview);
       fd.set("content", contentHtml);
+      fd.set("contentEn", contentEnHtml);
+      fd.set("contentAr", contentArHtml);
+      fd.set("title", liveTitle);
+      fd.set("titleEn", liveTitleEn);
+      fd.set("titleAr", liveTitleAr);
+      fd.set("excerpt", liveExcerpt);
+      fd.set("excerptEn", liveExcerptEn);
+      fd.set("excerptAr", liveExcerptAr);
+      fd.set("category", liveCategory);
+      fd.set("publishedAt", liveDate);
+
       if (editing) { fd.append("id", editing.id); await updateNews(fd); }
       else { await addNews(fd); }
       closeModal();
@@ -483,17 +515,8 @@ export default function BeritaClient({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Judul Berita <span className="text-red-500">*</span></label>
-                      <input
-                        type="text" name="title" required
-                        value={liveTitle}
-                        onChange={(e) => setLiveTitle(e.target.value)}
-                        placeholder="Masukkan judul berita…"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
-                      />
-                    </div>
+                  {/* General Configs: Date, Category, Published */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50/80 p-4 rounded-xl border border-gray-200">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5">Tanggal <span className="text-red-500">*</span></label>
                       <input
@@ -503,9 +526,6 @@ export default function BeritaClient({
                         className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
                       />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5">Kategori</label>
                       <select name="category" value={liveCategory} onChange={(e) => setLiveCategory(e.target.value)}
@@ -513,7 +533,7 @@ export default function BeritaClient({
                         {CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
                       </select>
                     </div>
-                    <div className="flex flex-col justify-end pb-1">
+                    <div className="flex flex-col justify-end pb-2">
                       <div className="flex items-center gap-2.5">
                         <input type="checkbox" id="published" name="published" value="1"
                           defaultChecked={editing ? editing.published : true}
@@ -523,30 +543,205 @@ export default function BeritaClient({
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                      Kutipan / Ringkasan <span className="text-gray-400 font-normal">(opsional, maks. 200 karakter)</span>
-                    </label>
-                    <textarea
-                      name="excerpt" rows={2}
-                      value={liveExcerpt}
-                      onChange={(e) => setLiveExcerpt(e.target.value)}
-                      maxLength={200}
-                      placeholder="Ringkasan singkat yang muncul di daftar berita…"
-                      className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] resize-none leading-relaxed text-justify"
-                    />
-                    <p className="text-right text-[10px] text-gray-400 mt-1">{liveExcerpt.length}/200</p>
-                  </div>
+                  {/* 🌐 Multilingual Tabs (ID, EN, AR) */}
+                  <div className="border border-gray-200 rounded-2xl p-4 bg-white space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 pb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-extrabold text-gray-700 uppercase tracking-wide">
+                          🌐 Konten 3 Bahasa (Multilingual)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!liveTitle.trim()) {
+                              alert("Silakan isi Judul Berita (Indonesia) terlebih dahulu!");
+                              return;
+                            }
+                            setIsSubmitting(true);
+                            try {
+                              const res = await fetch("/api/translate", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  title: liveTitle,
+                                  excerpt: liveExcerpt,
+                                  content: contentHtml,
+                                }),
+                              });
+                              if (res.ok) {
+                                const data = await res.json();
+                                if (data.titleEn) setLiveTitleEn(data.titleEn);
+                                if (data.titleAr) setLiveTitleAr(data.titleAr);
+                                if (data.excerptEn) setLiveExcerptEn(data.excerptEn);
+                                if (data.excerptAr) setLiveExcerptAr(data.excerptAr);
+                                if (data.contentEn) setContentEnHtml(data.contentEn);
+                                if (data.contentAr) setContentArHtml(data.contentAr);
+                                alert("✨ Berhasil menerjemahkan konten ke Bahasa Inggris (EN) & Arab (AR)!");
+                              } else {
+                                alert("Gagal melakukan terjemahan otomatis.");
+                              }
+                            } catch (err: any) {
+                              alert(err.message || "Gagal menerjemahkan.");
+                            } finally {
+                              setIsSubmitting(false);
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                        >
+                          ✨ Auto Translate ke EN & AR
+                        </button>
+                      </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                      Isi Berita <span className="text-red-500">*</span>
-                    </label>
-                    <TipTapEditor
-                      content={contentHtml}
-                      onChange={(html) => setContentHtml(html)}
-                      minHeight="320px"
-                    />
+                      {/* Tab Buttons */}
+                      <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+                        <button
+                          type="button"
+                          onClick={() => setFormTab("id")}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${formTab === "id" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                        >
+                          🇮🇩 Indonesia
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormTab("en")}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${formTab === "en" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                        >
+                          🇬🇧 English
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormTab("ar")}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${formTab === "ar" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                        >
+                          🇸🇦 العربية
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* TAB ID */}
+                    {formTab === "id" && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Judul Berita (Indonesia) <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={liveTitle}
+                            onChange={(e) => setLiveTitle(e.target.value)}
+                            placeholder="Masukkan judul berita…"
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Kutipan / Ringkasan (Indonesia) <span className="text-gray-400 font-normal">(opsional, maks. 200 karakter)</span>
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={liveExcerpt}
+                            onChange={(e) => setLiveExcerpt(e.target.value)}
+                            maxLength={200}
+                            placeholder="Ringkasan singkat yang muncul di daftar berita…"
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] resize-none leading-relaxed text-justify"
+                          />
+                          <p className="text-right text-[10px] text-gray-400 mt-1">{liveExcerpt.length}/200</p>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Isi Berita (Indonesia) <span className="text-red-500">*</span>
+                          </label>
+                          <TipTapEditor
+                            content={contentHtml}
+                            onChange={(html) => setContentHtml(html)}
+                            minHeight="280px"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB EN */}
+                    {formTab === "en" && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            News Title (English)
+                          </label>
+                          <input
+                            type="text"
+                            value={liveTitleEn}
+                            onChange={(e) => setLiveTitleEn(e.target.value)}
+                            placeholder="Enter news title in English…"
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Excerpt / Summary (English)
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={liveExcerptEn}
+                            onChange={(e) => setLiveExcerptEn(e.target.value)}
+                            maxLength={200}
+                            placeholder="Brief summary in English…"
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] resize-none leading-relaxed"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Content (English)
+                          </label>
+                          <TipTapEditor
+                            content={contentEnHtml}
+                            onChange={(html) => setContentEnHtml(html)}
+                            minHeight="280px"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB AR */}
+                    {formTab === "ar" && (
+                      <div className="space-y-4" dir="rtl">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5 font-serif text-right">
+                            عنوان الخبر (العربية)
+                          </label>
+                          <input
+                            type="text"
+                            value={liveTitleAr}
+                            onChange={(e) => setLiveTitleAr(e.target.value)}
+                            placeholder="أدخل عنوان الخبر باللغة العربية…"
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white font-serif text-right"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5 font-serif text-right">
+                            ملخص الخبر (العربية)
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={liveExcerptAr}
+                            onChange={(e) => setLiveExcerptAr(e.target.value)}
+                            maxLength={200}
+                            placeholder="ملخص قصير باللغة العربية…"
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] resize-none leading-relaxed font-serif text-right"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5 font-serif text-right">
+                            محتوى الخبر (العربية)
+                          </label>
+                          <TipTapEditor
+                            content={contentArHtml}
+                            onChange={(html) => setContentArHtml(html)}
+                            minHeight="280px"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

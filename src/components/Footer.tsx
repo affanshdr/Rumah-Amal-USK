@@ -3,9 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { footerDictionary, FooterLanguage } from "@/lib/i18n/footer";
 
 export default function Footer() {
   const [showTopBtn, setShowTopBtn] = useState(false);
+  const [lang, setLang] = useState<FooterLanguage>('id');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,13 +24,27 @@ export default function Footer() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    const readLang = () => {
+      const saved = (localStorage.getItem('app_lang') || localStorage.getItem('program_lang')) as FooterLanguage;
+      if (saved && ['id', 'en', 'ar'].includes(saved)) {
+        setLang(saved);
+      }
+    };
+    readLang();
+    window.addEventListener('languageChange', readLang);
+    return () => window.removeEventListener('languageChange', readLang);
+  }, []);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const dict = footerDictionary[lang] || footerDictionary.id;
+
   return (
     <>
-      <footer className="bg-[#002B14] text-white">
+      <footer className={`bg-[#002B14] text-white font-sans ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
         {/* Main Footer Grid */}
         <div className="max-w-[1340px] mx-auto px-6 sm:px-8 lg:px-12 py-12 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
 
@@ -46,27 +62,28 @@ export default function Footer() {
             </div>
 
             {/* Address */}
-            <p className="text-[13px] text-gray-300 leading-relaxed">
-              Lantai 1 Masjid Jamik USK<br />
-              T. Nyak Arief, Kopelma Darussalam, Banda Aceh 21311
+            <p className="text-[13px] text-gray-300 leading-relaxed whitespace-pre-line">
+              {dict.address}
             </p>
 
             {/* Jam Operasional */}
             <div>
-              <h3 className="font-bold text-[14px] text-white mb-1">Jam Operasional:</h3>
+              <h3 className={`font-bold text-[14px] text-white mb-1 ${lang === 'ar' ? 'font-serif' : ''}`}>
+                {dict.operationalTitle}
+              </h3>
               <div className="h-[2px] w-full bg-[#ffc800] mb-4 rounded-full" />
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-2 text-[13px] text-gray-300">
                   <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>Senin - Jum&apos;at: 08.00 - 17.00</span>
+                  <span>{dict.weekdays}</span>
                 </div>
                 <div className="flex items-center gap-2 text-[13px] text-gray-300">
                   <svg className="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>Sabtu - Minggu: Tutup</span>
+                  <span>{dict.weekend}</span>
                 </div>
               </div>
             </div>
@@ -76,35 +93,37 @@ export default function Footer() {
           <div className="flex flex-col gap-4">
             {/* Hubungi Kami */}
             <div>
-              <h3 className="font-bold text-[14px] text-white mb-1">Hubungi Kami:</h3>
+              <h3 className={`font-bold text-[14px] text-white mb-1 ${lang === 'ar' ? 'font-serif' : ''}`}>
+                {dict.contactTitle}
+              </h3>
               <div className="h-[2px] w-full bg-[#ffc800] mb-4 rounded-full" />
               <div className="flex flex-col gap-2.5 text-[13px] text-gray-300">
-                <div className="flex items-start gap-2">
-                  <span className="font-bold text-white shrink-0">WA:</span>
+                <div className="flex items-start gap-2" dir="ltr">
+                  <span className="font-bold text-white shrink-0">{dict.waLabel}</span>
                   <a href="https://wa.me/628116888123" className="hover:text-white transition-colors">
                     0811 6888 123
                   </a>
                 </div>
-                <div className="flex items-start gap-2">
-                  <span className="font-bold text-white shrink-0">Email:</span>
+                <div className="flex items-start gap-2" dir="ltr">
+                  <span className="font-bold text-white shrink-0">{dict.emailLabel}</span>
                   <a href="mailto:rumahamal@usk.ac.id" className="hover:text-white transition-colors">
                     rumahamal@usk.ac.id
                   </a>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="font-bold text-white shrink-0">Tautan:</span>
+                  <span className="font-bold text-white shrink-0">{dict.linksLabel}</span>
                   <a href="https://usk.ac.id" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                    Universitas Syiah Kuala
+                    {dict.universityLink}
                   </a>
                 </div>
                 <a href="#faq" className="font-bold text-white hover:text-[#ffc800] transition-colors mt-1">
-                  FAQ
+                  {dict.faqLabel}
                 </a>
               </div>
             </div>
 
             {/* Social Media Icons */}
-            <div className="flex items-center gap-3 mt-1">
+            <div className="flex items-center gap-3 mt-1" dir="ltr">
               <a
                 href="https://facebook.com"
                 target="_blank"
@@ -148,7 +167,7 @@ export default function Footer() {
                 href="#keluhan"
                 className="inline-block bg-[#ffc800] hover:bg-[#e8b500] text-[#111] font-extrabold text-sm px-8 py-3 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                Ajukan Keluhan
+                {dict.ctaBtn}
               </Link>
             </div>
           </div>
@@ -163,7 +182,7 @@ export default function Footer() {
               allowFullScreen
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="Lokasi Rumah Amal Masjid Jamik USK"
+              title={dict.mapTitle}
             />
           </div>
         </div>
@@ -171,36 +190,12 @@ export default function Footer() {
         {/* ===== Copyright Bar ===== */}
         <div className="border-t border-white/10 bg-[#fff] py-4 relative z-20">
           <div className="max-w-[1340px] mx-auto px-6 flex items-center justify-center">
-            <p className="text-[13px] text-[#002B14] text-center">
-              Copyright &copy; 2025{" "}
-              <span className="font-bold text-[#002B14]">Rumah Amal USK</span>
-              . All Rights Reserved
+            <p className="text-[13px] text-[#002B14] text-center font-medium">
+              {dict.copyright}
             </p>
           </div>
         </div>
       </footer>
-
-      {/* Floating Tombol Pilih Bahasa */}
-      <div className="fixed bottom-5 left-5 z-40 flex items-center">
-        <div className="relative flex items-center">
-          <svg className="w-4 h-4 text-gray-300 absolute left-3 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-          </svg>
-          <select
-            aria-label="Pilih Bahasa"
-            className="bg-[#002B14]/90 hover:bg-[#002B14] backdrop-blur-md text-white text-xs font-semibold pl-9 pr-8 py-2 rounded-lg border border-white/20 shadow-lg focus:outline-none focus:border-[#ffc800] appearance-none cursor-pointer transition-all"
-            defaultValue="id"
-          >
-            <option value="id" className="bg-[#002B14] text-white">Pilih Bahasa</option>
-            <option value="id-val" className="bg-[#002B14] text-white">Bahasa Indonesia</option>
-            <option value="en" className="bg-[#002B14] text-white">English</option>
-            <option value="ar" className="bg-[#002B14] text-white">العربية</option>
-          </select>
-          <svg className="w-3.5 h-3.5 text-gray-300 absolute right-3 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </div>
 
       {/* Floating Scroll to Top Button */}
       <button
