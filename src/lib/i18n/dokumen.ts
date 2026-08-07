@@ -14,8 +14,8 @@ export const dokumenDictionary = {
     sizeLabel: 'Ukuran:',
     downloadedLabel: 'Diunduh:',
     downloadBtn: 'Download',
-    prevBtn: '< Previous',
-    nextBtn: 'Next >',
+    prevBtn: '< Sebelumnya',
+    nextBtn: 'Selanjutnya >',
   },
   en: {
     title: 'DOCUMENTS',

@@ -12,8 +12,8 @@ export const newsletterDictionary = {
     emptyDesc: 'Belum ada newsletter yang diupload.',
     readBadge: '📖 Baca Newsletter',
     prefixTitle: 'NEWSLETTER: ',
-    prevBtn: '< Previous',
-    nextBtn: 'Next >',
+    prevBtn: '< Sebelumnya',
+    nextBtn: 'Selanjutnya >',
     closeModal: 'Tutup Modal',
   },
   en: {
