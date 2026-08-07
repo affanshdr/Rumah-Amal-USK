@@ -287,6 +287,14 @@ export default function PublicAnnouncementDetailPage({
             {/* Isi Konten Artikel */}
             <div className="prose max-w-none text-gray-800 mb-8">
               <style>{`
+                .public-article-content a[data-type="download-button"],
+                .public-article-content a[data-type="link-button"] {
+                  display: flex !important;
+                  width: 100% !important;
+                  justify-content: center !important;
+                  text-align: center !important;
+                  box-sizing: border-box !important;
+                }
                 .public-article-content p { margin-bottom: 1.25rem; line-height: 1.8; font-size: 1.05rem; }
                 .public-article-content h1 { font-size: 1.75rem; font-weight: 800; margin-top: 1.75rem; margin-bottom: 0.75rem; }
                 .public-article-content h2 { font-size: 1.4rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.6rem; }

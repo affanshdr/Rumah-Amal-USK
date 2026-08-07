@@ -32,7 +32,6 @@ interface NewsSummary {
   titleAr?: string | null;
   titleEn?: string | null;
   slug: string;
-  coverImageUrl?: string | null;
   publishedAt: string;
 }
 
@@ -49,7 +48,6 @@ export default function PublicNewsDetailPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [lang, setLang] = useState<Language>('id');
-  const [sidebarQuery, setSidebarQuery] = useState('');
 
   // Comment state
   const [commentName, setCommentName] = useState('');
@@ -140,8 +138,8 @@ export default function PublicNewsDetailPage({
         lang === 'ar'
           ? 'تم إرسال تعليقك وهو قيد المراجعة!'
           : lang === 'en'
-          ? 'Your comment has been submitted and is awaiting moderation!'
-          : 'Komentar Anda telah terkirim dan sedang menunggu moderasi!'
+            ? 'Your comment has been submitted and is awaiting moderation!'
+            : 'Komentar Anda telah terkirim dan sedang menunggu moderasi!'
       );
       setCommentContent('');
       setCommentName('');
@@ -239,6 +237,14 @@ export default function PublicNewsDetailPage({
             {/* Content Body */}
             <div className="prose max-w-none text-gray-800 text-base sm:text-lg leading-relaxed">
               <style>{`
+                .article-body a[data-type="download-button"],
+                .article-body a[data-type="link-button"] {
+                  display: flex !important;
+                  width: 100% !important;
+                  justify-content: center !important;
+                  text-align: center !important;
+                  box-sizing: border-box !important;
+                }
                 .article-body p { margin-bottom: 1.25rem; line-height: 1.8; }
                 .article-body h1 { font-size: 1.75rem; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; color: #111827; }
                 .article-body h2 { font-size: 1.4rem; font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.75rem; color: #111827; }
@@ -347,47 +353,13 @@ export default function PublicNewsDetailPage({
             </section>
           </article>
 
-          {/* ===== SIDEBAR KANAN (4 Kolom) ===== */}
-          <div className="lg:col-span-4 bg-white rounded-2xl p-6 shadow-sm border border-gray-100/90 space-y-8 sticky top-24">
-
-            {/* Box 1: Pencarian */}
-            <div>
-              <h3 className="font-extrabold text-base text-gray-900 mb-4 tracking-tight">
-                {lang === 'ar' ? 'البحث' : lang === 'en' ? 'Search' : 'Pencarian'}
+          {/* Sidebar (4 cols) */}
+          <aside className="lg:col-span-4">
+            <div className="sticky top-24 bg-gray-50 border border-gray-200 rounded-2xl p-6">
+              <h3 className="font-extrabold text-gray-900 text-lg mb-4 border-b border-gray-200 pb-3">
+                {lang === 'ar' ? 'أحدث الأخبار الأخرى' : lang === 'en' ? 'Other Recent News' : 'Berita Terkini Lainnya'}
               </h3>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (sidebarQuery.trim()) {
-                    window.location.href = `/berita?q=${encodeURIComponent(sidebarQuery.trim())}`;
-                  }
-                }}
-                className="flex"
-              >
-                <input
-                  type="text"
-                  placeholder={lang === 'ar' ? 'ابحث عن الأخبار...' : lang === 'en' ? 'Search news...' : 'Cari berita berdasarkan judul....'}
-                  value={sidebarQuery}
-                  onChange={(e) => setSidebarQuery(e.target.value)}
-                  className="flex-1 px-3.5 py-2.5 border border-gray-300 rounded-l-lg text-xs focus:outline-none focus:border-[#0b6330] bg-white text-gray-700 shadow-2xs rtl:rounded-l-none rtl:rounded-r-lg"
-                />
-                <button
-                  type="submit"
-                  aria-label="Search"
-                  className="bg-[#ffc800] hover:bg-[#e8b500] text-white px-4 py-2.5 rounded-r-lg flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-2xs rtl:rounded-r-none rtl:rounded-l-lg"
-                >
-                  <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
-                    <path fillRule="evenodd" clipRule="evenodd" d="M10.5 3.75a6.75 6.75 0 100 13.5 6.75 6.75 0 000-13.5zM2.25 10.5a8.25 8.25 0 1114.59 5.28l4.69 4.69a.75.75 0 11-1.06 1.06l-4.69-4.69A8.25 8.25 0 012.25 10.5z" />
-                  </svg>
-                </button>
-              </form>
-            </div>
 
-            {/* Box 2: Postingan Terkini */}
-            <div>
-              <h3 className="font-extrabold text-base text-gray-900 mb-4 tracking-tight">
-                {lang === 'ar' ? 'أحدث الأخبار' : lang === 'en' ? 'Recent News' : 'Postingan Terkini'}
-              </h3>
               {recentNews.length === 0 ? (
                 <p className="text-xs text-gray-400 italic">Belum ada berita lainnya.</p>
               ) : (
@@ -398,43 +370,30 @@ export default function PublicNewsDetailPage({
                       <Link
                         key={item.id}
                         href={`/berita/${item.slug}`}
-                        className="flex gap-3 group items-center"
+                        className="group block p-3 rounded-xl bg-white border border-gray-200 hover:border-[#0b6330] transition-colors shadow-2xs"
                       >
-                        <div className="w-20 h-14 bg-gray-50 rounded-lg overflow-hidden shrink-0 border border-gray-100/80">
-                          {item.coverImageUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={item.coverImageUrl}
-                              alt={recTitle}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#064e26] to-[#0b6330] text-white p-1">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src="/logo/rumah-amal.png"
-                                alt="Rumah Amal"
-                                className="h-5 w-auto object-contain brightness-0 invert opacity-90"
-                              />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className={`text-xs font-bold text-gray-800 group-hover:text-[#0b6330] line-clamp-2 leading-snug transition-colors uppercase ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
-                            {recTitle}
-                          </h4>
-                          <p className="text-[11px] text-gray-400 font-medium mt-1">
-                            {formatDate(item.publishedAt)}
-                          </p>
-                        </div>
+                        <h4 className={`font-bold text-xs sm:text-sm text-gray-900 group-hover:text-[#0b6330] transition-colors line-clamp-2 mb-1.5 leading-snug ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+                          {recTitle}
+                        </h4>
+                        <p className="text-[11px] text-gray-400 font-medium">
+                          {formatDate(item.publishedAt)}
+                        </p>
                       </Link>
                     );
                   })}
                 </div>
               )}
-            </div>
 
-          </div>
+              <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+                <Link
+                  href="/berita"
+                  className="text-xs font-extrabold text-[#0b6330] hover:underline"
+                >
+                  {lang === 'ar' ? 'عرض جميع الأخبار ←' : lang === 'en' ? 'View All News →' : 'Lihat Semua Berita →'}
+                </Link>
+              </div>
+            </div>
+          </aside>
 
         </div>
 

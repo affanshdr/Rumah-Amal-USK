@@ -31,7 +31,7 @@ export const DownloadButtonNode = Node.create({
   renderHTML({ HTMLAttributes, node }) {
     return [
       'div',
-      { class: 'my-4' },
+      { class: 'my-4 w-full' },
       [
         'a',
         mergeAttributes(
@@ -42,13 +42,17 @@ export const DownloadButtonNode = Node.create({
             rel: 'noopener noreferrer',
             download: '',
             style: [
-              'display:inline-flex',
+              'display:flex',
+              'width:100%',
+              'justify-content:center',
+              'text-align:center',
+              'box-sizing:border-box',
               'align-items:center',
               'gap:8px',
               'background:#0b6330',
               'color:#fff',
-              'padding:11px 22px',
-              'border-radius:8px',
+              'padding:12px 24px',
+              'border-radius:10px',
               'font-weight:700',
               'text-decoration:none',
               'font-size:14px',
@@ -92,7 +96,7 @@ export const LinkButtonNode = Node.create({
   renderHTML({ HTMLAttributes, node }) {
     return [
       'div',
-      { class: 'my-4' },
+      { class: 'my-4 w-full' },
       [
         'a',
         mergeAttributes(
@@ -102,13 +106,17 @@ export const LinkButtonNode = Node.create({
             target: '_blank',
             rel: 'noopener noreferrer',
             style: [
-              'display:inline-flex',
+              'display:flex',
+              'width:100%',
+              'justify-content:center',
+              'text-align:center',
+              'box-sizing:border-box',
               'align-items:center',
               'gap:8px',
               'background:#005621',
               'color:#fff',
-              'padding:11px 22px',
-              'border-radius:8px',
+              'padding:12px 24px',
+              'border-radius:10px',
               'font-weight:700',
               'text-decoration:none',
               'font-size:14px',
