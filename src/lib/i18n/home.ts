@@ -30,6 +30,8 @@ export const homeDictionary = {
       infaqSekarang: 'INFAQ SEKARANG',
       profilSub: 'Rumah Amal Masjid Jamik USK',
       profilText: 'Kami menyediakan sistem dan layanan yang memudahkan para muzakki atau donatur dalam menunaikan zakat, infaq, shadaqah, maupun wakaf dengan sebaik-baiknya. Menjadikan masjid sebagai pusat pemberdayaan ekonomi umat, Mendayagunakan dana zakat, infaq shadaqah maupun wakaf melalui program-program yang terasa manfaatnya, Mengangkat martabat mustahik, dan membahagiakan muzakki dan donatur.',
+      rekeningLabel: 'No. Rekening:',
+      anLabel: 'A.N.',
     },
   },
   en: {
@@ -61,6 +63,8 @@ export const homeDictionary = {
       infaqSekarang: 'DONATE NOW',
       profilSub: 'Rumah Amal Masjid Jamik USK',
       profilText: 'We provide systems and services that facilitate muzakki and donors in fulfilling zakat, infaq, shadaqah, and waqf in the best possible manner. Transforming the mosque into a center of economic empowerment for the community, utilizing zakat, infaq, shadaqah, and waqf funds through impactful programs, uplifting the dignity of mustahik, and bringing joy to donors.',
+      rekeningLabel: 'Account No:',
+      anLabel: 'Account Name:',
     },
   },
   ar: {
@@ -92,6 +96,8 @@ export const homeDictionary = {
       infaqSekarang: 'أنفق الآن',
       profilSub: 'Rumah Amal USK (بيت المال بمسجد جامعة سياه كوالا)',
       profilText: 'نحن نوفر أنظمة وخدمات تسهل على المزكين والمتبرعين أداء الزكاة والإنفاق والصدقة والوقف بأفضل طريقة. جعل المسجد مركزاً للتمكين الاقتصادي للأمة، واستغلال أموال الزكاة والإنفاق والصدقة والوقف من خلال برامج ملموسة الأثر، لرفع كرامة المستحقين وإسعاد المزكين والمتبرعين.',
+      rekeningLabel: 'رقم الحساب:',
+      anLabel: 'باسم:',
     },
   },
 };

@@ -583,10 +583,10 @@ export default function Home() {
                     Bank Syariah Indonesia (<span className="text-[#0b6330]">BSI</span>)
                   </span>
                   <span className="font-bold">
-                    No. Rekening: <span className="text-[#0b6330]">7099400409</span>
+                    {dict.sections.rekeningLabel} <span className="text-[#0b6330]">7099400409</span>
                   </span>
                   <span className="font-bold">
-                    A.N. <span className="text-[#0b6330]">Rumah Amal Mesjid Unsyiah</span>
+                    {dict.sections.anLabel} <span className="text-[#0b6330]">Rumah Amal Mesjid Unsyiah</span>
                   </span>
                 </div>
               </div>
