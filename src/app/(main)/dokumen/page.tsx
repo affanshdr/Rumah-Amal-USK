@@ -47,7 +47,9 @@ export default function DokumenPage() {
   const fetchDocuments = useCallback(async (p: number, q: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/documents?page=${p}&limit=${ITEMS_PER_PAGE}&search=${encodeURIComponent(q.trim())}`);
+      const res = await fetch(`/api/documents?page=${p}&limit=${ITEMS_PER_PAGE}&search=${encodeURIComponent(q.trim())}`, {
+        cache: 'no-store',
+      });
       if (res.ok) {
         const data = await res.json();
         setItems(data.documents || []);
