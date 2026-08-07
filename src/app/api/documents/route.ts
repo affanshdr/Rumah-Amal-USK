@@ -11,10 +11,11 @@ export async function GET(req: NextRequest) {
 
     const where = search
       ? {
-          judul: {
-            contains: search,
-            mode: 'insensitive' as const,
-          },
+          OR: [
+            { judul: { contains: search, mode: 'insensitive' as const } },
+            { judulEn: { contains: search, mode: 'insensitive' as const } },
+            { judulAr: { contains: search, mode: 'insensitive' as const } },
+          ],
         }
       : {};
 

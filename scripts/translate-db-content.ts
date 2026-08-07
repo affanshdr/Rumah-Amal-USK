@@ -62,7 +62,32 @@ async function translateAllContent() {
     }
   }
 
-  console.log('🎉 Batch translation for Announcement & News complete!');
+  // 3. Documents
+  const documents = await prisma.document.findMany();
+  console.log(`📌 Found ${documents.length} documents to process.`);
+
+  for (const doc of documents) {
+    console.log(`🔄 Translating Document: "${doc.judul}"...`);
+    try {
+      const translated = await autoTranslateAll({
+        title: doc.judul,
+      });
+
+      await prisma.document.update({
+        where: { id: doc.id },
+        data: {
+          judulEn: translated.titleEn,
+          judulAr: translated.titleAr,
+        },
+      });
+
+      console.log(`✅ Document "${doc.judul}" translated successfully!`);
+    } catch (err) {
+      console.error(`❌ Failed to translate document ${doc.id}:`, err);
+    }
+  }
+
+  console.log('🎉 Batch translation for Announcement, News & Documents complete!');
   await prisma.$disconnect();
 }
 

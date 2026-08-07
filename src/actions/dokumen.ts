@@ -46,7 +46,7 @@ export async function deleteDocumentAction(id: string) {
   revalidatePath('/');
 }
 
-export async function updateDocumentAction(id: string, data: { judul: string; pdfUrl: string; imageUrl?: string }) {
+export async function updateDocumentAction(id: string, data: { judul: string; judulEn?: string; judulAr?: string; pdfUrl: string; imageUrl?: string }) {
   const existing = await prisma.document.findUnique({
     where: { id },
     select: { imageUrl: true, pdfUrl: true },
@@ -63,6 +63,8 @@ export async function updateDocumentAction(id: string, data: { judul: string; pd
     where: { id },
     data: {
       judul: data.judul,
+      ...(data.judulEn !== undefined && { judulEn: data.judulEn || null }),
+      ...(data.judulAr !== undefined && { judulAr: data.judulAr || null }),
       pdfUrl: data.pdfUrl,
       ...(data.imageUrl && { imageUrl: data.imageUrl }),
     },

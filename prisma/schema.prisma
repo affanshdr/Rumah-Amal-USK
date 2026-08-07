@@ -230,6 +230,8 @@ model Mitra {
 model Document {
   id            String   @id @default(cuid())
   judul         String
+  judulAr       String?  @map("judul_ar")
+  judulEn       String?  @map("judul_en")
   imageUrl      String?  @map("image_url")
   pdfUrl        String   @map("pdf_url")
   fileSize      Float?   @map("file_size")       // Ukuran file dalam MB (null jika pakai link Drive)

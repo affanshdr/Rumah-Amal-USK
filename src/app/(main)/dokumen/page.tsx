@@ -7,6 +7,8 @@ import { dokumenDictionary, DokumenLanguage } from '@/lib/i18n/dokumen';
 interface DocumentItem {
   id: string;
   judul: string;
+  judulEn?: string | null;
+  judulAr?: string | null;
   imageUrl: string;
   pdfUrl: string;
   fileSize: number | null;
@@ -184,7 +186,7 @@ export default function DokumenPage() {
                   <div className="flex flex-col flex-1 p-4 gap-3">
                     {/* Judul */}
                     <h3 className="font-extrabold text-[#111827] text-[0.95rem] tracking-tight leading-snug text-center line-clamp-3 uppercase">
-                      {item.judul}
+                      {(lang === 'en' ? item.judulEn : lang === 'ar' ? item.judulAr : item.judul) || item.judul}
                     </h3>
 
                     {/* Meta info */}
