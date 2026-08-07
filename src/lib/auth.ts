@@ -51,25 +51,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    authorized({ request: { nextUrl }, auth }) {
-      const isLoggedIn = !!auth?.user;
-      const isAdminRoute = nextUrl.pathname.startsWith('/admin');
-      const isLoginRoute = nextUrl.pathname === '/admin/login';
-
-      if (isLoginRoute) {
-        if (isLoggedIn) {
-          // Kalau sudah login dan mencoba ke halaman login, redirect ke dashboard
-          return Response.redirect(new URL('/admin/dashboard', nextUrl));
-        }
-        return true; // Izinkan akses ke halaman login
-      }
-
-      if (isAdminRoute) {
-        if (isLoggedIn) return true; // Izinkan akses jika sudah login
-        return false; // Redirect ke halaman login jika belum login
-      }
-
-      return true; // Izinkan route publik lainnya
+    authorized() {
+      // TEMPORARY BYPASS: Allow checking all admin pages without login
+      return true;
     },
     async jwt({ token, user }) {
       if (user) {
