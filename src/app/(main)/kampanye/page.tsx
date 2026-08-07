@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { kampanyeDictionary, KampanyeLanguage } from '@/lib/i18n/kampanye';
 
 interface KampanyeItem {
   id: string;
@@ -16,10 +17,25 @@ interface KampanyeItem {
 }
 
 export default function PublicKampanyePage() {
+  const [lang, setLang] = useState<KampanyeLanguage>('id');
   const [items, setItems] = useState<KampanyeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeQuery, setActiveQuery] = useState('');
+
+  useEffect(() => {
+    const readLang = () => {
+      const saved = (localStorage.getItem('app_lang') || localStorage.getItem('program_lang')) as KampanyeLanguage;
+      if (saved && ['id', 'en', 'ar'].includes(saved)) {
+        setLang(saved);
+      }
+    };
+    readLang();
+    window.addEventListener('languageChange', readLang);
+    return () => window.removeEventListener('languageChange', readLang);
+  }, []);
+
+  const dict = kampanyeDictionary[lang] || kampanyeDictionary.id;
 
   const fetchKampanye = useCallback(async () => {
     setLoading(true);
@@ -62,28 +78,28 @@ export default function PublicKampanyePage() {
       const now = new Date();
       const diffTime = targetDate.getTime() - now.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays <= 0) return 'Selesai';
-      return `${diffDays} hari`;
+      if (diffDays <= 0) return dict.finished;
+      return `${diffDays} ${dict.days}`;
     } catch {
       return '-';
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] py-8 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className={`min-h-screen bg-[#fcfcfc] py-8 px-4 sm:px-6 lg:px-8 font-sans ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <div className="max-w-[1340px] mx-auto">
 
         {/* Page Title & Breadcrumb */}
         <div className="text-center my-6">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#333333] tracking-tight uppercase mb-4">
-            KAMPANYE
+          <h1 className={`text-3xl sm:text-4xl font-extrabold text-[#333333] tracking-tight uppercase mb-4 ${lang === 'ar' ? 'font-serif' : ''}`}>
+            {dict.title}
           </h1>
           <nav className="flex justify-center items-center gap-2 text-sm text-gray-500 font-medium">
             <Link href="/" className="hover:text-[#0b6330] transition-colors">
-              Beranda
+              {dict.breadcrumbHome}
             </Link>
             <span>/</span>
-            <span className="text-[#0b6330] font-bold">Kampanye</span>
+            <span className="text-[#0b6330] font-bold">{dict.breadcrumbCurrent}</span>
           </nav>
         </div>
 
@@ -91,7 +107,7 @@ export default function PublicKampanyePage() {
         <form onSubmit={handleSearchSubmit} className="max-w-xl mx-auto mb-12 mt-8 flex gap-2.5">
           <input
             type="text"
-            placeholder="Cari kampanye berdasarkan judul..."
+            placeholder={dict.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-700 font-medium focus:outline-none focus:border-[#0b6330] focus:ring-1 focus:ring-[#0b6330] bg-white transition-colors shadow-2xs"
@@ -100,7 +116,7 @@ export default function PublicKampanyePage() {
             type="submit"
             className="bg-[#0b6330] hover:bg-[#074722] text-white font-extrabold text-sm px-6 py-2.5 rounded-lg transition-colors shadow-2xs cursor-pointer shrink-0"
           >
-            Cari
+            {dict.searchBtn}
           </button>
         </form>
 
@@ -126,9 +142,9 @@ export default function PublicKampanyePage() {
         ) : filteredItems.length === 0 ? (
           /* Empty State */
           <div className="text-center py-16 text-gray-500 bg-white rounded-2xl border border-dashed border-gray-200 mb-12 shadow-xs">
-            <p className="text-lg font-semibold mb-2">Kampanye tidak ditemukan</p>
+            <p className="text-lg font-semibold mb-2">{dict.emptyTitle}</p>
             <p className="text-sm text-gray-400">
-              {activeQuery ? `Tidak ada hasil untuk "${activeQuery}"` : 'Belum ada kampanye aktif saat ini.'}
+              {activeQuery ? `${dict.noResultFor} "${activeQuery}"` : dict.emptyDesc}
             </p>
           </div>
         ) : (
@@ -167,7 +183,7 @@ export default function PublicKampanyePage() {
                     {/* Durasi */}
                     <div className="flex justify-end items-center mb-3">
                       <div className="text-right">
-                        <span className="block text-xs font-semibold text-gray-500">Durasi</span>
+                        <span className="block text-xs font-semibold text-gray-500">{dict.durasi}</span>
                         <span className="block text-xs sm:text-sm font-semibold text-gray-600">{durasiText}</span>
                       </div>
                     </div>
@@ -183,13 +199,13 @@ export default function PublicKampanyePage() {
                     {/* Terkumpul vs Dana Dibutuhkan */}
                     <div className="flex justify-between items-end mb-6">
                       <div>
-                        <span className="block text-xs font-semibold text-gray-700">Terkumpul</span>
+                        <span className="block text-xs font-semibold text-gray-700">{dict.terkumpul}</span>
                         <span className="text-sm font-extrabold text-[#0b6330]">
                           Rp. {formatRupiah(current)}
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="block text-xs font-semibold text-gray-700">Dana dibutuhkan</span>
+                        <span className="block text-xs font-semibold text-gray-700">{dict.danaDibutuhkan}</span>
                         <span className="text-sm font-extrabold text-[#0b6330]">
                           Rp. {formatRupiah(target)}
                         </span>
@@ -201,7 +217,7 @@ export default function PublicKampanyePage() {
                       href={`/infaq?kampanyeId=${item.id}`}
                       className="w-full bg-[#0b6330] hover:bg-[#074722] text-white font-extrabold py-3.5 rounded-xl text-sm transition-all duration-200 text-center tracking-wider uppercase block shadow-sm hover:shadow-md mt-auto"
                     >
-                      INFAQ SEKARANG
+                      {dict.infaqSekarang}
                     </Link>
                   </div>
                 </div>
@@ -214,3 +230,4 @@ export default function PublicKampanyePage() {
     </div>
   );
 }
+
