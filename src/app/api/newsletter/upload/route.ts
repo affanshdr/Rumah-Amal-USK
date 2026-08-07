@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import prisma from '@/lib/prisma';
+import { autoTranslateAll } from '@/lib/translate';
 
 const BUCKET = 'Newsletter';
 
@@ -30,6 +31,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    let judulEn: string | null = null;
+    let judulAr: string | null = null;
+    try {
+      const translated = await autoTranslateAll({ title: judul });
+      judulEn = translated.titleEn;
+      judulAr = translated.titleAr;
+    } catch (err) {
+      console.error('Auto translate newsletter error:', err);
+    }
+
     const ext = file.name.split('.').pop() ?? 'webp';
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     const arrayBuffer = await file.arrayBuffer();
@@ -51,6 +62,8 @@ export async function POST(req: NextRequest) {
     const newsletter = await prisma.newsletter.create({
       data: {
         judul,
+        judulEn,
+        judulAr,
         imageUrl: urlData.publicUrl,
         tanggal: new Date(tanggal),
       },

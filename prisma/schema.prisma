@@ -108,6 +108,8 @@ model Gallery {
 model Newsletter {
   id        String   @id @default(cuid())
   judul     String
+  judulAr   String?  @map("judul_ar")
+  judulEn   String?  @map("judul_en")
   imageUrl  String   @map("image_url")
   tanggal   DateTime @map("tanggal")
   createdAt DateTime @default(now()) @map("created_at")

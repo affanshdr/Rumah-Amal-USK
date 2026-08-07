@@ -7,6 +7,8 @@ import { newsletterDictionary, NewsletterLanguage } from '@/lib/i18n/newsletter'
 interface NewsletterItem {
   id: string;
   judul: string;
+  judulAr?: string | null;
+  judulEn?: string | null;
   imageUrl: string;
   tanggal: string;
   createdAt: string;
@@ -26,7 +28,7 @@ export default function NewsletterPage() {
 
   useEffect(() => {
     const readLang = () => {
-      const saved = (localStorage.getItem('app_lang') || localStorage.getItem('program_lang')) as NewsletterLanguage;
+      const saved = (localStorage.getItem('app_lang') || localStorage.getItem('newsletter_lang') || localStorage.getItem('program_lang')) as NewsletterLanguage;
       if (saved && ['id', 'en', 'ar'].includes(saved)) {
         setLang(saved);
       }
@@ -42,7 +44,9 @@ export default function NewsletterPage() {
     setLoading(true);
     try {
       const cleanQ = q.trim().toLowerCase() === 'newsletter' ? '' : q.trim();
-      const res = await fetch(`/api/newsletter?page=${p}&limit=${ITEMS_PER_PAGE}&q=${encodeURIComponent(cleanQ)}`);
+      const res = await fetch(`/api/newsletter?page=${p}&limit=${ITEMS_PER_PAGE}&q=${encodeURIComponent(cleanQ)}`, {
+        cache: 'no-store',
+      });
       if (res.ok) {
         const data = await res.json();
         setItems(data.items || []);
@@ -167,8 +171,8 @@ export default function NewsletterPage() {
 
                 {/* Info Text */}
                 <div className="mt-auto px-1">
-                  <h3 className="font-extrabold text-[#111827] text-base tracking-tight mb-2 uppercase leading-snug">
-                    {dict.prefixTitle}{item.judul}
+                  <h3 className="font-extrabold text-[#112b27] text-base tracking-tight mb-2 uppercase leading-snug">
+                    {dict.prefixTitle}{(lang === 'en' ? item.judulEn : lang === 'ar' ? item.judulAr : item.judul) || item.judul}
                   </h3>
                   <p className="text-xs text-gray-500 font-medium">
                     {formatDate(item.tanggal)}

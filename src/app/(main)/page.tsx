@@ -47,6 +47,8 @@ interface NewsItem {
 interface NewsletterItem {
   id: string;
   judul: string;
+  judulAr?: string | null;
+  judulEn?: string | null;
   imageUrl: string;
   tanggal: string;
 }
@@ -848,7 +850,7 @@ export default function Home() {
                     />
                   </div>
                   <h3 className="font-bold text-gray-900 text-sm line-clamp-2 mb-1 group-hover:text-[#0b6330] transition-colors">
-                    {item.judul}
+                    {(lang === 'en' ? item.judulEn : lang === 'ar' ? item.judulAr : item.judul) || item.judul}
                   </h3>
                   <p className="text-xs text-gray-400 mt-auto">{formatDate(item.tanggal)}</p>
                 </Link>
