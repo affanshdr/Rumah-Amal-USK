@@ -244,6 +244,7 @@ export default function PublicNewsDetailPage({
                   justify-content: center !important;
                   text-align: center !important;
                   box-sizing: border-box !important;
+                  border-radius: 16px !important;
                 }
                 .article-body p { margin-bottom: 1.25rem; line-height: 1.8; }
                 .article-body h1 { font-size: 1.75rem; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; color: #111827; }

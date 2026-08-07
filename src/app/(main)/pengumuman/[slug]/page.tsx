@@ -294,6 +294,7 @@ export default function PublicAnnouncementDetailPage({
                   justify-content: center !important;
                   text-align: center !important;
                   box-sizing: border-box !important;
+                  border-radius: 16px !important;
                 }
                 .public-article-content p { margin-bottom: 1.25rem; line-height: 1.8; font-size: 1.05rem; }
                 .public-article-content h1 { font-size: 1.75rem; font-weight: 800; margin-top: 1.75rem; margin-bottom: 0.75rem; }
