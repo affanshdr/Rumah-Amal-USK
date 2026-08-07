@@ -32,7 +32,7 @@ export default function DokumenPage() {
 
   useEffect(() => {
     const readLang = () => {
-      const saved = (localStorage.getItem('app_lang') || localStorage.getItem('program_lang')) as DokumenLanguage;
+      const saved = (localStorage.getItem('app_lang') || localStorage.getItem('dokumen_lang') || localStorage.getItem('program_lang')) as DokumenLanguage;
       if (saved && ['id', 'en', 'ar'].includes(saved)) {
         setLang(saved);
       }
@@ -97,6 +97,13 @@ export default function DokumenPage() {
     });
   };
 
+  const changeLanguage = (newLang: DokumenLanguage) => {
+    setLang(newLang);
+    localStorage.setItem('dokumen_lang', newLang);
+    localStorage.setItem('app_lang', newLang);
+    window.dispatchEvent(new Event('languageChange'));
+  };
+
   return (
     <div className={`min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <div className="max-w-[1340px] mx-auto">
@@ -106,14 +113,50 @@ export default function DokumenPage() {
           {dict.title}
         </h1>
 
-        {/* Breadcrumb */}
-        <nav className="text-[13.5px] font-semibold mb-8 flex items-center gap-1.5">
-          <Link href="/" className="text-gray-700 hover:text-[#0b6330] transition-colors">
-            {dict.breadcrumbHome}
-          </Link>
-          <span className="text-[#0b6330] font-bold">/</span>
-          <span className="text-[#0b6330] font-bold">{dict.breadcrumbCurrent}</span>
-        </nav>
+        {/* Breadcrumb & Language Switcher */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <nav className="text-[13.5px] font-semibold flex items-center gap-1.5">
+            <Link href="/" className="text-gray-700 hover:text-[#0b6330] transition-colors">
+              {dict.breadcrumbHome}
+            </Link>
+            <span className="text-[#0b6330] font-bold">/</span>
+            <span className="text-[#0b6330] font-bold">{dict.breadcrumbCurrent}</span>
+          </nav>
+
+          {/* In-page Language Selector */}
+          <div className="inline-flex rounded-xl p-1 bg-gray-100 border border-gray-200 items-center gap-0.5 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => changeLanguage('id')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                lang === 'id' ? 'bg-[#0b6330] text-white shadow-xs' : 'text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <span>🇮🇩</span>
+              <span>ID</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => changeLanguage('en')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                lang === 'en' ? 'bg-[#0b6330] text-white shadow-xs' : 'text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <span>🇬🇧</span>
+              <span>EN</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => changeLanguage('ar')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                lang === 'ar' ? 'bg-[#0b6330] text-white shadow-xs' : 'text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <span>🇸🇦</span>
+              <span>AR</span>
+            </button>
+          </div>
+        </div>
 
         {/* Form Search Bar */}
         <form onSubmit={handleSearchSubmit} className="max-w-2xl mx-auto mb-12 flex gap-3">

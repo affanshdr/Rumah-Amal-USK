@@ -59,7 +59,8 @@ export default function Navbar() {
     const saved = (localStorage.getItem("app_lang") ||
       localStorage.getItem("program_lang") ||
       localStorage.getItem("profil_lang") ||
-      localStorage.getItem("announcement_lang")) as Language;
+      localStorage.getItem("announcement_lang") ||
+      localStorage.getItem("dokumen_lang")) as Language;
     if (saved && ["id", "en", "ar"].includes(saved)) {
       setCurrentLang(saved);
     }
@@ -71,6 +72,9 @@ export default function Navbar() {
     localStorage.setItem("program_lang", newLang);
     localStorage.setItem("profil_lang", newLang);
     localStorage.setItem("announcement_lang", newLang);
+    localStorage.setItem("dokumen_lang", newLang);
+    localStorage.setItem("galeri_lang", newLang);
+    localStorage.setItem("newsletter_lang", newLang);
     window.dispatchEvent(new Event("languageChange"));
     window.location.reload();
   };
