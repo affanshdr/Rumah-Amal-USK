@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { autoTranslateAll } from '@/lib/translate';
 
 export async function GET(req: NextRequest) {
   try {
@@ -60,13 +61,29 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { title, slug, excerpt, category, coverImageUrl, content, tags } = body;
+    let { title, titleAr, titleEn, slug, excerpt, category, coverImageUrl, content, contentAr, contentEn, tags } = body;
 
     if (!title || !content) {
       return NextResponse.json(
         { error: 'Judul dan Konten berita wajib diisi.' },
         { status: 400 }
       );
+    }
+
+    if (!titleEn || !titleAr || !contentEn || !contentAr) {
+      try {
+        const translated = await autoTranslateAll({
+          title,
+          excerpt: excerpt || '',
+          content,
+        });
+        if (!titleEn) titleEn = translated.titleEn || null;
+        if (!titleAr) titleAr = translated.titleAr || null;
+        if (!contentEn) contentEn = translated.contentEn || null;
+        if (!contentAr) contentAr = translated.contentAr || null;
+      } catch (err) {
+        console.error('Auto translate API news error:', err);
+      }
     }
 
     const generatedSlug =
@@ -87,11 +104,15 @@ export async function POST(req: NextRequest) {
     const newsItem = await prisma.news.create({
       data: {
         title: title.trim(),
+        titleAr: titleAr || null,
+        titleEn: titleEn || null,
         slug: generatedSlug,
         excerpt: excerpt || null,
         category: category || 'Berita',
         coverImageUrl: coverImageUrl || null,
         content,
+        contentAr: contentAr || null,
+        contentEn: contentEn || null,
         published: true,
         publishedAt: body.publishedAt ? new Date(body.publishedAt) : new Date(),
         tags: {

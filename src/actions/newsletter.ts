@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
+import { autoTranslateAll } from '@/lib/translate';
 import { revalidatePath } from 'next/cache';
 
 type UploadResult = {
@@ -41,10 +42,22 @@ export async function addNewsletter(formData: FormData): Promise<UploadResult> {
         return { success: false, error: 'Judul, Tanggal, dan Gambar Newsletter wajib diisi.' };
     }
 
+    let judulEn: string | null = null;
+    let judulAr: string | null = null;
+    try {
+        const translated = await autoTranslateAll({ title: judul });
+        judulEn = translated.titleEn || null;
+        judulAr = translated.titleAr || null;
+    } catch (e) {
+        console.error('Auto translate newsletter action error:', e);
+    }
+
     try {
         await prisma.newsletter.create({
             data: {
                 judul,
+                judulEn,
+                judulAr,
                 tanggal: new Date(tanggalStr),
                 imageUrl,
             },
@@ -68,6 +81,16 @@ export async function uploadNewsletter(formData: FormData): Promise<UploadResult
         return { success: false, error: 'Data tidak lengkap.' };
     }
 
+    let judulEn: string | null = null;
+    let judulAr: string | null = null;
+    try {
+        const translated = await autoTranslateAll({ title: judul });
+        judulEn = translated.titleEn || null;
+        judulAr = translated.titleAr || null;
+    } catch (e) {
+        console.error('Auto translate newsletter upload error:', e);
+    }
+
     try {
         const ext = file.name.split('.').pop() || 'jpg';
         const fileName = `newsletter-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -84,6 +107,8 @@ export async function uploadNewsletter(formData: FormData): Promise<UploadResult
         await prisma.newsletter.create({
             data: {
                 judul,
+                judulEn,
+                judulAr,
                 tanggal: new Date(tanggalStr),
                 imageUrl: data.publicUrl
             },

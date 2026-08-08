@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { addProgram } from '@/actions/program';
 import prisma from '@/lib/prisma';
+import { autoTranslateAll } from '@/lib/translate';
 import { revalidatePath } from 'next/cache';
 
 function generateSlug(text: string): string {
@@ -18,13 +19,31 @@ export async function POST(request: NextRequest) {
 
     if (contentType.includes('application/json')) {
       const body = await request.json();
-      const { title, category, coverImageUrl, content, publishedAt, published } = body;
+      let { title, titleAr, titleEn, category, excerpt, excerptAr, excerptEn, coverImageUrl, content, contentAr, contentEn, publishedAt, published } = body;
 
       if (!title || !content) {
         return NextResponse.json(
           { error: 'Judul dan konten program wajib diisi.' },
           { status: 400 }
         );
+      }
+
+      if (!titleEn || !titleAr || !contentEn || !contentAr || !excerptEn || !excerptAr) {
+        try {
+          const translated = await autoTranslateAll({
+            title,
+            excerpt: excerpt || '',
+            content,
+          });
+          if (!titleEn) titleEn = translated.titleEn || null;
+          if (!titleAr) titleAr = translated.titleAr || null;
+          if (!excerptEn) excerptEn = translated.excerptEn || null;
+          if (!excerptAr) excerptAr = translated.excerptAr || null;
+          if (!contentEn) contentEn = translated.contentEn || null;
+          if (!contentAr) contentAr = translated.contentAr || null;
+        } catch (err) {
+          console.error('Auto translate API program upload error:', err);
+        }
       }
 
       let slug = generateSlug(title);
@@ -36,10 +55,17 @@ export async function POST(request: NextRequest) {
       const program = await prisma.program.create({
         data: {
           title,
+          titleAr: titleAr || null,
+          titleEn: titleEn || null,
           slug,
           category: category || 'PENDIDIKAN',
+          excerpt: excerpt || null,
+          excerptAr: excerptAr || null,
+          excerptEn: excerptEn || null,
           coverImageUrl: coverImageUrl || null,
           content,
+          contentAr: contentAr || null,
+          contentEn: contentEn || null,
           published: published ?? true,
           publishedAt: publishedAt ? new Date(publishedAt) : new Date(),
         },

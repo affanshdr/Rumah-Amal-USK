@@ -120,7 +120,11 @@ model Newsletter {
 model Kampanye {
   id             String    @id @default(cuid())
   judul          String
+  judulAr        String?   @map("judul_ar")
+  judulEn        String?   @map("judul_en")
   deskripsi      String?
+  deskripsiAr    String?   @map("deskripsi_ar")
+  deskripsiEn    String?   @map("deskripsi_en")
   imageUrl       String    @map("image_url")
   targetDana     Float?    @map("target_dana")
   terkumpul      Float     @default(0)

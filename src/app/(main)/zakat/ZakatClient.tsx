@@ -5,9 +5,11 @@ import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { submitZakat } from "@/actions/zakat";
 import Image from "next/image";
+import { zakatDictionary, ZakatLanguage } from "@/lib/i18n/zakat";
 
 export default function ZakatClient() {
   const searchParams = useSearchParams();
+  const [lang, setLang] = useState<ZakatLanguage>("id");
   const [tipePembayar, setTipePembayar] = useState<"masyarakat" | "dosen">("masyarakat");
   const [jenisZakat, setJenisZakat] = useState<string>("");
   const [sumberDana, setSumberDana] = useState<string>("");
@@ -25,6 +27,23 @@ export default function ZakatClient() {
   const [fileName, setFileName] = useState<string>("File...");
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
+
+  useEffect(() => {
+    const readLang = () => {
+      const saved = (localStorage.getItem("app_lang") ||
+        localStorage.getItem("zakat_lang") ||
+        localStorage.getItem("program_lang")) as ZakatLanguage;
+      if (saved && ["id", "en", "ar"].includes(saved)) {
+        setLang(saved);
+      }
+    };
+    readLang();
+    window.addEventListener("languageChange", readLang);
+    return () => window.removeEventListener("languageChange", readLang);
+  }, []);
+
+  const t = zakatDictionary[lang] || zakatDictionary.id;
+  const isRtl = lang === "ar";
 
   useEffect(() => {
     const jZakat = searchParams.get("jenis_zakat");
@@ -64,7 +83,7 @@ export default function ZakatClient() {
   };
 
   return (
-    <main className="flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full">
+    <main className={`flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full ${isRtl ? "rtl" : ""}`} dir={isRtl ? "rtl" : "ltr"}>
 
       {/* Selector Tab Tipe Pembayar */}
       <div className="text-center mb-8">
@@ -77,7 +96,7 @@ export default function ZakatClient() {
               : "text-gray-600 hover:text-[#000]"
               }`}
           >
-            Dosen / Pegawai USK
+            {t.tipeDosen}
           </button>
           <button
             type="button"
@@ -87,7 +106,7 @@ export default function ZakatClient() {
               : "text-gray-600 hover:text-[#000]"
               }`}
           >
-            Masyarakat Umum
+            {t.tipeMasyarakat}
           </button>
         </div>
       </div>
@@ -112,15 +131,15 @@ export default function ZakatClient() {
             )}
 
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-lg font-black text-[#000]">Formulir Pembayaran Zakat</h3>
+              <h3 className="text-lg font-black text-[#000]">{t.formTitle}</h3>
               <span className="text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-[#000] uppercase">
-                {tipePembayar}
+                {tipePembayar === "dosen" ? t.tipeDosen : t.tipeMasyarakat}
               </span>
             </div>
 
             {/* Jenis Zakat */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Jenis Zakat <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.jenisZakatLabel} <span className="text-red-500">*</span></label>
               <select
                 name="jenis_zakat"
                 value={jenisZakat}
@@ -128,31 +147,31 @@ export default function ZakatClient() {
                 required
                 className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] focus:ring-1 focus:ring-[#0b6330] transition-all bg-white"
               >
-                <option value="">-- Pilih Jenis Zakat --</option>
-                <option value="maal">Zakat Maal</option>
-                <option value="emas">Zakat Emas</option>
-                <option value="profesi">Zakat Profesi</option>
-                <option value="perniagaan">Zakat Perniagaan</option>
-                <option value="perusahaan">Zakat Perusahaan</option>
+                <option value="">{t.selectJenisZakat}</option>
+                <option value="maal">{t.maal}</option>
+                <option value="emas">{t.emas}</option>
+                <option value="profesi">{t.profesi}</option>
+                <option value="perniagaan">{t.perniagaan}</option>
+                <option value="perusahaan">{t.perusahaan}</option>
               </select>
             </div>
 
             {/* Sumber Dana (Tampil jika Jenis Zakat = Profesi) */}
             {jenisZakat === "profesi" && (
               <div className="bg-amber-50/60 p-3.5 rounded-xl border border-amber-200/70">
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">Sumber Dana (Zakat Profesi)</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.sumberDanaLabel}</label>
                 <select
                   name="sumber_dana"
                   value={sumberDana}
                   onChange={(e) => setSumberDana(e.target.value)}
                   className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white"
                 >
-                  <option value="">-- Pilih Sumber Dana --</option>
-                  <option value="remunerasi">Remunerasi</option>
-                  <option value="serdos">Sertifikasi Dosen (Serdos)</option>
-                  <option value="penghasilan_bulanan">Penghasilan Bulanan</option>
-                  <option value="sertifikasi_profesor">Sertifikasi Profesor</option>
-                  <option value="seluruh_dana">Seluruh Kategori / Seluruh Dana</option>
+                  <option value="">{t.selectSumberDana}</option>
+                  <option value="remunerasi">{t.remunerasi}</option>
+                  <option value="serdos">{t.serdos}</option>
+                  <option value="penghasilan_bulanan">{t.penghasilan_bulanan}</option>
+                  <option value="sertifikasi_profesor">{t.sertifikasi_profesor}</option>
+                  <option value="seluruh_dana">{t.seluruh_dana}</option>
                 </select>
               </div>
             )}
@@ -160,23 +179,23 @@ export default function ZakatClient() {
             {/* Jenis Perusahaan (Tampil jika Jenis Zakat = Perusahaan) */}
             {jenisZakat === "perusahaan" && (
               <div className="bg-amber-50/60 p-3.5 rounded-xl border border-amber-200/70">
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">Jenis Perusahaan</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.jenisPerusahaanLabel}</label>
                 <select
                   name="jenis_perusahaan"
                   value={jenisPerusahaan}
                   onChange={(e) => setJenisPerusahaan(e.target.value)}
                   className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white"
                 >
-                  <option value="">-- Pilih Jenis Perusahaan --</option>
-                  <option value="dagang_industri">Perusahaan Dagang / Industri</option>
-                  <option value="jasa">Perusahaan Jasa</option>
+                  <option value="">{t.selectJenisPerusahaan}</option>
+                  <option value="dagang_industri">{t.dagang_industri}</option>
+                  <option value="jasa">{t.jasa}</option>
                 </select>
               </div>
             )}
 
             {/* Jumlah Zakat */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Jumlah Zakat <span className="text-red-500">*</span></label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.jumlahZakatLabel} <span className="text-red-500">*</span></label>
               <div className="flex rounded-xl shadow-2xs overflow-hidden border border-gray-300 focus-within:border-[#0b6330] focus-within:ring-1 focus-within:ring-[#0b6330]">
                 <span className="inline-flex items-center px-4 bg-gray-100 text-gray-600 text-xs font-bold border-r border-gray-300">
                   Rp.
@@ -187,7 +206,7 @@ export default function ZakatClient() {
                   value={jumlahZakat}
                   onChange={(e) => setJumlahZakat(e.target.value)}
                   required
-                  placeholder="Jumlah yang ingin dibayarkan"
+                  placeholder={t.jumlahZakatPlaceholder}
                   className="flex-1 block w-full px-3.5 py-2.5 text-sm focus:outline-none bg-white"
                 />
               </div>
@@ -197,7 +216,7 @@ export default function ZakatClient() {
             {tipePembayar === "dosen" ? (
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  NIP / NIDN <span className="text-red-500">*</span>
+                  {t.nipLabel} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -205,7 +224,7 @@ export default function ZakatClient() {
                   value={nip}
                   onChange={(e) => setNip(e.target.value)}
                   required
-                  placeholder="Masukkan Nomor Induk Pegawai / Dosen USK"
+                  placeholder={t.nipPlaceholder}
                   className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white font-mono"
                 />
               </div>
@@ -213,7 +232,7 @@ export default function ZakatClient() {
               <>
                 {/* Nama Lengkap */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">Nama Lengkap <span className="text-red-500">*</span></label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.namaLabel} <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     name="nama"
@@ -221,7 +240,7 @@ export default function ZakatClient() {
                     onChange={(e) => setNama(e.target.value)}
                     readOnly={isHambaAllah}
                     required
-                    placeholder="Nama Lengkap Pembayar Zakat"
+                    placeholder={t.namaPlaceholder}
                     className={`w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] transition-all ${isHambaAllah ? "bg-gray-100 text-gray-500" : "bg-white"}`}
                   />
                 </div>
@@ -238,32 +257,32 @@ export default function ZakatClient() {
                     className="w-4 h-4 text-[#000] rounded focus:ring-[#0b6330] cursor-pointer"
                   />
                   <label htmlFor="anon-check-zakat" className="text-xs text-gray-600 font-semibold cursor-pointer">
-                    Sembunyikan nama saya (Hamba Allah)
+                    {t.hambaAllahLabel}
                   </label>
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">Email</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.emailLabel}</label>
                   <input
                     type="email"
                     name="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Contoh: nama@gmail.com"
+                    placeholder={t.emailPlaceholder}
                     className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white"
                   />
                 </div>
 
                 {/* Alamat */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">Alamat</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.alamatLabel}</label>
                   <input
                     type="text"
                     name="alamat"
                     value={alamat}
                     onChange={(e) => setAlamat(e.target.value)}
-                    placeholder="Alamat Tinggal / Domisili"
+                    placeholder={t.alamatPlaceholder}
                     className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white"
                   />
                 </div>
@@ -272,13 +291,13 @@ export default function ZakatClient() {
 
             {/* No. Telepon */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">No. Telepon / WhatsApp</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.noHpLabel}</label>
               <input
                 type="text"
                 name="no_hp"
                 value={noHp}
                 onChange={(e) => setNoHp(e.target.value)}
-                placeholder="Contoh: 08123456789"
+                placeholder={t.noHpPlaceholder}
                 className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white"
               />
             </div>
@@ -295,19 +314,19 @@ export default function ZakatClient() {
                 className="w-4 h-4 text-[#000] rounded focus:ring-[#0b6330] mt-0.5 cursor-pointer"
               />
               <label htmlFor="agree-contact-zakat" className="text-xs text-gray-600 leading-snug cursor-pointer">
-                Bersedia dihubungi oleh tim Rumah Amal USK mengenai bukti penyaluran
+                {t.bersediaDihubungiLabel}
               </label>
             </div>
 
             {/* Pesan */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Doa / Pesan</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.pesanLabel}</label>
               <textarea
                 name="pesan"
                 rows={3}
                 value={pesan}
                 onChange={(e) => setPesan(e.target.value)}
-                placeholder="Tulis doa atau niat zakat..."
+                placeholder={t.pesanPlaceholder}
                 className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white"
               />
             </div>
@@ -317,7 +336,7 @@ export default function ZakatClient() {
           {/* Kolom Kanan: Metode Pembayaran */}
           <div className="lg:col-span-4 bg-white p-6 sm:p-7 rounded-2xl shadow-md border border-gray-100 space-y-5">
             <h3 className="text-lg font-black text-[#000] border-b border-gray-100 pb-3">
-              Metode Pembayaran
+              {t.paymentMethodTitle}
             </h3>
 
             {/* Card Scan QRIS */}
@@ -333,20 +352,20 @@ export default function ZakatClient() {
                 />
               </div>
               <p className="text-[11px] text-gray-500 mt-3">
-                Transfer via Bank BSI No. Rek <strong>7099400409</strong> a.n. Rumah Amal Mesjid Unsyiah
+                {t.qrisNote}
               </p>
             </div>
 
             {/* Upload Bukti Pembayaran */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Upload Bukti Transfer / Pembayaran</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.uploadLabel}</label>
               <div className="flex items-center justify-between border border-gray-300 rounded-xl p-2 bg-gray-50/80">
                 <input
                   type="file"
                   id="bukti-zakat"
                   name="bukti_pembayaran"
                   className="hidden"
-                  onChange={(e) => setFileName(e.target.files?.[0]?.name || "File...")}
+                  onChange={(e) => setFileName(e.target.files?.[0]?.name || t.chooseFileBtn)}
                 />
                 <span className="text-xs text-gray-500 truncate px-2 max-w-[200px]">{fileName}</span>
                 <button
@@ -354,7 +373,7 @@ export default function ZakatClient() {
                   onClick={() => document.getElementById("bukti-zakat")?.click()}
                   className="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
                 >
-                  Pilih File...
+                  {t.chooseFileBtn}
                 </button>
               </div>
             </div>
@@ -372,7 +391,7 @@ export default function ZakatClient() {
                 className="w-4 h-4 text-[#000] rounded focus:ring-[#0b6330] mt-0.5 cursor-pointer"
               />
               <label htmlFor="terms-zakat" className="text-xs text-gray-600 leading-snug cursor-pointer">
-                Saya menyetujui syarat dan ketentuan niat & pembayaran zakat di Rumah Amal USK
+                {t.termsLabel}
               </label>
             </div>
 
@@ -382,7 +401,7 @@ export default function ZakatClient() {
               disabled={submitting}
               className="w-full bg-[#FFBB0C] hover:bg-[#e8b500] text-[#000] font-black py-3.5 rounded-xl text-sm shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer disabled:opacity-50"
             >
-              {submitting ? "Memproses Pembayaran..." : "Lanjutkan Pembayaran Zakat"}
+              {submitting ? t.submittingBtn : t.submitBtn}
             </button>
           </div>
         </form>
