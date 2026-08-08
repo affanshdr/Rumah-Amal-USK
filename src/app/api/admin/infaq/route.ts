@@ -23,7 +23,7 @@ export async function GET() {
                 unitKerja: i.dosen.unitKerja,
             } : null,
             tipePembayar: i.tipePembayar,
-            jenisInfaq: i.jenisInfaq,
+            jenisInfaq: i.kampanye?.judul || i.jenisInfaq,
             kampanyeId: i.kampanyeId,
             kampanyeJudul: i.kampanye?.judul || null,
             jumlahInfaq: i.jumlahInfaq,

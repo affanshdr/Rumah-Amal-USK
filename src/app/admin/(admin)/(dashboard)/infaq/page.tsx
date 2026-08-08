@@ -211,11 +211,10 @@ export default function AdminInfaqPage() {
       <div className="inline-flex rounded-xl p-1 bg-gray-100/80 shadow-inner gap-1">
         <button
           onClick={() => { setActiveTab('bebas'); setFilterStatus('all'); setSearch(''); }}
-          className={`flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'bebas'
-              ? 'bg-white text-[#063A1E] shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
+          className={`flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'bebas'
+            ? 'bg-white text-[#063A1E] shadow-sm'
+            : 'text-gray-500 hover:text-gray-700'
+            }`}
         >
           <FontAwesomeIcon icon={faUnlink} className="w-3 h-3" />
           Infaq Bebas
@@ -225,11 +224,10 @@ export default function AdminInfaqPage() {
         </button>
         <button
           onClick={() => { setActiveTab('terikat'); setFilterStatus('all'); setSearch(''); }}
-          className={`flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'terikat'
-              ? 'bg-white text-[#063A1E] shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
+          className={`flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'terikat'
+            ? 'bg-white text-[#063A1E] shadow-sm'
+            : 'text-gray-500 hover:text-gray-700'
+            }`}
         >
           <FontAwesomeIcon icon={faLink} className="w-3 h-3" />
           Infaq Terikat
@@ -240,11 +238,10 @@ export default function AdminInfaqPage() {
       </div>
 
       {/* Description block */}
-      <div className={`text-xs px-4 py-2.5 rounded-xl font-medium border ${
-        activeTab === 'bebas'
-          ? 'bg-blue-50 border-blue-100 text-blue-700'
-          : 'bg-amber-50 border-amber-100 text-amber-700'
-      }`}>
+      <div className={`text-xs px-4 py-2.5 rounded-xl font-medium border ${activeTab === 'bebas'
+        ? 'bg-blue-50 border-blue-100 text-blue-700'
+        : 'bg-amber-50 border-amber-100 text-amber-700'
+        }`}>
         {activeTab === 'bebas'
           ? '🔓 Infaq Bebas — Pembayar memilih Infaq Rutin / Umum tanpa terikat pada kampanye khusus.'
           : '🔗 Infaq Terikat — Pembayar memilih salah satu Kampanye. Dana dikreditkan ke total terkumpul Kampanye saat diapprove.'}
@@ -263,11 +260,10 @@ export default function AdminInfaqPage() {
           <button
             key={key}
             onClick={() => setFilterStatus(key)}
-            className={`rounded-xl p-3 text-left transition-all border cursor-pointer ${
-              filterStatus === key
-                ? 'border-[#063A1E] shadow-sm ring-1 ring-[#063A1E]/20'
-                : 'border-gray-100 hover:border-gray-200'
-            } bg-white`}
+            className={`rounded-xl p-3 text-left transition-all border cursor-pointer ${filterStatus === key
+              ? 'border-[#063A1E] shadow-sm ring-1 ring-[#063A1E]/20'
+              : 'border-gray-100 hover:border-gray-200'
+              } bg-white`}
           >
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{label}</p>
             <p className={`text-xl font-black mt-0.5 px-2 py-0.5 rounded-lg inline-block ${color}`}>
@@ -560,10 +556,10 @@ export default function AdminInfaqPage() {
         title="Import Infaq Dosen"
         endpoint="/api/admin/import/infaq"
         requiredColumns={['nip', 'jumlah_infaq', 'jenis_infaq']}
-        optionalColumns={['no_hp', 'pesan', 'tanggal']}
+        optionalColumns={['nama_kampanye', 'no_hp', 'pesan', 'tanggal']}
         templateRows={[
-          ['198501012010121001', '150000', 'umum', '0812-0001-0001', 'Infaq rutin', '2025-01-15'],
-          ['197803152005011002', '100000', 'umum', '', '', '2025-01-20'],
+          ['198501012010121001', '150000', 'Infak Umum', '', '0812-0001-0001', 'Infaq rutin', '2025-01-15'],
+          ['197803152005011002', '100000', 'Bantuan Bencana USK', 'Bantuan Bencana USK', '', '', '2025-01-20'],
         ]}
       />
     </div>

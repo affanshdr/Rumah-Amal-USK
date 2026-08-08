@@ -7,8 +7,15 @@ import { redirect } from 'next/navigation';
 
 export async function submitInfaq(formData: FormData) {
   const tipePembayar = formData.get('tipe_pembayar') as string;
-  const jenisInfaq = formData.get('jenis_infaq') as string;
+  let jenisInfaq = (formData.get('jenis_infaq') as string | null)?.trim() || '';
   const kampanyeId = (formData.get('kampanye_id') as string | null)?.trim() || null;
+
+  if (kampanyeId) {
+    const kampanye = await prisma.kampanye.findUnique({ where: { id: kampanyeId } });
+    if (kampanye) {
+      jenisInfaq = kampanye.judul;
+    }
+  }
   const jumlahInfaq = Number(formData.get('jumlah_infaq'));
   const nip = (formData.get('nip') as string | null)?.trim() || null;
   let nama = (formData.get('nama') as string | null)?.trim() || '';
@@ -162,6 +169,14 @@ export async function updateInfaqAdmin(id: string, data: {
   const newKampanyeId = data.kampanyeId || null;
   const newStatus = data.status;
 
+  let finalJenisInfaq = data.jenisInfaq;
+  if (newKampanyeId) {
+    const kampanye = await prisma.kampanye.findUnique({ where: { id: newKampanyeId } });
+    if (kampanye) {
+      finalJenisInfaq = kampanye.judul;
+    }
+  }
+
   if (oldInfaq.status === 'lunas' && oldInfaq.kampanyeId) {
     await prisma.kampanye.update({
       where: { id: oldInfaq.kampanyeId },
@@ -175,7 +190,7 @@ export async function updateInfaqAdmin(id: string, data: {
       nama: data.nama,
       nip: data.nip || null,
       ...(data.tipePembayar && { tipePembayar: data.tipePembayar }),
-      jenisInfaq: data.jenisInfaq,
+      jenisInfaq: finalJenisInfaq,
       kampanyeId: newKampanyeId,
       jumlahInfaq: newJumlah,
       pesan: data.pesan || null,

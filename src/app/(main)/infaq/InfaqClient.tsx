@@ -131,6 +131,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
         {/* Form Pembayaran Infaq */}
         <form onSubmit={handleFormSubmit} className="contents">
           <input type="hidden" name="tipe_pembayar" value={tipePembayar} />
+          <input type="hidden" name="jenis_infaq" value={jenisInfaq} />
           <input type="hidden" name="kampanye_id" value={selectedKampanyeId} />
 
           <div className="lg:col-span-5 bg-white p-6 sm:p-7 rounded-2xl shadow-md border border-gray-100 space-y-4">
@@ -154,7 +155,6 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                 Kategori Program Infaq <span className="text-red-500">*</span>
               </label>
               <select
-                name="jenis_infaq"
                 value={selectedKampanyeId ? selectedKampanyeId : jenisInfaq}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -169,7 +169,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                 className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white font-medium"
               >
                 <optgroup label="Infaq Bebas (Rutin / Umum)">
-                  <option value="Infak Umum / Sedekah Sukarela">Infak Umum / Sedekah Sukarela</option>
+                  <option value="Infak Umum">Infak Umum</option>
                   <option value="Komunitas Infaq Rutin">Komunitas Infaq Rutin</option>
                 </optgroup>
                 {programs.length > 0 && (
