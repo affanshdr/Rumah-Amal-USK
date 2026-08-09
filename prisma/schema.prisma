@@ -26,6 +26,7 @@ model Dosen {
   npwp      String?
   alamat    String?
   unitKerja String?  @map("unit_kerja")
+  noHp      String?  @map("no_hp")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -120,7 +121,11 @@ model Newsletter {
 model Kampanye {
   id             String    @id @default(cuid())
   judul          String
+  judulAr        String?   @map("judul_ar")
+  judulEn        String?   @map("judul_en")
   deskripsi      String?
+  deskripsiAr    String?   @map("deskripsi_ar")
+  deskripsiEn    String?   @map("deskripsi_en")
   imageUrl       String    @map("image_url")
   targetDana     Float?    @map("target_dana")
   terkumpul      Float     @default(0)
@@ -266,3 +271,16 @@ model Program {
 
   @@map("programs")
 }
+
+model NisabConfig {
+  id                String   @id @default("default")
+  hargaEmasPerGram  Float    @default(2500000) @map("harga_emas_per_gram")
+  nisabEmasGram     Float    @default(94) @map("nisab_emas_gram")
+  nisabProfesiBulan Float    @default(13000000) @map("nisab_profesi_bulan")
+  aturanQanun       String?  @default("Qanun Aceh No. 10/2018 tentang Baitul Mal") @map("aturan_qanun")
+  skNisabProfesi    String?  @default("SK DPS BMA No. 04/KPTS/2025") @map("sk_nisab_profesi")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("nisab_configs")
+}
+

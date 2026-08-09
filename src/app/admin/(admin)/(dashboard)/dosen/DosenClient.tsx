@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createDosen, updateDosen, deleteDosen } from '@/actions/dosen';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faSearch, faEdit, faTrash, faUserTie, faFileArrowUp } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faSearch, faEdit, faTrash, faUserTie, faFileArrowUp, faPhone } from '@fortawesome/free-solid-svg-icons';
 import CsvImportModal from '@/components/admin/CsvImportModal';
 import AdminPagination from '@/components/admin/AdminPagination';
 
@@ -13,6 +13,7 @@ type DosenItem = {
   npwp: string | null;
   alamat: string | null;
   unitKerja: string | null;
+  noHp: string | null;
   createdAt: Date;
 };
 
@@ -37,12 +38,14 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
   const [npwp, setNpwp] = useState('');
   const [alamat, setAlamat] = useState('');
   const [unitKerja, setUnitKerja] = useState('');
+  const [noHp, setNoHp] = useState('');
 
   const filteredData = data.filter(
     (item) =>
       item.nama.toLowerCase().includes(search.toLowerCase()) ||
       item.nip.toLowerCase().includes(search.toLowerCase()) ||
-      (item.unitKerja && item.unitKerja.toLowerCase().includes(search.toLowerCase()))
+      (item.unitKerja && item.unitKerja.toLowerCase().includes(search.toLowerCase())) ||
+      (item.noHp && item.noHp.includes(search))
   );
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
@@ -58,6 +61,7 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
     setNpwp('');
     setAlamat('');
     setUnitKerja('');
+    setNoHp('');
     setErrorMsg('');
     setIsModalOpen(true);
   }
@@ -69,6 +73,7 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
     setNpwp(item.npwp || '');
     setAlamat(item.alamat || '');
     setUnitKerja(item.unitKerja || '');
+    setNoHp(item.noHp || '');
     setErrorMsg('');
     setIsModalOpen(true);
   }
@@ -84,6 +89,7 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
     formData.append('npwp', npwp);
     formData.append('alamat', alamat);
     formData.append('unit_kerja', unitKerja);
+    formData.append('no_hp', noHp);
 
     try {
       if (editingDosen) {
@@ -91,14 +97,30 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
         setData((prev) =>
           prev.map((item) =>
             item.nip === editingDosen.nip
-              ? { ...item, nip, nama, npwp: npwp || null, alamat: alamat || null, unitKerja: unitKerja || null }
+              ? {
+                  ...item,
+                  nip,
+                  nama,
+                  npwp: npwp || null,
+                  alamat: alamat || null,
+                  unitKerja: unitKerja || null,
+                  noHp: noHp || null,
+                }
               : item
           )
         );
       } else {
         await createDosen(formData);
         setData((prev) => [
-          { nip, nama, npwp: npwp || null, alamat: alamat || null, unitKerja: unitKerja || null, createdAt: new Date() },
+          {
+            nip,
+            nama,
+            npwp: npwp || null,
+            alamat: alamat || null,
+            unitKerja: unitKerja || null,
+            noHp: noHp || null,
+            createdAt: new Date(),
+          },
           ...prev,
         ]);
       }
@@ -131,21 +153,21 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
             Data Dosen & Pegawai
           </h1>
           <p className="text-xs text-gray-500 mt-1">
-            Kelola data Master Dosen USK (NIP, NPWP, Alamat, Unit Kerja) untuk relasi Zakat dan Infaq.
+            Kelola data Master Dosen USK (NIP, NPWP, No. HP, Alamat, Unit Kerja) untuk relasi Zakat dan Infaq.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsCsvModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-[#063A1E] border border-[#063A1E]/30 hover:border-[#063A1E] px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer shrink-0"
+            className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-[#063A1E] border border-[#063A1E]/30 hover:border-[#063A1E] px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer shrink-0"
           >
             <FontAwesomeIcon icon={faFileArrowUp} className="w-3.5 h-3.5" />
             Import CSV
           </button>
           <button
             onClick={openAddModal}
-            className="inline-flex items-center justify-center gap-2 bg-[#063A1E] hover:bg-[#042814] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-sm transition-all cursor-pointer shrink-0"
+            className="inline-flex items-center justify-center gap-2 bg-[#063A1E] hover:bg-[#042814] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer shrink-0"
           >
             <FontAwesomeIcon icon={faPlus} className="w-3.5 h-3.5" />
             Tambah Dosen
@@ -158,7 +180,7 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
         <FontAwesomeIcon icon={faSearch} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
         <input
           type="text"
-          placeholder="Cari berdasarkan NIP, Nama, atau Unit Kerja..."
+          placeholder="Cari berdasarkan NIP, Nama, No. HP, atau Unit Kerja..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
@@ -166,13 +188,14 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase tracking-wider font-bold">
                 <th className="py-3.5 px-4">NIP</th>
                 <th className="py-3.5 px-4">Nama Dosen</th>
+                <th className="py-3.5 px-4">No. HP</th>
                 <th className="py-3.5 px-4">NPWP</th>
                 <th className="py-3.5 px-4">Unit Kerja</th>
                 <th className="py-3.5 px-4">Alamat</th>
@@ -182,7 +205,7 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
             <tbody className="divide-y divide-gray-100">
               {filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-10 text-gray-400">
+                  <td colSpan={7} className="text-center py-10 text-gray-400">
                     Belum ada data dosen ditemukan.
                   </td>
                 </tr>
@@ -191,6 +214,16 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
                   <tr key={item.nip} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-3.5 px-4 font-mono font-bold text-gray-800">{item.nip}</td>
                     <td className="py-3.5 px-4 font-semibold text-gray-900">{item.nama}</td>
+                    <td className="py-3.5 px-4 text-gray-700 font-mono">
+                      {item.noHp ? (
+                        <span className="inline-flex items-center gap-1.5 text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md font-semibold">
+                          <FontAwesomeIcon icon={faPhone} className="text-emerald-600 text-[10px]" />
+                          {item.noHp}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 font-normal">-</span>
+                      )}
+                    </td>
                     <td className="py-3.5 px-4 text-gray-600 font-mono">{item.npwp || '-'}</td>
                     <td className="py-3.5 px-4 text-gray-700">{item.unitKerja || '-'}</td>
                     <td className="py-3.5 px-4 text-gray-600 max-w-[200px] truncate">{item.alamat || '-'}</td>
@@ -282,6 +315,17 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
               </div>
 
               <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">No. HP / WhatsApp</label>
+                <input
+                  type="text"
+                  value={noHp}
+                  onChange={(e) => setNoHp(e.target.value)}
+                  placeholder="Contoh: 081234567890"
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                />
+              </div>
+
+              <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">NPWP</label>
                 <input
                   type="text"
@@ -350,10 +394,10 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
         title="Import Data Dosen"
         endpoint="/api/admin/import/dosen"
         requiredColumns={['nip', 'nama']}
-        optionalColumns={['npwp', 'alamat', 'unit_kerja']}
+        optionalColumns={['npwp', 'alamat', 'unit_kerja', 'no_hp']}
         templateRows={[
-          ['198501012010121001', 'Dr. Ahmad Subagyo, M.T.', '12.345.678.9-012.000', 'Jl. Kampus No.1 Banda Aceh', 'Fakultas Teknik'],
-          ['197803152005011002', 'Prof. Dr. Siti Rahma, M.Sc.', '', 'Jl. Darussalam No.5', 'Fakultas MIPA'],
+          ['198501012010121001', 'Dr. Ahmad Subagyo, M.T.', '12.345.678.9-012.000', 'Jl. Kampus No.1 Banda Aceh', 'Fakultas Teknik', '081234567890'],
+          ['197803152005011002', 'Prof. Dr. Siti Rahma, M.Sc.', '', 'Jl. Darussalam No.5', 'Fakultas MIPA', '085298765432'],
         ]}
       />
     </div>

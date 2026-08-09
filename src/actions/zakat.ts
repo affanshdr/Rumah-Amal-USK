@@ -13,7 +13,7 @@ export async function submitZakat(formData: FormData) {
   let nama = (formData.get('nama') as string | null)?.trim() || '';
   let email = (formData.get('email') as string | null)?.trim() || null;
   let alamat = (formData.get('alamat') as string | null)?.trim() || null;
-  const noHp = (formData.get('no_hp') as string | null)?.trim() || null;
+  let noHp = (formData.get('no_hp') as string | null)?.trim() || null;
   const isHambaAllah = formData.get('is_hamba_allah') === '1';
   const bersediaDihubungi = formData.get('bersedia_dihubungi') === '1';
   const pesan = (formData.get('pesan') as string | null)?.trim() || null;
@@ -36,6 +36,7 @@ export async function submitZakat(formData: FormData) {
 
     nama = dosenObj.nama;
     if (!alamat) alamat = dosenObj.alamat;
+    if (!noHp) noHp = dosenObj.noHp;
   } else {
     if (isHambaAllah) {
       nama = 'Hamba Allah';
