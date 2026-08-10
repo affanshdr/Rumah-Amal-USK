@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { updateInfaqAdmin } from '@/actions/infaq';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -23,6 +23,7 @@ type DosenInfo = {
   npwp: string | null;
   alamat: string | null;
   unitKerja: string | null;
+  noHp: string | null;
 };
 
 type KampanyeOption = {
@@ -34,6 +35,7 @@ type InfaqItem = {
   id: string;
   nama: string;
   nip: string | null;
+  noHp: string | null;
   dosen: DosenInfo | null;
   tipePembayar: string;
   jenisInfaq: string;
@@ -46,9 +48,8 @@ type InfaqItem = {
   status: string;
 };
 
-function isInfaqBebas(item: InfaqItem): boolean {
-  return !item.kampanyeId;
-}
+type StatusCounts = { all: number; pending: number; lunas: number; ditolak: number };
+type TabCounts    = { bebas: number; terikat: number };
 
 function formatRupiah(angka: number) {
   return 'Rp ' + angka.toLocaleString('id-ID');
@@ -56,7 +57,7 @@ function formatRupiah(angka: number) {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    lunas: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    lunas:   'bg-emerald-100 text-emerald-700 border-emerald-200',
     pending: 'bg-amber-100 text-amber-700 border-amber-200',
     ditolak: 'bg-red-100 text-red-700 border-red-200',
   };
@@ -68,57 +69,121 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+const ITEMS_PER_PAGE = 20;
+const DEBOUNCE_MS    = 400;
+
 export default function AdminInfaqPage() {
-  const [data, setData] = useState<InfaqItem[]>([]);
-  const [kampanyes, setKampanyes] = useState<KampanyeOption[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'bebas' | 'terikat'>('bebas');
+  const [data, setData]                 = useState<InfaqItem[]>([]);
+  const [kampanyes, setKampanyes]       = useState<KampanyeOption[]>([]);
+  const [totalItems, setTotalItems]     = useState(0);
+  const [totalPages, setTotalPages]     = useState(1);
+  const [statusCounts, setStatusCounts] = useState<StatusCounts>({ all: 0, pending: 0, lunas: 0, ditolak: 0 });
+  const [tabCounts, setTabCounts]       = useState<TabCounts>({ bebas: 0, terikat: 0 });
+  const [loading, setLoading]           = useState(true);
+  const [activeTab, setActiveTab]       = useState<'bebas' | 'terikat'>('bebas');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'lunas' | 'ditolak'>('all');
-  const [search, setSearch] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
+  const [search, setSearch]             = useState('');
+  const [currentPage, setCurrentPage]   = useState(1);
 
   // Edit Modal State
-  const [editingItem, setEditingItem] = useState<InfaqItem | null>(null);
-  const [editNama, setEditNama] = useState('');
-  const [editNip, setEditNip] = useState('');
-  const [editJenis, setEditJenis] = useState('');
+  const [editingItem, setEditingItem]   = useState<InfaqItem | null>(null);
+  const [editNama, setEditNama]         = useState('');
+  const [editNip, setEditNip]           = useState('');
+  const [editJenis, setEditJenis]       = useState('');
   const [editKampanyeId, setEditKampanyeId] = useState<string>('');
-  const [editJumlah, setEditJumlah] = useState<number>(0);
-  const [editStatus, setEditStatus] = useState('pending');
-  const [editPesan, setEditPesan] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [editJumlah, setEditJumlah]     = useState<number>(0);
+  const [editStatus, setEditStatus]     = useState('pending');
+  const [editPesan, setEditPesan]       = useState('');
+  const [saving, setSaving]             = useState(false);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
 
-  async function loadData() {
+  const debounceRef     = useRef<NodeJS.Timeout | null>(null);
+  const latestReqRef    = useRef(0);
+  const searchRef       = useRef(search);
+  const filterStatusRef = useRef(filterStatus);
+  const activeTabRef    = useRef(activeTab);
+  const currentPageRef  = useRef(currentPage);
+
+  // Load kampanye list once
+  useEffect(() => {
+    fetch('/api/kampanye')
+      .then((r) => r.json())
+      .then((json) => setKampanyes(json.kampanyes || []))
+      .catch(console.error);
+  }, []);
+
+  async function fetchData(page: number, searchVal: string, statusVal: string, tabVal: string) {
+    const reqId = ++latestReqRef.current;
     setLoading(true);
     try {
-      const [resInfaq, resKampanye] = await Promise.all([
-        fetch('/api/admin/infaq'),
-        fetch('/api/kampanye'),
-      ]);
-      const jsonInfaq = await resInfaq.json();
-      const jsonKampanye = await resKampanye.json();
-      setData(jsonInfaq);
-      setKampanyes(jsonKampanye.kampanyes || []);
-    } catch (err) {
-      console.error('Error loading admin infaq:', err);
+      const params = new URLSearchParams({
+        page:   String(page),
+        limit:  String(ITEMS_PER_PAGE),
+        search: searchVal,
+        status: statusVal,
+        tab:    tabVal,
+      });
+      const res  = await fetch(`/api/admin/infaq?${params}`);
+      const json = await res.json();
+      if (reqId !== latestReqRef.current) return;
+      setData(json.data          || []);
+      setTotalItems(json.total         ?? 0);
+      setTotalPages(json.totalPages    ?? 1);
+      setStatusCounts(json.statusCounts || { all: 0, pending: 0, lunas: 0, ditolak: 0 });
+      setTabCounts(json.tabCounts    || { bebas: 0, terikat: 0 });
     } finally {
-      setLoading(false);
+      if (reqId === latestReqRef.current) setLoading(false);
     }
   }
 
+  // Initial load
   useEffect(() => {
-    loadData();
+    fetchData(1, '', 'all', 'bebas');
   }, []);
 
-  useEffect(() => {
+  function handleSearchChange(val: string) {
+    setSearch(val);
+    searchRef.current = val;
     setCurrentPage(1);
-  }, [activeTab, filterStatus, search]);
+    currentPageRef.current = 1;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchData(1, val, filterStatusRef.current, activeTabRef.current);
+    }, DEBOUNCE_MS);
+  }
+
+  function handleStatusChange(status: 'all' | 'pending' | 'lunas' | 'ditolak') {
+    setFilterStatus(status);
+    filterStatusRef.current = status;
+    setCurrentPage(1);
+    currentPageRef.current = 1;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    fetchData(1, searchRef.current, status, activeTabRef.current);
+  }
+
+  function handleTabChange(tab: 'bebas' | 'terikat') {
+    setActiveTab(tab);
+    activeTabRef.current = tab;
+    setFilterStatus('all');
+    filterStatusRef.current = 'all';
+    setSearch('');
+    searchRef.current = '';
+    setCurrentPage(1);
+    currentPageRef.current = 1;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    fetchData(1, '', 'all', tab);
+  }
+
+  function handlePageChange(page: number) {
+    setCurrentPage(page);
+    currentPageRef.current = page;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    fetchData(page, searchRef.current, filterStatusRef.current, activeTabRef.current);
+  }
 
   async function handleAction(id: string, action: 'approve' | 'reject') {
     await fetch(`/api/admin/infaq/${id}/${action}`, { method: 'PATCH' });
-    loadData();
+    fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, activeTabRef.current);
   }
 
   function openEditModal(item: InfaqItem) {
@@ -138,16 +203,16 @@ export default function AdminInfaqPage() {
     setSaving(true);
     try {
       await updateInfaqAdmin(editingItem.id, {
-        nama: editNama,
-        nip: editNip,
+        nama:       editNama,
+        nip:        editNip,
         jenisInfaq: editJenis,
         kampanyeId: editKampanyeId || null,
         jumlahInfaq: editJumlah,
-        status: editStatus,
-        pesan: editPesan,
+        status:     editStatus,
+        pesan:      editPesan,
       });
       setEditingItem(null);
-      loadData();
+      fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, activeTabRef.current);
     } catch (err: any) {
       alert(err.message || 'Gagal menyimpan perubahan');
     } finally {
@@ -155,35 +220,7 @@ export default function AdminInfaqPage() {
     }
   }
 
-  const tabData = data.filter((item) =>
-    activeTab === 'bebas' ? isInfaqBebas(item) : !isInfaqBebas(item)
-  );
-
-  const filtered = tabData.filter((item) => {
-    const matchSearch =
-      item.nama.toLowerCase().includes(search.toLowerCase()) ||
-      (item.nip && item.nip.includes(search)) ||
-      (item.kampanyeJudul && item.kampanyeJudul.toLowerCase().includes(search.toLowerCase())) ||
-      (item.dosen?.nama && item.dosen.nama.toLowerCase().includes(search.toLowerCase()));
-    const matchStatus = filterStatus === 'all' ? true : item.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
-
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginatedData = filtered.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  const bebasCount = data.filter(isInfaqBebas).length;
-  const terikatCount = data.filter((i) => !isInfaqBebas(i)).length;
-
-  const counts = {
-    all: tabData.length,
-    pending: tabData.filter((d) => d.status === 'pending').length,
-    lunas: tabData.filter((d) => d.status === 'lunas').length,
-    ditolak: tabData.filter((d) => d.status === 'ditolak').length,
-  };
+  const colSpan = activeTab === 'terikat' ? 9 : 8;
 
   return (
     <div className="space-y-6">
@@ -210,38 +247,37 @@ export default function AdminInfaqPage() {
       {/* Tab Bebas / Terikat */}
       <div className="inline-flex rounded-xl p-1 bg-gray-100/80 shadow-inner gap-1">
         <button
-          onClick={() => { setActiveTab('bebas'); setFilterStatus('all'); setSearch(''); }}
-          className={`flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'bebas'
-            ? 'bg-white text-[#063A1E] shadow-sm'
-            : 'text-gray-500 hover:text-gray-700'
-            }`}
+          onClick={() => handleTabChange('bebas')}
+          className={`flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'bebas' ? 'bg-white text-[#063A1E] shadow-sm' : 'text-gray-500 hover:text-gray-700'
+          }`}
         >
           <FontAwesomeIcon icon={faUnlink} className="w-3 h-3" />
           Infaq Bebas
           <span className="ml-1 px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-600 text-[10px]">
-            {bebasCount}
+            {tabCounts.bebas}
           </span>
         </button>
         <button
-          onClick={() => { setActiveTab('terikat'); setFilterStatus('all'); setSearch(''); }}
-          className={`flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === 'terikat'
-            ? 'bg-white text-[#063A1E] shadow-sm'
-            : 'text-gray-500 hover:text-gray-700'
-            }`}
+          onClick={() => handleTabChange('terikat')}
+          className={`flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'terikat' ? 'bg-white text-[#063A1E] shadow-sm' : 'text-gray-500 hover:text-gray-700'
+          }`}
         >
           <FontAwesomeIcon icon={faLink} className="w-3 h-3" />
           Infaq Terikat
           <span className="ml-1 px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-600 text-[10px]">
-            {terikatCount}
+            {tabCounts.terikat}
           </span>
         </button>
       </div>
 
       {/* Description block */}
-      <div className={`text-xs px-4 py-2.5 rounded-xl font-medium border ${activeTab === 'bebas'
-        ? 'bg-blue-50 border-blue-100 text-blue-700'
-        : 'bg-amber-50 border-amber-100 text-amber-700'
-        }`}>
+      <div className={`text-xs px-4 py-2.5 rounded-xl font-medium border ${
+        activeTab === 'bebas'
+          ? 'bg-blue-50 border-blue-100 text-blue-700'
+          : 'bg-amber-50 border-amber-100 text-amber-700'
+      }`}>
         {activeTab === 'bebas'
           ? '🔓 Infaq Bebas — Pembayar memilih Infaq Rutin / Umum tanpa terikat pada kampanye khusus.'
           : '🔗 Infaq Terikat — Pembayar memilih salah satu Kampanye. Dana dikreditkan ke total terkumpul Kampanye saat diapprove.'}
@@ -251,23 +287,24 @@ export default function AdminInfaqPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {(
           [
-            { key: 'all', label: 'Semua', color: 'bg-gray-100 text-gray-700' },
-            { key: 'pending', label: 'Pending', color: 'bg-amber-100 text-amber-700' },
-            { key: 'lunas', label: 'Lunas', color: 'bg-emerald-100 text-emerald-700' },
-            { key: 'ditolak', label: 'Ditolak', color: 'bg-red-100 text-red-700' },
+            { key: 'all',     label: 'Semua',  color: 'bg-gray-100 text-gray-700'       },
+            { key: 'pending', label: 'Pending', color: 'bg-amber-100 text-amber-700'     },
+            { key: 'lunas',   label: 'Lunas',   color: 'bg-emerald-100 text-emerald-700' },
+            { key: 'ditolak', label: 'Ditolak', color: 'bg-red-100 text-red-700'         },
           ] as const
         ).map(({ key, label, color }) => (
           <button
             key={key}
-            onClick={() => setFilterStatus(key)}
-            className={`rounded-xl p-3 text-left transition-all border cursor-pointer ${filterStatus === key
-              ? 'border-[#063A1E] shadow-sm ring-1 ring-[#063A1E]/20'
-              : 'border-gray-100 hover:border-gray-200'
-              } bg-white`}
+            onClick={() => handleStatusChange(key)}
+            className={`rounded-xl p-3 text-left transition-all border cursor-pointer ${
+              filterStatus === key
+                ? 'border-[#063A1E] shadow-sm ring-1 ring-[#063A1E]/20'
+                : 'border-gray-100 hover:border-gray-200'
+            } bg-white`}
           >
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{label}</p>
             <p className={`text-xl font-black mt-0.5 px-2 py-0.5 rounded-lg inline-block ${color}`}>
-              {counts[key]}
+              {statusCounts[key]}
             </p>
           </button>
         ))}
@@ -280,7 +317,7 @@ export default function AdminInfaqPage() {
           type="text"
           placeholder={activeTab === 'bebas' ? 'Cari nama, NIP, atau jenis infaq...' : 'Cari nama, NIP, atau kampanye...'}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
         />
       </div>
@@ -293,7 +330,7 @@ export default function AdminInfaqPage() {
               <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase tracking-wider font-bold">
                 <th className="py-3.5 px-4">Nama Pembayar</th>
                 {activeTab === 'terikat' && <th className="py-3.5 px-4">Kampanye</th>}
-                <th className="py-3.5 px-4">Dosen / Unit</th>
+                <th className="py-3.5 px-4">Unit Kerja / No. HP</th>
                 <th className="py-3.5 px-4">Jenis Infaq</th>
                 <th className="py-3.5 px-4">Jumlah</th>
                 <th className="py-3.5 px-4">Bukti</th>
@@ -305,18 +342,18 @@ export default function AdminInfaqPage() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={activeTab === 'terikat' ? 9 : 8} className="text-center py-10 text-gray-400">
+                  <td colSpan={colSpan} className="text-center py-10 text-gray-400">
                     <div className="w-5 h-5 border-2 border-[#063A1E] border-t-transparent rounded-full animate-spin mx-auto" />
                   </td>
                 </tr>
-              ) : filtered.length === 0 ? (
+              ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={activeTab === 'terikat' ? 9 : 8} className="text-center py-10 text-gray-400">
+                  <td colSpan={colSpan} className="text-center py-10 text-gray-400">
                     Tidak ada data infaq {activeTab === 'bebas' ? 'bebas' : 'terikat'} ditemukan.
                   </td>
                 </tr>
               ) : (
-                paginatedData.map((item) => (
+                data.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                     {/* Nama Pembayar */}
                     <td className="py-3.5 px-4">
@@ -346,17 +383,24 @@ export default function AdminInfaqPage() {
                       </td>
                     )}
 
-                    {/* Dosen Info */}
+                    {/* Unit Kerja / No. HP */}
                     <td className="py-3.5 px-4">
                       {item.dosen ? (
                         <div>
-                          <p className="font-semibold text-gray-800">{item.dosen.nama}</p>
                           {item.dosen.unitKerja && (
-                            <p className="text-[10px] text-[#063A1E] mt-0.5">{item.dosen.unitKerja}</p>
+                            <p className="text-[10px] text-[#063A1E] font-semibold">{item.dosen.unitKerja}</p>
+                          )}
+                          {(item.dosen.noHp || item.noHp) && (
+                            <p className="text-[10px] text-gray-500 mt-0.5">{item.dosen.noHp || item.noHp}</p>
+                          )}
+                          {!item.dosen.unitKerja && !item.dosen.noHp && !item.noHp && (
+                            <span className="text-gray-400">—</span>
                           )}
                         </div>
                       ) : (
-                        <span className="text-gray-400">—</span>
+                        item.noHp
+                          ? <span className="text-[10px] text-gray-600 font-medium">{item.noHp}</span>
+                          : <span className="text-gray-400">—</span>
                       )}
                     </td>
 
@@ -380,7 +424,6 @@ export default function AdminInfaqPage() {
                     </td>
 
                     <td className="py-3.5 px-4 text-gray-600">{item.tanggal}</td>
-
                     <td className="py-3.5 px-4">
                       <StatusBadge status={item.status} />
                     </td>
@@ -424,9 +467,9 @@ export default function AdminInfaqPage() {
         <AdminPagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={filtered.length}
+          totalItems={totalItems}
           itemsPerPage={ITEMS_PER_PAGE}
-          onPageChange={setCurrentPage}
+          onPageChange={handlePageChange}
           itemLabel="infaq"
         />
       </div>
@@ -552,7 +595,7 @@ export default function AdminInfaqPage() {
       <CsvImportModal
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
-        onSuccess={() => loadData()}
+        onSuccess={() => fetchData(1, searchRef.current, filterStatusRef.current, activeTabRef.current)}
         title="Import Infaq Dosen"
         endpoint="/api/admin/import/infaq"
         requiredColumns={['nip', 'jumlah_infaq', 'jenis_infaq']}
