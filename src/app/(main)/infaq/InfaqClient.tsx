@@ -147,6 +147,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
         {/* Form Pembayaran Infaq */}
         <form onSubmit={handleFormSubmit} className="contents">
           <input type="hidden" name="tipe_pembayar" value={tipePembayar} />
+          <input type="hidden" name="jenis_infaq" value={jenisInfaq} />
           <input type="hidden" name="kampanye_id" value={selectedKampanyeId} />
 
           <div className="lg:col-span-5 bg-white p-6 sm:p-7 rounded-2xl shadow-md border border-gray-100 space-y-4">
@@ -172,7 +173,6 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                 {t.kategoriLabel} <span className="text-red-500">*</span>
               </label>
               <select
-                name="jenis_infaq"
                 value={selectedKampanyeId ? selectedKampanyeId : jenisInfaq}
                 onChange={(e) => {
                   const val = e.target.value;

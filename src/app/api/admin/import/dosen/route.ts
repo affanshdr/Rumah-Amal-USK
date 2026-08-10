@@ -7,6 +7,9 @@ interface DosenRow {
   npwp?: string;
   alamat?: string;
   unit_kerja?: string;
+  unitKerja?: string;
+  no_hp?: string;
+  noHp?: string;
 }
 
 export async function POST(req: NextRequest) {
@@ -39,17 +42,29 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
+        const newNpwp = row.npwp?.toString().trim();
+        const newAlamat = row.alamat?.toString().trim();
+        const newUnitKerja = (row.unit_kerja || row.unitKerja)?.toString().trim();
+        const newNoHp = (row.no_hp || row.noHp)?.toString().trim();
+
         try {
           const existing = await prisma.dosen.findUnique({ where: { nip } });
 
           if (existing) {
+            // Logic Task 4: jika kolom CSV baru kosong, tetapi data lama di DB ada, jangan timpa dengan kosong
+            const npwpToSave = newNpwp && newNpwp !== '' ? newNpwp : existing.npwp;
+            const alamatToSave = newAlamat && newAlamat !== '' ? newAlamat : existing.alamat;
+            const unitKerjaToSave = newUnitKerja && newUnitKerja !== '' ? newUnitKerja : existing.unitKerja;
+            const noHpToSave = newNoHp && newNoHp !== '' ? newNoHp : existing.noHp;
+
             await prisma.dosen.update({
               where: { nip },
               data: {
                 nama,
-                npwp: row.npwp?.toString().trim() || existing.npwp,
-                alamat: row.alamat?.toString().trim() || existing.alamat,
-                unitKerja: row.unit_kerja?.toString().trim() || existing.unitKerja,
+                npwp: npwpToSave,
+                alamat: alamatToSave,
+                unitKerja: unitKerjaToSave,
+                noHp: noHpToSave,
               },
             });
             updated++;
@@ -58,9 +73,10 @@ export async function POST(req: NextRequest) {
               data: {
                 nip,
                 nama,
-                npwp: row.npwp?.toString().trim() || null,
-                alamat: row.alamat?.toString().trim() || null,
-                unitKerja: row.unit_kerja?.toString().trim() || null,
+                npwp: newNpwp || null,
+                alamat: newAlamat || null,
+                unitKerja: newUnitKerja || null,
+                noHp: newNoHp || null,
               },
             });
             inserted++;

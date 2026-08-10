@@ -30,7 +30,8 @@ export async function createDosen(formData: FormData) {
   const nama = (formData.get('nama') as string)?.trim();
   const npwp = (formData.get('npwp') as string)?.trim() || null;
   const alamat = (formData.get('alamat') as string)?.trim() || null;
-  const unitKerja = (formData.get('unit_kerja') as string)?.trim() || null;
+  const unitKerja = (formData.get('unit_kerja') as string)?.trim() || (formData.get('unitKerja') as string)?.trim() || null;
+  const noHp = (formData.get('no_hp') as string)?.trim() || (formData.get('noHp') as string)?.trim() || null;
 
   if (!nip || !nama) {
     throw new Error('NIP dan Nama Dosen wajib diisi');
@@ -48,6 +49,7 @@ export async function createDosen(formData: FormData) {
       npwp,
       alamat,
       unitKerja,
+      noHp,
     },
   });
 
@@ -60,7 +62,8 @@ export async function updateDosen(oldNip: string, formData: FormData) {
   const nama = (formData.get('nama') as string)?.trim();
   const npwp = (formData.get('npwp') as string)?.trim() || null;
   const alamat = (formData.get('alamat') as string)?.trim() || null;
-  const unitKerja = (formData.get('unit_kerja') as string)?.trim() || null;
+  const unitKerja = (formData.get('unit_kerja') as string)?.trim() || (formData.get('unitKerja') as string)?.trim() || null;
+  const noHp = (formData.get('no_hp') as string)?.trim() || (formData.get('noHp') as string)?.trim() || null;
 
   if (!nip || !nama) {
     throw new Error('NIP dan Nama Dosen wajib diisi');
@@ -74,6 +77,7 @@ export async function updateDosen(oldNip: string, formData: FormData) {
       npwp,
       alamat,
       unitKerja,
+      noHp,
     },
   });
 
