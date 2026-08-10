@@ -98,7 +98,7 @@ export default function NisabClient({ initialData }: { initialData: NisabConfigT
 
           <div>
             <label className="block text-xs font-bold text-gray-700 mb-1">
-              Aturan Qanun Membayar Zakat
+              Aturan Qanun
             </label>
             <input
               type="text"
