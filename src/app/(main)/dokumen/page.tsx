@@ -115,8 +115,8 @@ export default function DokumenPage() {
           {dict.title}
         </h1>
 
-        {/* Breadcrumb & Language Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        {/* Breadcrumb */}
+        <div className="mb-8">
           <nav className="text-[13.5px] font-semibold flex items-center gap-1.5">
             <Link href="/" className="text-gray-700 hover:text-[#0b6330] transition-colors">
               {dict.breadcrumbHome}
@@ -124,40 +124,6 @@ export default function DokumenPage() {
             <span className="text-[#0b6330] font-bold">/</span>
             <span className="text-[#0b6330] font-bold">{dict.breadcrumbCurrent}</span>
           </nav>
-
-          {/* In-page Language Selector */}
-          <div className="inline-flex rounded-xl p-1 bg-gray-100 border border-gray-200 items-center gap-0.5 self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => changeLanguage('id')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                lang === 'id' ? 'bg-[#0b6330] text-white shadow-xs' : 'text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <span>🇮🇩</span>
-              <span>ID</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => changeLanguage('en')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                lang === 'en' ? 'bg-[#0b6330] text-white shadow-xs' : 'text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <span>🇬🇧</span>
-              <span>EN</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => changeLanguage('ar')}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                lang === 'ar' ? 'bg-[#0b6330] text-white shadow-xs' : 'text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <span>🇸🇦</span>
-              <span>AR</span>
-            </button>
-          </div>
         </div>
 
         {/* Form Search Bar */}

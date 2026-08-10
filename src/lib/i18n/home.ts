@@ -4,13 +4,13 @@ export const homeDictionary = {
   id: {
     cards: {
       infakTitle: 'INFAK',
-      infakDesc: 'Bersyukur atas rizki, berbagi kebahagian dengan sesama muslim.',
+      infakDesc: 'Bersyukur atas rezeki, berbagi kebahagiaan dengan sesama muslim.',
       infakBtn: 'Infak',
       zakatTitle: 'ZAKAT',
-      zakatDesc: 'Menyempurnakan rukun islam, mensucikan harta dan mententramkan jiwa.',
+      zakatDesc: 'Menyempurnakan rukun Islam, mensucikan harta dan menenteramkan jiwa.',
       zakatBtn: 'Zakat',
       programTitle: 'PROGRAM',
-      programDesc: 'Rumah amal masjid jamik USK menyediakan beberapa program donasi.',
+      programDesc: 'Rumah Amal Masjid Jamik USK menyediakan beberapa program donasi.',
       programBtn: 'Program',
     },
     sections: {
@@ -76,7 +76,7 @@ export const homeDictionary = {
       zakatDesc: 'إتمام ركن الإسلام، وتطهير الأموال، وطمأنينة النفوس.',
       zakatBtn: 'زكاة',
       programTitle: 'البرامج',
-      programDesc: 'يوفر بيت المال بمسجد جامعة سياه كوالا برامج تبرع متعددة الأثر.',
+      programDesc: 'تقدم مؤسسة Rumah Amal USK برامج تبرع متنوعة ذات أثر كبير.',
       programBtn: 'البرامج',
     },
     sections: {
@@ -94,7 +94,7 @@ export const homeDictionary = {
       terkumpul: 'المبلغ المجموع',
       danaDibutuhkan: 'المبلغ المطلوب',
       infaqSekarang: 'أنفق الآن',
-      profilSub: 'Rumah Amal USK (بيت المال بمسجد جامعة سياه كوالا)',
+      profilSub: 'Rumah Amal – Masjid Jamik USK',
       profilText: 'نحن نوفر أنظمة وخدمات تسهل على المزكين والمتبرعين أداء الزكاة والإنفاق والصدقة والوقف بأفضل طريقة. جعل المسجد مركزاً للتمكين الاقتصادي للأمة، واستغلال أموال الزكاة والإنفاق والصدقة والوقف من خلال برامج ملموسة الأثر، لرفع كرامة المستحقين وإسعاد المزكين والمتبرعين.',
       rekeningLabel: 'رقم الحساب:',
       anLabel: 'باسم:',

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { beritaDictionary, BeritaLanguage } from '@/lib/i18n/berita';
 
 interface NewsItem {
   id: string;
@@ -15,28 +16,22 @@ interface NewsItem {
   createdAt: string;
 }
 
-type Language = 'id' | 'en' | 'ar';
-
 export default function PublicNewsListPage() {
   const [items, setItems] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeQuery, setActiveQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [lang, setLang] = useState<Language>('id');
+  const [lang, setLang] = useState<BeritaLanguage>('id');
   const ITEMS_PER_PAGE = 9;
 
   useEffect(() => {
-    const savedLang = (localStorage.getItem('app_lang') || localStorage.getItem('announcement_lang')) as Language;
+    const savedLang = (localStorage.getItem('app_lang') ||
+      localStorage.getItem('announcement_lang')) as BeritaLanguage;
     if (savedLang && ['id', 'en', 'ar'].includes(savedLang)) {
       setLang(savedLang);
     }
   }, []);
-
-  const changeLanguage = (newLang: Language) => {
-    setLang(newLang);
-    localStorage.setItem('announcement_lang', newLang);
-  };
 
   const fetchNews = useCallback(async () => {
     setLoading(true);
@@ -102,52 +97,16 @@ export default function PublicNewsListPage() {
     }
   };
 
-  const labels = {
-    id: {
-      pageTitle: 'BERITA',
-      home: 'Beranda',
-      news: 'Berita',
-      searchPlaceholder: 'Cari berita berdasarkan judul...',
-      searchBtn: 'Cari',
-      badge: 'BERITA',
-      officialBadge: 'BERITA RESMI',
-      notFoundTitle: 'Berita tidak ditemukan',
-      notFoundText: 'Belum ada berita yang dipublikasikan.',
-      prev: '< Sebelumnya',
-      next: 'Berikutnya >',
-    },
-    en: {
-      pageTitle: 'NEWS',
-      home: 'Home',
-      news: 'News',
-      searchPlaceholder: 'Search news by title...',
-      searchBtn: 'Search',
-      badge: 'NEWS',
-      officialBadge: 'OFFICIAL NEWS',
-      notFoundTitle: 'No news found',
-      notFoundText: 'No news published yet.',
-      prev: '< Previous',
-      next: 'Next >',
-    },
-    ar: {
-      pageTitle: 'الأخبار',
-      home: 'الرئيسية',
-      news: 'الأخبار',
-      searchPlaceholder: 'ابحث عن الأخبار بالعنوان...',
-      searchBtn: 'بحث',
-      badge: 'خبر',
-      officialBadge: 'خبر رسمي',
-      notFoundTitle: 'لم يتم العثور على أخبار',
-      notFoundText: 'لم يتم نشر أي أخبار حتى الآن.',
-      prev: '< السابق',
-      next: 'التالي >',
-    },
-  }[lang];
+  const labels = beritaDictionary[lang] || beritaDictionary.id;
 
   return (
-    <div className={`min-h-screen bg-white py-10 px-4 sm:px-6 lg:px-8 font-sans ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div
+      className={`min-h-screen bg-white py-10 px-4 sm:px-6 lg:px-8 font-sans ${
+        lang === 'ar' ? 'rtl' : 'ltr'
+      }`}
+      dir={lang === 'ar' ? 'rtl' : 'ltr'}
+    >
       <div className="max-w-[1340px] mx-auto">
-
         {/* Big Page Title & Breadcrumb */}
         <div className="text-center mb-6">
           <h1 className="text-4xl sm:text-5xl font-extrabold text-[#374151] tracking-tight uppercase mb-6">
@@ -185,7 +144,10 @@ export default function PublicNewsListPage() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 animate-pulse mb-12">
             {[...Array(ITEMS_PER_PAGE)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden flex flex-col">
+              <div
+                key={i}
+                className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden flex flex-col"
+              >
                 <div className="bg-gray-200 aspect-[16/10] w-full"></div>
                 <div className="p-5 flex flex-col flex-1">
                   <div className="bg-gray-200 h-5 w-24 rounded-md mb-3"></div>
@@ -255,7 +217,11 @@ export default function PublicNewsListPage() {
                     </div>
 
                     <div className="flex flex-col justify-between flex-1">
-                      <h3 className={`font-bold text-[#112b27] text-sm sm:text-base leading-tight mb-3 line-clamp-4 group-hover:text-[#0b6330] transition-colors ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+                      <h3
+                        className={`font-bold text-[#112b27] text-sm sm:text-base leading-tight mb-3 line-clamp-4 group-hover:text-[#0b6330] transition-colors ${
+                          lang === 'ar' ? 'font-serif text-right' : ''
+                        }`}
+                      >
                         {displayTitle}
                       </h3>
                       <p className="text-xs text-gray-500 font-medium mt-auto">
@@ -297,7 +263,10 @@ export default function PublicNewsListPage() {
               return pages.map((p, idx) => {
                 if (typeof p === 'string') {
                   return (
-                    <span key={`dots-${idx}`} className="w-8 h-9 flex items-center justify-center text-gray-400 font-semibold select-none">
+                    <span
+                      key={`dots-${idx}`}
+                      className="w-8 h-9 flex items-center justify-center text-gray-400 font-semibold select-none"
+                    >
                       ...
                     </span>
                   );
@@ -328,7 +297,6 @@ export default function PublicNewsListPage() {
             </button>
           </div>
         )}
-
       </div>
     </div>
   );

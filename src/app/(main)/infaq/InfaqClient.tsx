@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { submitInfaq } from "@/actions/infaq";
 import Image from "next/image";
+import { infaqDictionary, InfaqLanguage } from "@/lib/i18n/infaq";
 
 type KampanyeOption = {
   id: string;
@@ -16,6 +17,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
   const kampanyeIdFromUrl = searchParams.get("kampanyeId");
   const programFromUrl = searchParams.get("program");
 
+  const [lang, setLang] = useState<InfaqLanguage>("id");
   const [tipePembayar, setTipePembayar] = useState<"masyarakat" | "dosen">("masyarakat");
   const [selectedKampanyeId, setSelectedKampanyeId] = useState<string>("");
   const [jenisInfaq, setJenisInfaq] = useState<string>("Infak Umum / Sedekah Sukarela");
@@ -33,6 +35,19 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
 
+  useEffect(() => {
+    const readLang = () => {
+      const saved = (localStorage.getItem("app_lang") ||
+        localStorage.getItem("program_lang")) as InfaqLanguage;
+      if (saved && ["id", "en", "ar"].includes(saved)) {
+        setLang(saved);
+      }
+    };
+    readLang();
+    window.addEventListener("languageChange", readLang);
+    return () => window.removeEventListener("languageChange", readLang);
+  }, []);
+
   // Sync selected Kampanye from URL parameter if provided
   useEffect(() => {
     if (kampanyeIdFromUrl) {
@@ -42,7 +57,9 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
         setJenisInfaq(found.judul);
       }
     } else if (programFromUrl) {
-      const found = programs.find((p) => p.judul.toLowerCase() === programFromUrl.toLowerCase());
+      const found = programs.find(
+        (p) => p.judul.toLowerCase() === programFromUrl.toLowerCase()
+      );
       if (found) {
         setSelectedKampanyeId(found.id);
         setJenisInfaq(found.judul);
@@ -58,18 +75,14 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
       setJenisInfaq("Infak Umum / Sedekah Sukarela");
     } else {
       const selected = programs.find((p) => p.id === value);
-      if (selected) {
-        setJenisInfaq(selected.judul);
-      }
+      if (selected) setJenisInfaq(selected.judul);
     }
   };
 
   const handleTipeSwitch = (tipe: "dosen" | "masyarakat") => {
     setTipePembayar(tipe);
     setErrorMsg("");
-    if (tipe === "dosen") {
-      setIsHambaAllah(false);
-    }
+    if (tipe === "dosen") setIsHambaAllah(false);
   };
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -80,46 +93,49 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
     try {
       await submitInfaq(formData);
     } catch (err: any) {
-      setErrorMsg(err.message || "Terjadi kesalahan saat memproses infaq.");
+      setErrorMsg(err.message || t.errorDefault);
       setSubmitting(false);
     }
   };
 
   const handleHambaAllahChange = (checked: boolean) => {
     setIsHambaAllah(checked);
-    if (checked) {
-      setNama("Hamba Allah");
-    } else {
-      setNama("");
-    }
+    setNama(checked ? "Hamba Allah" : "");
   };
 
+  const t = infaqDictionary[lang] || infaqDictionary.id;
+  const isRtl = lang === "ar";
   const selectedKampanyeObj = programs.find((p) => p.id === selectedKampanyeId);
 
   return (
-    <main className="flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full font-sans">
+    <main
+      className={`flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full font-sans ${isRtl ? "rtl" : ""}`}
+      dir={isRtl ? "rtl" : "ltr"}
+    >
       {/* Selector Tab Tipe Pembayar */}
       <div className="text-center mb-8">
         <div className="inline-flex rounded-xl p-1 bg-gray-200/80 shadow-inner">
           <button
             type="button"
             onClick={() => handleTipeSwitch("dosen")}
-            className={`text-xs sm:text-sm font-extrabold px-8 py-2.5 rounded-lg transition-all cursor-pointer ${tipePembayar === "dosen"
-              ? "bg-[#FFBB0C] text-[#000] shadow-sm"
-              : "text-gray-600 hover:text-[#000]"
-              }`}
+            className={`text-xs sm:text-sm font-extrabold px-8 py-2.5 rounded-lg transition-all cursor-pointer ${
+              tipePembayar === "dosen"
+                ? "bg-[#FFBB0C] text-[#000] shadow-sm"
+                : "text-gray-600 hover:text-[#000]"
+            }`}
           >
-            Dosen / Pegawai USK
+            {t.tipeDosen}
           </button>
           <button
             type="button"
             onClick={() => handleTipeSwitch("masyarakat")}
-            className={`text-xs sm:text-sm font-extrabold px-8 py-2.5 rounded-lg transition-all cursor-pointer ${tipePembayar === "masyarakat"
-              ? "bg-[#FFBB0C] text-[#000] shadow-sm"
-              : "text-gray-600 hover:text-[#000]"
-              }`}
+            className={`text-xs sm:text-sm font-extrabold px-8 py-2.5 rounded-lg transition-all cursor-pointer ${
+              tipePembayar === "masyarakat"
+                ? "bg-[#FFBB0C] text-[#000] shadow-sm"
+                : "text-gray-600 hover:text-[#000]"
+            }`}
           >
-            Masyarakat Umum
+            {t.tipeMasyarakat}
           </button>
         </div>
       </div>
@@ -143,16 +159,18 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
             )}
 
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h3 className="text-lg font-black text-[#000]">Formulir Pembayaran Infaq</h3>
+              <h3 className={`text-lg font-black text-[#000] ${isRtl ? "font-serif" : ""}`}>
+                {t.formTitle}
+              </h3>
               <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-[#000] uppercase">
-                {tipePembayar}
+                {tipePembayar === "dosen" ? t.tipeDosen : t.tipeMasyarakat}
               </span>
             </div>
 
             {/* Kategori Infaq / Kampanye Selector */}
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                Kategori Program Infaq <span className="text-red-500">*</span>
+                {t.kategoriLabel} <span className="text-red-500">*</span>
               </label>
               <select
                 value={selectedKampanyeId ? selectedKampanyeId : jenisInfaq}
@@ -168,12 +186,12 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                 required
                 className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white font-medium"
               >
-                <optgroup label="Infaq Bebas (Rutin / Umum)">
-                  <option value="Infak Umum">Infak Umum</option>
-                  <option value="Komunitas Infaq Rutin">Komunitas Infaq Rutin</option>
+                <optgroup label={t.groupBebas}>
+                  <option value="Infak Umum / Sedekah Sukarela">{t.infakUmum}</option>
+                  <option value="Komunitas Infaq Rutin">{t.komunitas}</option>
                 </optgroup>
                 {programs.length > 0 && (
-                  <optgroup label="Infaq Terikat (Kampanye Khusus)">
+                  <optgroup label={t.groupTerikat}>
                     {programs.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.judul}
@@ -183,18 +201,18 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                 )}
               </select>
 
-              {/* Indicator badge for selected Kampanye */}
+              {/* Indicator badge */}
               {selectedKampanyeObj ? (
                 <div className="mt-2 text-xs p-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl flex items-center gap-1.5 font-medium">
                   <span>🔗</span>
                   <span>
-                    Infaq Terikat Kampanye: <strong>{selectedKampanyeObj.judul}</strong>
+                    {t.badgeTerikat} <strong>{selectedKampanyeObj.judul}</strong>
                   </span>
                 </div>
               ) : (
                 <div className="mt-2 text-xs p-2 bg-blue-50 border border-blue-100 text-blue-700 rounded-xl flex items-center gap-1.5 font-medium">
                   <span>🔓</span>
-                  <span>Infaq Bebas (Bebas Disalurkan)</span>
+                  <span>{t.badgeBebas}</span>
                 </div>
               )}
             </div>
@@ -202,7 +220,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
             {/* Jumlah Infaq */}
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                Jumlah Infaq <span className="text-red-500">*</span>
+                {t.jumlahLabel} <span className="text-red-500">*</span>
               </label>
               <div className="flex rounded-xl shadow-2xs overflow-hidden border border-gray-300 focus-within:border-[#005621]">
                 <span className="inline-flex items-center px-4 bg-gray-100 text-gray-600 text-xs font-bold border-r border-gray-300">
@@ -214,17 +232,17 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                   value={jumlahInfaq}
                   onChange={(e) => setJumlahInfaq(e.target.value)}
                   required
-                  placeholder="Jumlah infaq yang ingin disalurkan"
+                  placeholder={t.jumlahPlaceholder}
                   className="flex-1 block w-full px-3.5 py-2.5 text-sm focus:outline-none bg-white"
                 />
               </div>
             </div>
 
-            {/* Opsi Dosen: NIP (Nama, Email, Alamat diambil otomatis dari tabel Dosen) */}
+            {/* Dosen: NIP — Masyarakat: Nama/Email/Alamat */}
             {tipePembayar === "dosen" ? (
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  NIP / NIDN <span className="text-red-500">*</span>
+                  {t.nipLabel} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -232,7 +250,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                   value={nip}
                   onChange={(e) => setNip(e.target.value)}
                   required
-                  placeholder="Masukkan Nomor Induk Pegawai / Dosen USK"
+                  placeholder={t.nipPlaceholder}
                   className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white font-mono"
                 />
               </div>
@@ -241,7 +259,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                 {/* Nama Lengkap */}
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                    Nama Lengkap <span className="text-red-500">*</span>
+                    {t.namaLabel} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -250,9 +268,10 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                     onChange={(e) => setNama(e.target.value)}
                     readOnly={isHambaAllah}
                     required
-                    placeholder="Nama Lengkap Donatur"
-                    className={`w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] ${isHambaAllah ? "bg-gray-100 text-gray-500" : "bg-white"
-                      }`}
+                    placeholder={t.namaPlaceholder}
+                    className={`w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] ${
+                      isHambaAllah ? "bg-gray-100 text-gray-500" : "bg-white"
+                    }`}
                   />
                 </div>
 
@@ -267,33 +286,40 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                     onChange={(e) => handleHambaAllahChange(e.target.checked)}
                     className="w-4 h-4 text-[#000] rounded focus:ring-[#005621] cursor-pointer"
                   />
-                  <label htmlFor="anon-check-infaq" className="text-xs text-gray-600 font-semibold cursor-pointer">
-                    Sembunyikan nama saya (Hamba Allah)
+                  <label
+                    htmlFor="anon-check-infaq"
+                    className="text-xs text-gray-600 font-semibold cursor-pointer"
+                  >
+                    {t.hambaAllahLabel}
                   </label>
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">Email</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                    {t.emailLabel}
+                  </label>
                   <input
                     type="email"
                     name="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Contoh: nama@gmail.com"
+                    placeholder={t.emailPlaceholder}
                     className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white"
                   />
                 </div>
 
                 {/* Alamat */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">Alamat</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                    {t.alamatLabel}
+                  </label>
                   <input
                     type="text"
                     name="alamat"
                     value={alamat}
                     onChange={(e) => setAlamat(e.target.value)}
-                    placeholder="Alamat Tinggal / Domisili"
+                    placeholder={t.alamatPlaceholder}
                     className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white"
                   />
                 </div>
@@ -302,13 +328,15 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
 
             {/* No. Telepon */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">No. Telepon / WhatsApp</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                {t.noHpLabel}
+              </label>
               <input
                 type="text"
                 name="no_hp"
                 value={noHp}
                 onChange={(e) => setNoHp(e.target.value)}
-                placeholder="Contoh: 08123456789"
+                placeholder={t.noHpPlaceholder}
                 className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white"
               />
             </div>
@@ -324,20 +352,25 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                 onChange={(e) => setBersediaDihubungi(e.target.checked)}
                 className="w-4 h-4 text-[#000] rounded focus:ring-[#005621] mt-0.5 cursor-pointer"
               />
-              <label htmlFor="agree-contact-infaq" className="text-xs text-gray-600 leading-snug cursor-pointer">
-                Bersedia dihubungi oleh Rumah Amal USK mengenai update penggunaan infaq
+              <label
+                htmlFor="agree-contact-infaq"
+                className="text-xs text-gray-600 leading-snug cursor-pointer"
+              >
+                {t.bersediaDihubungiLabel}
               </label>
             </div>
 
-            {/* Pesan */}
+            {/* Pesan / Doa */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Doa / Harapan</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                {t.pesanLabel}
+              </label>
               <textarea
                 name="pesan"
                 rows={3}
                 value={pesan}
                 onChange={(e) => setPesan(e.target.value)}
-                placeholder="Tulis doa atau niat baik untuk keberkahan infaq ini..."
+                placeholder={t.pesanPlaceholder}
                 className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white"
               />
             </div>
@@ -345,8 +378,8 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
 
           {/* Kolom Kanan: Metode Pembayaran */}
           <div className="lg:col-span-4 bg-white p-6 sm:p-7 rounded-2xl shadow-md border border-gray-100 space-y-5">
-            <h3 className="text-lg font-black text-[#000] border-b border-gray-100 pb-3">
-              Metode Pembayaran
+            <h3 className={`text-lg font-black text-[#000] border-b border-gray-100 pb-3 ${isRtl ? "font-serif" : ""}`}>
+              {t.paymentMethodTitle}
             </h3>
 
             {/* Card Scan QRIS */}
@@ -358,32 +391,36 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                   width={97.2}
                   height={112.2}
                   priority
-                  className={`h-48 sm:h-52 w-auto object-contain transition-all`}
+                  className="h-48 sm:h-52 w-auto object-contain transition-all"
                 />
               </div>
-              <p className="text-[11px] text-gray-500 mt-3">
-                Transfer via Bank BSI No. Rek <strong>7099400409</strong> a.n. Rumah Amal Mesjid Unsyiah
-              </p>
+              <p className="text-[11px] text-gray-500 mt-3">{t.qrisNote}</p>
             </div>
 
             {/* Upload Bukti Pembayaran */}
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Upload Bukti Transfer / Pembayaran</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                {t.uploadLabel}
+              </label>
               <div className="flex items-center justify-between border border-gray-300 rounded-xl p-2 bg-gray-50/80">
                 <input
                   type="file"
                   id="bukti-infaq"
                   name="bukti_pembayaran"
                   className="hidden"
-                  onChange={(e) => setFileName(e.target.files?.[0]?.name || "File...")}
+                  onChange={(e) =>
+                    setFileName(e.target.files?.[0]?.name || t.chooseFileBtn)
+                  }
                 />
-                <span className="text-xs text-gray-500 truncate px-2 max-w-[200px]">{fileName}</span>
+                <span className="text-xs text-gray-500 truncate px-2 max-w-[200px]">
+                  {fileName}
+                </span>
                 <button
                   type="button"
                   onClick={() => document.getElementById("bukti-infaq")?.click()}
                   className="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-bold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
                 >
-                  Pilih File...
+                  {t.chooseFileBtn}
                 </button>
               </div>
             </div>
@@ -400,8 +437,11 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                 required
                 className="w-4 h-4 text-[#000] rounded focus:ring-[#005621] mt-0.5 cursor-pointer"
               />
-              <label htmlFor="terms-infaq" className="text-xs text-gray-600 leading-snug cursor-pointer">
-                Saya menyetujui syarat dan ketentuan infaq di Rumah Amal USK
+              <label
+                htmlFor="terms-infaq"
+                className="text-xs text-gray-600 leading-snug cursor-pointer"
+              >
+                {t.termsLabel}
               </label>
             </div>
 
@@ -411,7 +451,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
               disabled={submitting}
               className="w-full bg-[#FFBB0C] hover:bg-[#e8b500] text-[#000] font-black py-3.5 rounded-xl text-sm shadow-md transition-all duration-200 hover:shadow-lg cursor-pointer disabled:opacity-50"
             >
-              {submitting ? "Memproses Infaq..." : "Lanjutkan Pembayaran Infaq"}
+              {submitting ? t.submittingBtn : t.submitBtn}
             </button>
           </div>
         </form>

@@ -13,15 +13,18 @@ export function fixProperNouns(text: string, targetLang: 'en' | 'ar'): string {
     result = result.replace(/Jamik Mosque/gi, 'Masjid Jamik USK');
   } else if (targetLang === 'ar') {
     // Arabic proper noun & institutional name rules
-    result = result.replace(/Charity House/gi, 'بيت المال (Rumah Amal)');
-    result = result.replace(/House of Charity/gi, 'بيت المال (Rumah Amal)');
-    result = result.replace(/دار الأعمال/g, 'بيت المال (Rumah Amal)');
-    result = result.replace(/منزل الأعمال/g, 'بيت المال (Rumah Amal)');
-    result = result.replace(/بيت الأعمال/g, 'بيت المال (Rumah Amal)');
-    result = result.replace(/بيت صدقة/g, 'بيت المال (Rumah Amal)');
+    // "Rumah Amal" is the official name — do NOT translate it
+    result = result.replace(/Charity House/gi, 'Rumah Amal');
+    result = result.replace(/House of Charity/gi, 'Rumah Amal');
+    result = result.replace(/دار الأعمال/g, 'Rumah Amal');
+    result = result.replace(/منزل الأعمال/g, 'Rumah Amal');
+    result = result.replace(/بيت الأعمال/g, 'Rumah Amal');
+    result = result.replace(/بيت صدقة/g, 'Rumah Amal');
+    result = result.replace(/بيت المال \(Rumah Amal\)/g, 'Rumah Amal');
+    result = result.replace(/بيت المال/g, 'Rumah Amal');
     result = result.replace(/روماه أمل/g, 'Rumah Amal USK');
-    result = result.replace(/جامعة سياه كوالا/g, 'جامعة سياه كوالا (USK)');
-    result = result.replace(/المسجد الجامع/g, 'المسجد الجامع (Masjid Jamik USK)');
+    result = result.replace(/جامعة سياه كوالا/g, 'Universitas Syiah Kuala (USK)');
+    result = result.replace(/المسجد الجامع/g, 'Masjid Jamik USK');
   }
 
   return result;
@@ -34,6 +37,41 @@ export async function autoTranslate(
 ): Promise<string> {
   if (!text || !text.trim()) return text;
 
+  const apiKey = process.env.DEEPL_API_KEY;
+
+  if (apiKey) {
+    try {
+      const endpoint = apiKey.endsWith(':fx')
+        ? 'https://api-free.deepl.com/v2/translate'
+        : 'https://api.deepl.com/v2/translate';
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `DeepL-Auth-Key ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: [text],
+          target_lang: targetLang.toUpperCase(),
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const translated = data.translations?.[0]?.text;
+        if (translated) {
+          return fixProperNouns(translated, targetLang);
+        }
+      } else {
+        console.warn(`[DeepL API Warning ${res.status}] Falling back to Google Translate...`);
+      }
+    } catch (error) {
+      console.error('DeepL translation error, falling back to Google:', error);
+    }
+  }
+
+  // Fallback to Google Translate if DeepL is unavailable
   try {
     const res = await fetch(
       `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(
@@ -51,7 +89,7 @@ export async function autoTranslate(
 
     return fixProperNouns(translated, targetLang);
   } catch (error) {
-    console.error('Translation error:', error);
+    console.error('Google Translation error:', error);
     return text;
   }
 }

@@ -217,11 +217,25 @@ export default function PublicAnnouncementDetailPage({
   if (!announcement) {
     return (
       <div className="min-h-screen bg-white py-16 px-4 text-center font-sans">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Pengumuman Tidak Ditemukan</h2>
-        <p className="text-gray-500 mb-6">Pengumuman yang Anda cari tidak tersedia atau telah dihapus.</p>
-        <Link href="/" className="px-5 py-2.5 bg-[#0b6330] text-white font-bold rounded-xl text-sm">
-          Kembali ke Beranda
-        </Link>
+        <div className="max-w-md mx-auto bg-gray-50 p-8 rounded-2xl border border-gray-200">
+          <span className="text-4xl mb-3 block">📢</span>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">
+            {lang === 'ar' ? 'الإعلان غير موجود' : lang === 'en' ? 'Announcement Not Found' : 'Pengumuman Tidak Ditemukan'}
+          </h2>
+          <p className="text-sm text-gray-500 mb-6">
+            {lang === 'ar'
+              ? 'الإعلان الذي تبحث عنه غير متوفر أو تم حذفه.'
+              : lang === 'en'
+              ? 'The announcement you are looking for is not available or has been deleted.'
+              : 'Pengumuman yang Anda cari tidak tersedia atau telah dihapus.'}
+          </p>
+          <Link
+            href="/"
+            className="px-5 py-2.5 bg-[#0b6330] text-white font-bold rounded-xl text-sm inline-block hover:bg-[#074722] transition-colors"
+          >
+            {lang === 'ar' ? 'العودة إلى الرئيسية' : lang === 'en' ? 'Back to Home' : 'Kembali ke Beranda'}
+          </Link>
+        </div>
       </div>
     );
   }
@@ -407,7 +421,9 @@ export default function PublicAnnouncementDetailPage({
 
               {/* List Komentar */}
               {loadingComments ? (
-                <div className="text-sm text-gray-400 py-4 animate-pulse">Memuat komentar…</div>
+                <div className="text-sm text-gray-400 py-4 animate-pulse">
+                  {lang === 'ar' ? 'جاري تحميل التعليقات...' : lang === 'en' ? 'Loading comments...' : 'Memuat komentar…'}
+                </div>
               ) : comments.length === 0 ? (
                 <div className="text-center py-8 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200 text-sm">
                   {lang === 'ar' ? 'لا يوجد تعليقات حتى الآن.' : lang === 'en' ? 'No comments yet. Be the first to comment!' : 'Belum ada komentar. Jadilah yang pertama memberikan komentar!'}

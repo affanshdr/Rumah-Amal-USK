@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { deleteStorageFileByUrl } from '@/lib/supabase';
+import { autoTranslateAll } from '@/lib/translate';
 import { revalidatePath } from 'next/cache';
 
 export async function getPaginatedDocuments(page: number = 1, limit: number = 5) {
@@ -47,6 +48,18 @@ export async function deleteDocumentAction(id: string) {
 }
 
 export async function updateDocumentAction(id: string, data: { judul: string; judulEn?: string; judulAr?: string; pdfUrl: string; imageUrl?: string }) {
+  let { judulEn, judulAr } = data;
+
+  if (!judulEn || !judulAr) {
+    try {
+      const translated = await autoTranslateAll({ title: data.judul });
+      if (!judulEn) judulEn = translated.titleEn || undefined;
+      if (!judulAr) judulAr = translated.titleAr || undefined;
+    } catch (err) {
+      console.error('Auto translate document action error:', err);
+    }
+  }
+
   const existing = await prisma.document.findUnique({
     where: { id },
     select: { imageUrl: true, pdfUrl: true },
@@ -63,8 +76,8 @@ export async function updateDocumentAction(id: string, data: { judul: string; ju
     where: { id },
     data: {
       judul: data.judul,
-      ...(data.judulEn !== undefined && { judulEn: data.judulEn || null }),
-      ...(data.judulAr !== undefined && { judulAr: data.judulAr || null }),
+      ...(judulEn !== undefined && { judulEn: judulEn || null }),
+      ...(judulAr !== undefined && { judulAr: judulAr || null }),
       pdfUrl: data.pdfUrl,
       ...(data.imageUrl && { imageUrl: data.imageUrl }),
     },

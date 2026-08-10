@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { deleteStorageFileByUrl } from '@/lib/supabase';
+import { autoTranslateAll } from '@/lib/translate';
 import { revalidatePath } from 'next/cache';
 
 export async function getKampanye() {
@@ -46,7 +47,11 @@ export async function getPaginatedKampanye(page: number = 1, limit: number = 5) 
 
 export async function addKampanye(formData: FormData) {
   const judul = (formData.get('judul') as string).trim();
+  let judulAr = (formData.get('judulAr') as string | null)?.trim() || null;
+  let judulEn = (formData.get('judulEn') as string | null)?.trim() || null;
   const deskripsi = (formData.get('deskripsi') as string | null)?.trim() || null;
+  let deskripsiAr = (formData.get('deskripsiAr') as string | null)?.trim() || null;
+  let deskripsiEn = (formData.get('deskripsiEn') as string | null)?.trim() || null;
   const targetDanaStr = formData.get('targetDana') as string;
   const targetDana = targetDanaStr ? Number(targetDanaStr) : null;
   const terkumpulStr = formData.get('terkumpul') as string;
@@ -60,10 +65,31 @@ export async function addKampanye(formData: FormData) {
     throw new Error('Judul kampanye wajib diisi');
   }
 
+  if (!judulEn || !judulAr || (deskripsi && (!deskripsiEn || !deskripsiAr))) {
+    try {
+      const translated = await autoTranslateAll({
+        title: judul,
+        content: deskripsi || '',
+      });
+      if (!judulEn) judulEn = translated.titleEn || null;
+      if (!judulAr) judulAr = translated.titleAr || null;
+      if (deskripsi) {
+        if (!deskripsiEn) deskripsiEn = translated.contentEn || null;
+        if (!deskripsiAr) deskripsiAr = translated.contentAr || null;
+      }
+    } catch (err) {
+      console.error('Auto translate kampanye error:', err);
+    }
+  }
+
   await prisma.kampanye.create({
     data: {
       judul,
+      judulAr,
+      judulEn,
       deskripsi,
+      deskripsiAr,
+      deskripsiEn,
       imageUrl: imageUrl || '',
       targetDana,
       terkumpul,
@@ -82,7 +108,11 @@ export async function addKampanye(formData: FormData) {
 export async function updateKampanye(formData: FormData) {
   const id = formData.get('id') as string;
   const judul = (formData.get('judul') as string).trim();
+  let judulAr = (formData.get('judulAr') as string | null)?.trim() || null;
+  let judulEn = (formData.get('judulEn') as string | null)?.trim() || null;
   const deskripsi = (formData.get('deskripsi') as string | null)?.trim() || null;
+  let deskripsiAr = (formData.get('deskripsiAr') as string | null)?.trim() || null;
+  let deskripsiEn = (formData.get('deskripsiEn') as string | null)?.trim() || null;
   const targetDanaStr = formData.get('targetDana') as string;
   const targetDana = targetDanaStr ? Number(targetDanaStr) : null;
   const terkumpulStr = formData.get('terkumpul') as string;
@@ -94,6 +124,23 @@ export async function updateKampanye(formData: FormData) {
 
   if (!id || !judul) {
     throw new Error('ID dan judul kampanye wajib diisi');
+  }
+
+  if (!judulEn || !judulAr || (deskripsi && (!deskripsiEn || !deskripsiAr))) {
+    try {
+      const translated = await autoTranslateAll({
+        title: judul,
+        content: deskripsi || '',
+      });
+      if (!judulEn) judulEn = translated.titleEn || null;
+      if (!judulAr) judulAr = translated.titleAr || null;
+      if (deskripsi) {
+        if (!deskripsiEn) deskripsiEn = translated.contentEn || null;
+        if (!deskripsiAr) deskripsiAr = translated.contentAr || null;
+      }
+    } catch (err) {
+      console.error('Auto translate kampanye update error:', err);
+    }
   }
 
   const existingKampanye = await prisma.kampanye.findUnique({
@@ -113,7 +160,11 @@ export async function updateKampanye(formData: FormData) {
     where: { id },
     data: {
       judul,
+      judulAr,
+      judulEn,
       deskripsi,
+      deskripsiAr,
+      deskripsiEn,
       ...(imageUrl && { imageUrl }),
       targetDana,
       ...(terkumpul !== undefined && { terkumpul }),

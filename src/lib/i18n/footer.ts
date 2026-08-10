@@ -25,7 +25,7 @@ export const footerDictionary = {
     waLabel: 'WA:',
     emailLabel: 'Email:',
     linksLabel: 'Links:',
-    universityLink: 'Syiah Kuala University',
+    universityLink: 'Syiah Kuala University (USK)',
     faqLabel: 'FAQ',
     ctaBtn: 'Submit Complaint',
     mapTitle: 'Location of Rumah Amal Jamik Mosque USK',
@@ -43,7 +43,7 @@ export const footerDictionary = {
     universityLink: 'جامعة سياه كوالا (USK)',
     faqLabel: 'الأسئلة الشائعة',
     ctaBtn: 'تقديم شكوى',
-    mapTitle: 'موقع بيت المال بمسجد جامعة سياه كوالا',
+    mapTitle: 'موقع Rumah Amal – Masjid Jamik USK',
     copyright: 'حقوق الطبع والنشر © 2025 Rumah Amal USK. جميع الحقوق محفوظة.',
   },
 };

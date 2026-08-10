@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/prisma';
 import { deleteStorageFileByUrl } from '@/lib/supabase';
+import { autoTranslateAll } from '@/lib/translate';
 import { revalidatePath } from 'next/cache';
 
 function generateSlug(title: string): string {
@@ -104,20 +105,38 @@ export async function getPaginatedPrograms(page: number = 1, limit: number = 5) 
 
 export async function addProgram(formData: FormData) {
   const title = (formData.get('title') as string).trim();
-  const titleAr = (formData.get('titleAr') as string | null)?.trim() || null;
-  const titleEn = (formData.get('titleEn') as string | null)?.trim() || null;
+  let titleAr = (formData.get('titleAr') as string | null)?.trim() || null;
+  let titleEn = (formData.get('titleEn') as string | null)?.trim() || null;
   const category = (formData.get('category') as string | null)?.trim() || 'PENDIDIKAN';
   const excerpt = (formData.get('excerpt') as string | null)?.trim() || null;
-  const excerptAr = (formData.get('excerptAr') as string | null)?.trim() || null;
-  const excerptEn = (formData.get('excerptEn') as string | null)?.trim() || null;
+  let excerptAr = (formData.get('excerptAr') as string | null)?.trim() || null;
+  let excerptEn = (formData.get('excerptEn') as string | null)?.trim() || null;
   const coverImageUrl = (formData.get('coverImageUrl') as string | null)?.trim() || null;
   const content = (formData.get('content') as string | null)?.trim() || '';
-  const contentAr = (formData.get('contentAr') as string | null)?.trim() || null;
-  const contentEn = (formData.get('contentEn') as string | null)?.trim() || null;
+  let contentAr = (formData.get('contentAr') as string | null)?.trim() || null;
+  let contentEn = (formData.get('contentEn') as string | null)?.trim() || null;
   const publishedAtRaw = formData.get('publishedAt') as string | null;
   const published = formData.get('published') === '1';
 
   if (!title) throw new Error('Judul program tidak boleh kosong.');
+
+  if (!titleEn || !titleAr || !contentEn || !contentAr || !excerptEn || !excerptAr) {
+    try {
+      const translated = await autoTranslateAll({
+        title,
+        excerpt: excerpt || '',
+        content,
+      });
+      if (!titleEn) titleEn = translated.titleEn || null;
+      if (!titleAr) titleAr = translated.titleAr || null;
+      if (!excerptEn) excerptEn = translated.excerptEn || null;
+      if (!excerptAr) excerptAr = translated.excerptAr || null;
+      if (!contentEn) contentEn = translated.contentEn || null;
+      if (!contentAr) contentAr = translated.contentAr || null;
+    } catch (err) {
+      console.error('Auto translate program error:', err);
+    }
+  }
 
   const baseSlug = generateSlug(title);
   const slug = await uniqueSlug(baseSlug);
@@ -150,20 +169,38 @@ export async function addProgram(formData: FormData) {
 export async function updateProgram(formData: FormData) {
   const id = formData.get('id') as string;
   const title = (formData.get('title') as string).trim();
-  const titleAr = (formData.get('titleAr') as string | null)?.trim() || null;
-  const titleEn = (formData.get('titleEn') as string | null)?.trim() || null;
+  let titleAr = (formData.get('titleAr') as string | null)?.trim() || null;
+  let titleEn = (formData.get('titleEn') as string | null)?.trim() || null;
   const category = (formData.get('category') as string | null)?.trim() || 'PENDIDIKAN';
   const excerpt = (formData.get('excerpt') as string | null)?.trim() || null;
-  const excerptAr = (formData.get('excerptAr') as string | null)?.trim() || null;
-  const excerptEn = (formData.get('excerptEn') as string | null)?.trim() || null;
+  let excerptAr = (formData.get('excerptAr') as string | null)?.trim() || null;
+  let excerptEn = (formData.get('excerptEn') as string | null)?.trim() || null;
   const coverImageUrl = (formData.get('coverImageUrl') as string | null)?.trim() || null;
   const content = (formData.get('content') as string | null)?.trim() || '';
-  const contentAr = (formData.get('contentAr') as string | null)?.trim() || null;
-  const contentEn = (formData.get('contentEn') as string | null)?.trim() || null;
+  let contentAr = (formData.get('contentAr') as string | null)?.trim() || null;
+  let contentEn = (formData.get('contentEn') as string | null)?.trim() || null;
   const publishedAtRaw = formData.get('publishedAt') as string | null;
   const published = formData.get('published') === '1';
 
   if (!id || !title) throw new Error('ID dan judul program tidak boleh kosong.');
+
+  if (!titleEn || !titleAr || !contentEn || !contentAr || !excerptEn || !excerptAr) {
+    try {
+      const translated = await autoTranslateAll({
+        title,
+        excerpt: excerpt || '',
+        content,
+      });
+      if (!titleEn) titleEn = translated.titleEn || null;
+      if (!titleAr) titleAr = translated.titleAr || null;
+      if (!excerptEn) excerptEn = translated.excerptEn || null;
+      if (!excerptAr) excerptAr = translated.excerptAr || null;
+      if (!contentEn) contentEn = translated.contentEn || null;
+      if (!contentAr) contentAr = translated.contentAr || null;
+    } catch (err) {
+      console.error('Auto translate program update error:', err);
+    }
+  }
 
   const existingProgram = await prisma.program.findUnique({
     where: { id },

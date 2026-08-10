@@ -128,8 +128,8 @@ export default function Home() {
       try {
         const [kampanyeRes, newsRes, annRes, newsletterRes] = await Promise.all([
           fetch('/api/kampanye'),
-          fetch('/api/news'),
-          fetch('/api/announcements'),
+          fetch('/api/news?limit=5'),
+          fetch('/api/announcements?limit=5'),
           fetch('/api/newsletter?limit=3'),
         ]);
 
@@ -586,7 +586,7 @@ export default function Home() {
                     {dict.sections.rekeningLabel} <span className="text-[#0b6330]">7099400409</span>
                   </span>
                   <span className="font-bold">
-                    {dict.sections.anLabel} <span className="text-[#0b6330]">Rumah Amal Mesjid Unsyiah</span>
+                    {dict.sections.anLabel} <span className="text-[#0b6330]">Rumah Amal Masjid Jamik USK</span>
                   </span>
                 </div>
               </div>
