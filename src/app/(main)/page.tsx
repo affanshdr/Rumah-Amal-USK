@@ -586,7 +586,7 @@ export default function Home() {
                     {dict.sections.rekeningLabel} <span className="text-[#0b6330]">7099400409</span>
                   </span>
                   <span className="font-bold">
-                    {dict.sections.anLabel} <span className="text-[#0b6330]">Rumah Amal Mesjid Unsyiah</span>
+                    {dict.sections.anLabel} <span className="text-[#0b6330]">Rumah Amal Masjid Jamik USK</span>
                   </span>
                 </div>
               </div>

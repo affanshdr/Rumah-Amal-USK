@@ -13,15 +13,18 @@ export function fixProperNouns(text: string, targetLang: 'en' | 'ar'): string {
     result = result.replace(/Jamik Mosque/gi, 'Masjid Jamik USK');
   } else if (targetLang === 'ar') {
     // Arabic proper noun & institutional name rules
-    result = result.replace(/Charity House/gi, 'بيت المال (Rumah Amal)');
-    result = result.replace(/House of Charity/gi, 'بيت المال (Rumah Amal)');
-    result = result.replace(/دار الأعمال/g, 'بيت المال (Rumah Amal)');
-    result = result.replace(/منزل الأعمال/g, 'بيت المال (Rumah Amal)');
-    result = result.replace(/بيت الأعمال/g, 'بيت المال (Rumah Amal)');
-    result = result.replace(/بيت صدقة/g, 'بيت المال (Rumah Amal)');
+    // "Rumah Amal" is the official name — do NOT translate it
+    result = result.replace(/Charity House/gi, 'Rumah Amal');
+    result = result.replace(/House of Charity/gi, 'Rumah Amal');
+    result = result.replace(/دار الأعمال/g, 'Rumah Amal');
+    result = result.replace(/منزل الأعمال/g, 'Rumah Amal');
+    result = result.replace(/بيت الأعمال/g, 'Rumah Amal');
+    result = result.replace(/بيت صدقة/g, 'Rumah Amal');
+    result = result.replace(/بيت المال \(Rumah Amal\)/g, 'Rumah Amal');
+    result = result.replace(/بيت المال/g, 'Rumah Amal');
     result = result.replace(/روماه أمل/g, 'Rumah Amal USK');
-    result = result.replace(/جامعة سياه كوالا/g, 'جامعة سياه كوالا (USK)');
-    result = result.replace(/المسجد الجامع/g, 'المسجد الجامع (Masjid Jamik USK)');
+    result = result.replace(/جامعة سياه كوالا/g, 'Universitas Syiah Kuala (USK)');
+    result = result.replace(/المسجد الجامع/g, 'Masjid Jamik USK');
   }
 
   return result;

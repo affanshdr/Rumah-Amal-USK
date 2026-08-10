@@ -2,6 +2,12 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import {
+  CATEGORIES_RAW,
+  CATEGORIES_TRANSLATED,
+  programDictionary,
+  ProgramLanguage,
+} from '@/lib/i18n/program';
 
 interface ProgramItem {
   id: string;
@@ -18,74 +24,29 @@ interface ProgramItem {
   createdAt: string;
 }
 
-type Language = 'id' | 'en' | 'ar';
-
-const CATEGORIES_RAW = [
-  'SEMUA',
-  'PENDIDIKAN',
-  'PEMBERDAYAAN',
-  'SOSIAL & KEMANUSIAAN',
-  'SYIAR & QURBAN',
-  'KEMITRAAN',
-  'FASILITATOR & RELAWAN',
-];
-
-const CATEGORIES_TRANSLATED: Record<Language, Record<string, string>> = {
-  id: {
-    'SEMUA': 'SEMUA',
-    'PENDIDIKAN': 'PENDIDIKAN',
-    'PEMBERDAYAAN': 'PEMBERDAYAAN',
-    'SOSIAL & KEMANUSIAAN': 'SOSIAL & KEMANUSIAAN',
-    'SYIAR & QURBAN': 'SYIAR & QURBAN',
-    'KEMITRAAN': 'KEMITRAAN',
-    'FASILITATOR & RELAWAN': 'FASILITATOR & RELAWAN',
-  },
-  en: {
-    'SEMUA': 'ALL CATEGORIES',
-    'PENDIDIKAN': 'EDUCATION',
-    'PEMBERDAYAAN': 'EMPOWERMENT',
-    'SOSIAL & KEMANUSIAAN': 'SOCIAL & HUMANITARIAN',
-    'SYIAR & QURBAN': 'DAW\'AH & QURBAN',
-    'KEMITRAAN': 'PARTNERSHIP',
-    'FASILITATOR & RELAWAN': 'FACILITATOR & VOLUNTEER',
-  },
-  ar: {
-    'SEMUA': 'جميع الفئات',
-    'PENDIDIKAN': 'التعليم',
-    'PEMBERDAYAAN': 'التمكين',
-    'SOSIAL & KEMANUSIAAN': 'اجتماعي وإنساني',
-    'SYIAR & QURBAN': 'الدعوة والأضاحي',
-    'KEMITRAAN': 'الشراكة',
-    'FASILITATOR & RELAWAN': 'الميسرون والمتطوعون',
-  },
-};
-
 export default function PublicProgramPage() {
   const [items, setItems] = useState<ProgramItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('SEMUA');
   const [page, setPage] = useState(1);
-  const [lang, setLang] = useState<Language>('id');
+  const [lang, setLang] = useState<ProgramLanguage>('id');
   const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
-    const savedLang = localStorage.getItem('program_lang') as Language;
+    const savedLang = (localStorage.getItem('app_lang') ||
+      localStorage.getItem('program_lang')) as ProgramLanguage;
     if (savedLang && ['id', 'en', 'ar'].includes(savedLang)) {
       setLang(savedLang);
     }
   }, []);
 
-  const changeLanguage = (newLang: Language) => {
-    setLang(newLang);
-    localStorage.setItem('program_lang', newLang);
-  };
-
   const fetchPrograms = useCallback(async () => {
     setLoading(true);
     try {
-      const url = selectedCategory !== 'SEMUA'
-        ? `/api/program?category=${encodeURIComponent(selectedCategory)}`
-        : '/api/program';
+      const url =
+        selectedCategory !== 'SEMUA'
+          ? `/api/program?category=${encodeURIComponent(selectedCategory)}`
+          : '/api/program';
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -124,30 +85,30 @@ export default function PublicProgramPage() {
     return item.title;
   };
 
-  return (
-    <div className={`min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
-      <div className="max-w-[1340px] mx-auto">
+  const t = programDictionary[lang] || programDictionary.id;
 
-        {/* Header & Breadcrumb & Language Switcher */}
+  return (
+    <div
+      className={`min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans ${
+        lang === 'ar' ? 'rtl' : 'ltr'
+      }`}
+      dir={lang === 'ar' ? 'rtl' : 'ltr'}
+    >
+      <div className="max-w-[1340px] mx-auto">
+        {/* Header & Breadcrumb */}
         <div className="my-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <nav className="flex items-center gap-2 text-sm text-gray-500 font-medium" dir="ltr">
               <Link href="/" className="hover:text-[#0b6330] transition-colors">
-                {lang === 'ar' ? 'الرئيسية' : lang === 'en' ? 'Home' : 'Beranda'}
+                {t.home}
               </Link>
               <span>/</span>
-              <span className="text-[#0b6330] font-bold">
-                {lang === 'ar' ? 'البرامج' : lang === 'en' ? 'Programs' : 'Program'}
-              </span>
+              <span className="text-[#0b6330] font-bold">{t.program}</span>
             </nav>
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[#333333] tracking-tight uppercase mb-4 text-center">
-            {lang === 'ar'
-              ? 'برامج Rumah Amal USK'
-              : lang === 'en'
-              ? 'RUMAH AMAL USK PROGRAMS'
-              : 'PROGRAM RUMAH AMAL USK'}
+            {t.pageTitle}
           </h1>
         </div>
 
@@ -170,7 +131,10 @@ export default function PublicProgramPage() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 animate-pulse mb-12">
             {[...Array(ITEMS_PER_PAGE)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden flex flex-col">
+              <div
+                key={i}
+                className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden flex flex-col"
+              >
                 <div className="bg-gray-200 aspect-[16/10] w-full"></div>
                 <div className="p-5 flex flex-col flex-1">
                   <div className="bg-gray-200 h-5 w-24 rounded-md mb-3"></div>
@@ -183,21 +147,13 @@ export default function PublicProgramPage() {
         ) : paginatedItems.length === 0 ? (
           /* Empty State */
           <div className="text-center py-16 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200 mb-12">
-            <p className="text-lg font-semibold mb-2">
-              {lang === 'ar' ? 'لم يتم العثور على برامج' : lang === 'en' ? 'No programs found' : 'Program tidak ditemukan'}
-            </p>
+            <p className="text-lg font-semibold mb-2">{t.notFoundTitle}</p>
             <p className="text-sm text-gray-400">
               {selectedCategory !== 'SEMUA'
-                ? (lang === 'ar'
-                    ? `لا توجد برامج متوفرة لهذه الفئة.`
-                    : lang === 'en'
-                    ? `No programs available for this category.`
-                    : `Belum ada program untuk kategori "${selectedCategory}".`)
-                : (lang === 'ar'
-                    ? 'لم يتم نشر أي برامج بعد.'
-                    : lang === 'en'
-                    ? 'No programs have been published yet.'
-                    : 'Belum ada program yang dipublikasikan.')}
+                ? `${t.notFoundCategory} "${
+                    CATEGORIES_TRANSLATED[lang]?.[selectedCategory] || selectedCategory
+                  }".`
+                : t.notFoundEmpty}
             </p>
           </div>
         ) : (
@@ -233,7 +189,7 @@ export default function PublicProgramPage() {
               disabled={page === 1}
               className="px-3 py-1.5 text-[#0b6330] hover:text-[#084823] disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              {lang === 'ar' ? 'التالي >' : '< Previous'}
+              {t.prev}
             </button>
 
             {(() => {
@@ -253,7 +209,10 @@ export default function PublicProgramPage() {
               return pages.map((p, idx) => {
                 if (typeof p === 'string') {
                   return (
-                    <span key={`dots-${idx}`} className="w-8 h-9 flex items-center justify-center text-gray-400 font-semibold select-none">
+                    <span
+                      key={`dots-${idx}`}
+                      className="w-8 h-9 flex items-center justify-center text-gray-400 font-semibold select-none"
+                    >
                       ...
                     </span>
                   );
@@ -280,11 +239,10 @@ export default function PublicProgramPage() {
               disabled={page === totalPages}
               className="px-3 py-1.5 text-[#0b6330] hover:text-[#084823] disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              {lang === 'ar' ? '< السابق' : 'Next >'}
+              {t.next}
             </button>
           </div>
         )}
-
       </div>
     </div>
   );
