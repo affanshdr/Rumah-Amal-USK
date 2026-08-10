@@ -32,6 +32,17 @@ interface AnnouncementSlide {
   createdAt?: string;
 }
 
+interface BannerSlide {
+  id: string;
+  title: string;
+  titleAr?: string | null;
+  titleEn?: string | null;
+  imageUrl: string;
+  linkUrl?: string | null;
+  order: number;
+  isActive: boolean;
+}
+
 interface NewsItem {
   id: string;
   title: string;
@@ -96,12 +107,16 @@ function RevealOnScroll({
 export default function Home() {
   const [lang, setLang] = useState<HomeLanguage>('id');
   const [currentSlide, setCurrentSlide] = useState(0);
+  const isHoveringSlider = useRef(false);
 
   const [kampanyes, setKampanyes] = useState<KampanyeItem[]>([]);
   const [loadingKampanye, setLoadingKampanye] = useState(true);
 
   const [announcements, setAnnouncements] = useState<AnnouncementSlide[]>([]);
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
+
+  const [banners, setBanners] = useState<BannerSlide[]>([]);
+  const [loadingBanners, setLoadingBanners] = useState(true);
 
   const [newsList, setNewsList] = useState<NewsItem[]>([]);
   const [loadingNews, setLoadingNews] = useState(true);
@@ -126,11 +141,12 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [kampanyeRes, newsRes, annRes, newsletterRes] = await Promise.all([
+        const [kampanyeRes, newsRes, annRes, newsletterRes, bannerRes] = await Promise.all([
           fetch('/api/kampanye'),
           fetch('/api/news?limit=5'),
-          fetch('/api/announcements?limit=5'),
+          fetch('/api/announcements?limit=4'),
           fetch('/api/newsletter?limit=3'),
+          fetch('/api/banner'),
         ]);
 
         if (kampanyeRes.ok) {
@@ -152,11 +168,17 @@ export default function Home() {
           const data = await newsletterRes.json();
           setNewsletters(data.items || []);
         }
+
+        if (bannerRes.ok) {
+          const data = await bannerRes.json();
+          setBanners(data.banners || []);
+        }
       } catch (err) {
         console.error('Error fetching home data:', err);
       } finally {
         setLoadingKampanye(false);
         setLoadingAnnouncements(false);
+        setLoadingBanners(false);
         setLoadingNews(false);
         setLoadingNewsletters(false);
       }
@@ -203,26 +225,27 @@ export default function Home() {
     }
   };
 
-  // Build active slides exclusively from items with valid images
-  const announcementSlides = announcements
-    .filter((item) => Boolean(item.coverImageUrl && item.coverImageUrl.trim() !== ''))
-    .map((item) => ({
-      id: `ann-${item.id}`,
-      title: getItemTitle(item),
-      imageUrl: item.coverImageUrl!,
-      href: item.slug ? `/pengumuman/${item.slug}` : '/pengumuman',
-    }));
+  // 1. Take strictly 1 latest announcement with cover image
+  const firstAnn = announcements.find((item) => Boolean(item.coverImageUrl && item.coverImageUrl.trim() !== ''));
+  const announcementSlides = firstAnn ? [{
+    id: `ann-${firstAnn.id}`,
+    title: getItemTitle(firstAnn),
+    imageUrl: firstAnn.coverImageUrl!,
+    href: firstAnn.slug ? `/pengumuman/${firstAnn.slug}` : '/pengumuman',
+  }] : [];
 
-  const kampanyeSlides = kampanyes
+  // 2. Take active custom admin banners from /admin/banner
+  const customBannerSlides = banners
     .filter((item) => Boolean(item.imageUrl && item.imageUrl.trim() !== ''))
     .map((item) => ({
-      id: `kam-${item.id}`,
-      title: item.judul,
+      id: `ban-${item.id}`,
+      title: getItemTitle(item),
       imageUrl: item.imageUrl,
-      href: `/infaq?kampanyeId=${item.id}`,
+      href: item.linkUrl || '#',
     }));
 
-  const activeSlides = [...announcementSlides, ...kampanyeSlides];
+  // Strictly 1 latest announcement + active custom admin banners
+  const activeSlides = [...announcementSlides, ...customBannerSlides];
 
   useEffect(() => {
     if (currentSlide >= activeSlides.length && activeSlides.length > 0) {
@@ -242,11 +265,24 @@ export default function Home() {
     setCurrentSlide((prev) => (prev - 1 + activeSlides.length) % activeSlides.length);
   };
 
+  // Autoplay: maju slide otomatis setiap 5 detik, berhenti saat hover
+  useEffect(() => {
+    if (activeSlides.length <= 1) return;
+    const interval = setInterval(() => {
+      if (!isHoveringSlider.current) {
+        setCurrentSlide((prev) => (prev + 1) % activeSlides.length);
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [activeSlides.length]);
+
   const displayedKampanye = kampanyes.slice(0, 3);
   const displayedAnnouncements = announcements.slice(0, 3);
   const displayedNews = newsList.slice(0, 3);
 
-  const isLoadingBanner = loadingAnnouncements && loadingKampanye;
+  // True hanya jika setidaknya satu dari data banner/pengumuman masih dalam proses loading
+  const isLoadingBanner = loadingAnnouncements || loadingBanners;
+
 
   return (
     <main className={`min-h-screen bg-gray-50/50 pb-16 sm:pb-24 relative overflow-x-hidden ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
@@ -261,6 +297,8 @@ export default function Home() {
           <div
             className="relative bg-gray-950 overflow-hidden w-full shadow-md group mx-auto"
             style={{ maxWidth: '100vw' }}
+            onMouseEnter={() => { isHoveringSlider.current = true; }}
+            onMouseLeave={() => { isHoveringSlider.current = false; }}
           >
 
             {/* Left Arrow Button */}
