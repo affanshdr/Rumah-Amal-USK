@@ -128,8 +128,8 @@ export default function Home() {
       try {
         const [kampanyeRes, newsRes, annRes, newsletterRes] = await Promise.all([
           fetch('/api/kampanye'),
-          fetch('/api/news'),
-          fetch('/api/announcements'),
+          fetch('/api/news?limit=5'),
+          fetch('/api/announcements?limit=5'),
           fetch('/api/newsletter?limit=3'),
         ]);
 

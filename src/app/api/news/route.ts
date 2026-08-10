@@ -42,10 +42,30 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ news: newsItem });
     }
 
+    const limitParam = searchParams.get('limit');
+    const pageParam = searchParams.get('page');
+
+    const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+    const page = pageParam ? parseInt(pageParam, 10) : 1;
+    const skip = limit && page ? (page - 1) * limit : undefined;
+
     const newsList = await prisma.news.findMany({
       where: { published: true },
       orderBy: { publishedAt: 'desc' },
-      include: { tags: true },
+      ...(limit && { take: limit }),
+      ...(skip !== undefined && { skip }),
+      select: {
+        id: true,
+        title: true,
+        titleAr: true,
+        titleEn: true,
+        slug: true,
+        category: true,
+        coverImageUrl: true,
+        publishedAt: true,
+        createdAt: true,
+        tags: true,
+      },
     });
 
     return NextResponse.json({ news: newsList });
