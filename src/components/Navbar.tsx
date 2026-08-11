@@ -18,7 +18,7 @@ const NAV_LABELS: Record<Language, Record<string, string>> = {
     Newsletter: "Newsletter",
     Dokumen: "Dokumen",
     Galeri: "Galeri",
-    BayarZakat: "Bayar Zakat",
+    BayarZakat: "Kalkulator Zakat",
   },
   en: {
     Beranda: "Home",
@@ -30,7 +30,7 @@ const NAV_LABELS: Record<Language, Record<string, string>> = {
     Newsletter: "Newsletter",
     Dokumen: "Documents",
     Galeri: "Gallery",
-    BayarZakat: "Pay Zakat",
+    BayarZakat: "Zakat Calculator",
   },
   ar: {
     Beranda: "الرئيسية",
@@ -42,7 +42,7 @@ const NAV_LABELS: Record<Language, Record<string, string>> = {
     Newsletter: "النشرة الإخبارية",
     Dokumen: "الوثائق",
     Galeri: "المعرض",
-    BayarZakat: "دفع الزكاة",
+    BayarZakat: "حاسبة الزكاة",
   },
 };
 
@@ -245,9 +245,9 @@ export default function Navbar() {
                 </button>
               </div>
 
-              {/* Bayar Zakat Button */}
+              {/* Kalkulator Zakat Button */}
               <Link
-                href="/zakat"
+                href="/kalkulator"
                 className="hidden lg:inline-flex items-center justify-center bg-[#ffc800] hover:bg-[#e8b500] text-[#1a1a1a] font-extrabold text-[13px] px-4 py-2 rounded-lg transition-all duration-200 shadow-2xs"
               >
                 {t.BayarZakat}
@@ -421,9 +421,9 @@ export default function Navbar() {
                 {t.Galeri}
               </Link>
 
-              {/* Pembayaran Zakat */}
+              {/* Kalkulator Zakat */}
               <Link
-                href="/zakat"
+                href="/kalkulator"
                 onClick={() => setMobileMenuOpen(false)}
                 className="bg-[#ffc800] hover:bg-[#e8b500] text-[#111111] font-bold text-[16px] text-left px-5 py-3.5 rounded-xl shadow-xs transition-all block mt-2"
               >

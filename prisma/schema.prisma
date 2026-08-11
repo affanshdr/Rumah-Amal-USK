@@ -284,3 +284,18 @@ model NisabConfig {
   @@map("nisab_configs")
 }
 
+model Banner {
+  id        String   @id @default(cuid())
+  title     String
+  titleAr   String?  @map("title_ar")
+  titleEn   String?  @map("title_en")
+  imageUrl  String   @map("image_url")
+  linkUrl   String?  @map("link_url")
+  order     Int      @default(0)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("banners")
+}
+

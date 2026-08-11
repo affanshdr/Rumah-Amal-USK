@@ -11,14 +11,17 @@ const globalForPrisma = globalThis as unknown as {
 export function getPrismaInstance(): PrismaClient {
   if (
     globalForPrisma.prisma &&
-    (!(globalForPrisma.prisma as any).program || !(globalForPrisma.prisma as any).news)
+    (!(globalForPrisma.prisma as any).program || !(globalForPrisma.prisma as any).news || !(globalForPrisma.prisma as any).banner)
   ) {
     globalForPrisma.prisma = undefined;
   }
   if (!globalForPrisma.prisma) {
     try {
-      const prismaClientPath = require.resolve('@prisma/client');
-      delete require.cache[prismaClientPath];
+      Object.keys(require.cache).forEach((key) => {
+        if (key.includes('@prisma/client') || key.includes('.prisma')) {
+          delete require.cache[key];
+        }
+      });
     } catch {
       // ignore
     }

@@ -56,6 +56,7 @@ const menuGroups = [
   {
     label: 'Media',
     items: [
+      { href: '/admin/banner', label: 'Banner Hero', icon: faImages },
       { href: '/admin/galeri', label: 'Galeri', icon: faImages },
       { href: '/admin/dokumen', label: 'Dokumen', icon: faFile },
       { href: '/admin/mitra', label: 'Mitra', icon: faBuilding },
