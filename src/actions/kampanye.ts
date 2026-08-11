@@ -18,18 +18,27 @@ export async function getActiveKampanye() {
   });
 }
 
-export async function getPaginatedKampanye(page: number = 1, limit: number = 5) {
+export async function getPaginatedKampanye(page: number = 1, limit: number = 5, search: string = '') {
   const skip = (page - 1) * limit;
+
+  const where: any = search
+    ? {
+        OR: [
+          { title: { contains: search, mode: 'insensitive' as const } },
+        ],
+      }
+    : {};
 
   const [items, totalCount, activeCount, inactiveCount] = await Promise.all([
     prisma.kampanye.findMany({
+      where,
       orderBy: { updatedAt: 'desc' },
       skip,
       take: limit,
     }),
-    prisma.kampanye.count(),
-    prisma.kampanye.count({ where: { isActive: true } }),
-    prisma.kampanye.count({ where: { isActive: false } }),
+    prisma.kampanye.count({ where }),
+    prisma.kampanye.count({ where: { ...where, isActive: true } }),
+    prisma.kampanye.count({ where: { ...where, isActive: false } }),
   ]);
 
   const totalPages = Math.ceil(totalCount / limit) || 1;

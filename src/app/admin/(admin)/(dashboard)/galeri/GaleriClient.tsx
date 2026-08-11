@@ -19,6 +19,7 @@ interface GaleriClientProps {
   currentPage?: number;
   totalPages?: number;
   totalCount?: number;
+  initialSearch?: string;
 }
 
 function formatTanggal(date: Date | null) {
@@ -33,8 +34,10 @@ export default function GaleriClient({
   currentPage = 1,
   totalPages = 1,
   totalCount = initialData.length,
+  initialSearch = "",
 }: GaleriClientProps) {
   const router = useRouter();
+  const search = initialSearch;
   const [data, setData] = useState(initialData);
 
   useEffect(() => {
@@ -171,7 +174,7 @@ export default function GaleriClient({
               <div className="flex items-center gap-1.5">
                 {currentPage > 1 ? (
                   <Link
-                    href={`/admin/galeri?page=${currentPage - 1}`}
+                    href={`/admin/galeri?page=${currentPage - 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
                     className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors shadow-2xs"
                   >
                     « Prev
@@ -203,7 +206,7 @@ export default function GaleriClient({
                     return (
                       <Link
                         key={p}
-                        href={`/admin/galeri?page=${p}`}
+                        href={`/admin/galeri?page=${p}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
                         className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-colors ${isActive
                           ? "bg-[#005621] text-white shadow-xs"
                           : "bg-white border border-gray-200 hover:bg-gray-100 text-gray-700"
@@ -217,7 +220,7 @@ export default function GaleriClient({
 
                 {currentPage < totalPages ? (
                   <Link
-                    href={`/admin/galeri?page=${currentPage + 1}`}
+                    href={`/admin/galeri?page=${currentPage + 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
                     className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors shadow-2xs"
                   >
                     Next »

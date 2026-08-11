@@ -28,11 +28,21 @@ async function uniqueSlug(base: string, excludeId?: string): Promise<string> {
   return slug;
 }
 
-export async function getAnnouncements(page: number = 1, limit: number = 5) {
+export async function getAnnouncements(page: number = 1, limit: number = 5, search: string = '') {
   const skip = (page - 1) * limit;
+
+  const where: any = search
+    ? {
+        OR: [
+          { title: { contains: search, mode: 'insensitive' as const } },
+          { category: { contains: search, mode: 'insensitive' as const } },
+        ],
+      }
+    : {};
 
   const [items, totalCount, publishedCount, draftCount] = await Promise.all([
     prisma.announcement.findMany({
+      where,
       orderBy: { publishedAt: 'desc' },
       skip,
       take: limit,
@@ -54,9 +64,9 @@ export async function getAnnouncements(page: number = 1, limit: number = 5) {
         createdAt: true,
       },
     }),
-    prisma.announcement.count(),
-    prisma.announcement.count({ where: { published: true } }),
-    prisma.announcement.count({ where: { published: false } }),
+    prisma.announcement.count({ where }),
+    prisma.announcement.count({ where: { ...where, published: true } }),
+    prisma.announcement.count({ where: { ...where, published: false } }),
   ]);
 
   const totalPages = Math.ceil(totalCount / limit) || 1;

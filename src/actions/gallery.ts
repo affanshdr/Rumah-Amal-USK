@@ -9,16 +9,21 @@ type UploadResult = {
     errors: string[];
 };
 
-export async function getPaginatedGallery(page: number = 1, limit: number = 8) {
+export async function getPaginatedGallery(page: number = 1, limit: number = 8, search: string = '') {
     const skip = (page - 1) * limit;
+
+    const where: any = search
+        ? { imageUrl: { contains: search, mode: 'insensitive' as const } }
+        : {};
 
     const [items, totalCount] = await Promise.all([
         prisma.gallery.findMany({
+            where,
             orderBy: { createdAt: 'desc' },
             skip,
             take: limit,
         }),
-        prisma.gallery.count(),
+        prisma.gallery.count({ where }),
     ]);
 
     const totalPages = Math.ceil(totalCount / limit) || 1;

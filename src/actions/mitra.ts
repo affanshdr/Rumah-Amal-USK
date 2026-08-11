@@ -4,16 +4,21 @@ import prisma from '@/lib/prisma';
 import { deleteStorageFileByUrl } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
 
-export async function getPaginatedMitra(page: number = 1, limit: number = 5) {
+export async function getPaginatedMitra(page: number = 1, limit: number = 5, search: string = '') {
   const skip = (page - 1) * limit;
+
+  const where: any = search
+    ? { nama: { contains: search, mode: 'insensitive' as const } }
+    : {};
 
   const [items, totalCount] = await Promise.all([
     prisma.mitra.findMany({
+      where,
       orderBy: { createdAt: 'desc' },
       skip,
       take: limit,
     }),
-    prisma.mitra.count(),
+    prisma.mitra.count({ where }),
   ]);
 
   const totalPages = Math.ceil(totalCount / limit) || 1;

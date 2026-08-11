@@ -178,7 +178,10 @@ interface ProgramClientProps {
   totalCount?: number;
   publishedCount?: number;
   draftCount?: number;
+  initialSearch?: string;
 }
+
+const DEBOUNCE_MS = 400;
 
 export default function ProgramClient({
   initialData,
@@ -187,6 +190,7 @@ export default function ProgramClient({
   totalCount = initialData.length,
   publishedCount = initialData.filter((d) => d.published).length,
   draftCount = initialData.filter((d) => !d.published).length,
+  initialSearch = "",
 }: ProgramClientProps) {
   const router = useRouter();
   const [data, setData] = useState(initialData);
@@ -223,14 +227,22 @@ export default function ProgramClient({
   const [liveCategory, setLiveCategory] = useState("PENDIDIKAN");
   const [liveDate, setLiveDate] = useState(new Date().toISOString().slice(0, 10));
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
-  const filtered = data.filter((item) =>
-    item.title.toLowerCase().includes(search.toLowerCase()) ||
-    (item.titleEn && item.titleEn.toLowerCase().includes(search.toLowerCase())) ||
-    (item.titleAr && item.titleAr.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filtered = data;
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (val) params.set("search", val);
+      params.set("page", "1");
+      router.push(`/admin/program?${params.toString()}`);
+    }, DEBOUNCE_MS);
+  };
 
   const openAdd = () => {
     setEditing(null);
@@ -341,7 +353,7 @@ export default function ProgramClient({
             </svg>
             <input
               type="text" placeholder="Cari program…" value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#005621] bg-gray-50/60 placeholder-gray-400"
             />
           </div>
@@ -440,7 +452,7 @@ export default function ProgramClient({
               <div className="flex items-center gap-1.5">
                 {currentPage > 1 ? (
                   <Link
-                    href={`/admin/program?page=${currentPage - 1}`}
+                    href={`/admin/program?page=${currentPage - 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
                     className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors shadow-2xs"
                   >
                     « Prev
@@ -472,7 +484,7 @@ export default function ProgramClient({
                     return (
                       <Link
                         key={p}
-                        href={`/admin/program?page=${p}`}
+                        href={`/admin/program?page=${p}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
                         className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-colors ${isActive
                           ? "bg-[#005621] text-white shadow-xs"
                           : "bg-white border border-gray-200 hover:bg-gray-100 text-gray-700"
@@ -486,7 +498,7 @@ export default function ProgramClient({
 
                 {currentPage < totalPages ? (
                   <Link
-                    href={`/admin/program?page=${currentPage + 1}`}
+                    href={`/admin/program?page=${currentPage + 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
                     className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors shadow-2xs"
                   >
                     Next »

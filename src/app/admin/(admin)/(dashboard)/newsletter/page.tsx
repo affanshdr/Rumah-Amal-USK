@@ -8,9 +8,10 @@ export default async function AdminNewsletterPage(
 ) {
   const searchParams = await props.searchParams;
   const page = parseInt((searchParams.page as string) || '1', 10);
+  const search = (searchParams.search as string) || '';
   const limit = 8;
 
-  const { items, totalCount, totalPages } = await getPaginatedNewsletter(page, limit);
+  const { items, totalCount, totalPages } = await getPaginatedNewsletter(page, limit, search);
 
   const serialised = items.map((a: any) => ({
     ...a,
@@ -40,6 +41,7 @@ export default async function AdminNewsletterPage(
         currentPage={page}
         totalPages={totalPages}
         totalCount={totalCount}
+        initialSearch={search}
       />
     </div>
   );

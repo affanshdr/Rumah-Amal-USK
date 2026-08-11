@@ -8,9 +8,10 @@ export default async function AdminPengumumanPage(
 ) {
   const searchParams = await props.searchParams;
   const page = parseInt((searchParams.page as string) || '1', 10);
+  const search = (searchParams.search as string) || '';
   const limit = 8;
 
-  const { items, totalCount, totalPages, publishedCount, draftCount } = await getAnnouncements(page, limit);
+  const { items, totalCount, totalPages, publishedCount, draftCount } = await getAnnouncements(page, limit, search);
 
   // Serialise Dates untuk props client component
   const serialised = items.map((a: any) => ({
@@ -46,6 +47,7 @@ export default async function AdminPengumumanPage(
         totalCount={totalCount}
         publishedCount={publishedCount}
         draftCount={draftCount}
+        initialSearch={search}
       />
     </div>
   );

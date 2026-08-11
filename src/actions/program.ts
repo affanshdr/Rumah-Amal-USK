@@ -58,11 +58,21 @@ export async function getProgramBySlug(slug: string) {
   });
 }
 
-export async function getPaginatedPrograms(page: number = 1, limit: number = 5) {
+export async function getPaginatedPrograms(page: number = 1, limit: number = 5, search: string = '') {
   const skip = (page - 1) * limit;
+
+  const where: any = search
+    ? {
+        OR: [
+          { title: { contains: search, mode: 'insensitive' as const } },
+          { category: { contains: search, mode: 'insensitive' as const } },
+        ],
+      }
+    : {};
 
   const [items, totalCount, publishedCount, draftCount] = await Promise.all([
     prisma.program.findMany({
+      where,
       orderBy: { createdAt: 'desc' },
       skip,
       take: limit,
@@ -85,9 +95,9 @@ export async function getPaginatedPrograms(page: number = 1, limit: number = 5) 
         createdAt: true,
       },
     }),
-    prisma.program.count(),
-    prisma.program.count({ where: { published: true } }),
-    prisma.program.count({ where: { published: false } }),
+    prisma.program.count({ where }),
+    prisma.program.count({ where: { ...where, published: true } }),
+    prisma.program.count({ where: { ...where, published: false } }),
   ]);
 
   const totalPages = Math.ceil(totalCount / limit) || 1;

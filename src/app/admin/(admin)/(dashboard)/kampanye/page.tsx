@@ -8,9 +8,10 @@ export default async function AdminKampanyePage(
 ) {
   const searchParams = await props.searchParams;
   const page = parseInt((searchParams.page as string) || '1', 10);
+  const search = (searchParams.search as string) || '';
   const limit = 8;
 
-  const { items, totalCount, totalPages, activeCount, inactiveCount } = await getPaginatedKampanye(page, limit);
+  const { items, totalCount, totalPages, activeCount, inactiveCount } = await getPaginatedKampanye(page, limit, search);
 
   const serialised = items.map((a: any) => ({
     ...a,
@@ -45,6 +46,7 @@ export default async function AdminKampanyePage(
         totalCount={totalCount}
         activeCount={activeCount}
         inactiveCount={inactiveCount}
+        initialSearch={search}
       />
     </div>
   );

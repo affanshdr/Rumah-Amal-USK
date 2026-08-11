@@ -8,9 +8,10 @@ export default async function AdminGaleriPage(
 ) {
   const searchParams = await props.searchParams;
   const page = parseInt((searchParams.page as string) || '1', 10);
+  const search = (searchParams.search as string) || '';
   const limit = 8;
 
-  const { items, totalCount, totalPages } = await getPaginatedGallery(page, limit);
+  const { items, totalCount, totalPages } = await getPaginatedGallery(page, limit, search);
 
   const serialised = items.map((a: any) => ({
     ...a,
@@ -39,6 +40,7 @@ export default async function AdminGaleriPage(
         currentPage={page}
         totalPages={totalPages}
         totalCount={totalCount}
+        initialSearch={search}
       />
     </div>
   );

@@ -1,11 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSave } from "@fortawesome/free-solid-svg-icons";
-import { deleteDocumentAction, updateDocumentAction } from "@/actions/dokumen";
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSave } from '@fortawesome/free-solid-svg-icons';
+import { deleteDocumentAction, updateDocumentAction } from '@/actions/dokumen';
 
 type DocumentRow = {
   id: string;
@@ -22,44 +21,87 @@ interface DokumenClientProps {
   totalCount?: number;
 }
 
-const DEFAULT_COVER = "/cover/Cover Doc RA.jpeg";
+const DEFAULT_COVER = '/cover/Cover Doc RA.jpeg';
+const ITEMS_PER_PAGE = 8;
+const DEBOUNCE_MS = 400;
 
 function formatTanggal(date: Date | null) {
-  if (!date) return "-";
-  return new Date(date).toLocaleDateString("id-ID", {
-    day: "numeric", month: "long", year: "numeric",
+  if (!date) return '-';
+  return new Date(date).toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   });
 }
 
 export default function DokumenClient({
   initialData,
-  currentPage = 1,
-  totalPages = 1,
-  totalCount = initialData.length,
+  currentPage: initPage = 1,
+  totalPages: initTotalPages = 1,
+  totalCount: initTotalCount = initialData.length,
 }: DokumenClientProps) {
   const router = useRouter();
-  const [data, setData] = useState(initialData);
-
-  useEffect(() => {
-    setData(initialData);
-  }, [initialData]);
+  const [data, setData] = useState<DocumentRow[]>(initialData);
+  const [currentPage, setCurrentPage] = useState(initPage);
+  const [totalPages, setTotalPages] = useState(initTotalPages);
+  const [totalCount, setTotalCount] = useState(initTotalCount);
+  const [isFetching, setIsFetching] = useState(false);
+  const [search, setSearch] = useState('');
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DocumentRow | null>(null);
 
-  const [judul, setJudul] = useState("");
-  const [driveUrl, setDriveUrl] = useState("");
+  const [judul, setJudul] = useState('');
+  const [driveUrl, setDriveUrl] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [search, setSearch] = useState("");
 
-  const filtered = data.filter((item) =>
-    item.judul.toLowerCase().includes(search.toLowerCase())
-  );
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const latestReqRef = useRef(0);
+  const searchRef = useRef(search);
+
+  async function fetchData(page = currentPage, searchVal = searchRef.current) {
+    const reqId = ++latestReqRef.current;
+    setIsFetching(true);
+    try {
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(ITEMS_PER_PAGE),
+        search: searchVal,
+      });
+      const res = await fetch(`/api/documents?${params}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (reqId !== latestReqRef.current) return;
+        setData(json.documents || []);
+        setTotalCount(json.pagination?.total ?? 0);
+        setTotalPages(json.pagination?.totalPages ?? 1);
+      }
+    } catch (err) {
+      console.error('Error fetching documents:', err);
+    } finally {
+      if (reqId === latestReqRef.current) setIsFetching(false);
+    }
+  }
+
+  function handleSearchChange(val: string) {
+    setSearch(val);
+    searchRef.current = val;
+    setCurrentPage(1);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchData(1, val);
+    }, DEBOUNCE_MS);
+  }
+
+  function handlePageChange(page: number) {
+    setCurrentPage(page);
+    fetchData(page, searchRef.current);
+  }
 
   const openAdd = () => {
     setEditingItem(null);
-    setJudul("");
-    setDriveUrl("");
+    setJudul('');
+    setDriveUrl('');
     setIsAddModalOpen(true);
   };
 
@@ -72,8 +114,8 @@ export default function DokumenClient({
 
   const handleSubmitDocument = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!judul.trim()) { alert("Judul dokumen wajib diisi."); return; }
-    if (!driveUrl.trim()) { alert("Link Google Drive wajib diisi."); return; }
+    if (!judul.trim()) { alert('Judul dokumen wajib diisi.'); return; }
+    if (!driveUrl.trim()) { alert('Link Google Drive wajib diisi.'); return; }
 
     setUploading(true);
     if (editingItem) {
@@ -82,17 +124,11 @@ export default function DokumenClient({
           judul: judul.trim(),
           pdfUrl: driveUrl.trim(),
         });
-        setData((prev) =>
-          prev.map((doc) =>
-            doc.id === editingItem.id
-              ? { ...doc, judul: judul.trim(), pdfUrl: driveUrl.trim() }
-              : doc
-          )
-        );
         setIsAddModalOpen(false);
         setEditingItem(null);
-        setJudul("");
-        setDriveUrl("");
+        setJudul('');
+        setDriveUrl('');
+        fetchData(currentPage, searchRef.current);
         router.refresh();
       } catch (err) {
         alert(`Gagal mengedit dokumen: ${(err as Error).message}`);
@@ -103,9 +139,9 @@ export default function DokumenClient({
     }
 
     try {
-      const res = await fetch("/api/documents/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/documents/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           judul: judul.trim(),
           pdfUrl: driveUrl.trim(),
@@ -114,14 +150,15 @@ export default function DokumenClient({
       });
       const resData = await res.json();
       if (!res.ok || !resData.success) {
-        alert(resData.error ?? "Gagal menambahkan dokumen");
+        alert(resData.error ?? 'Gagal menambahkan dokumen');
         setUploading(false);
         return;
       }
 
       setIsAddModalOpen(false);
-      setJudul("");
-      setDriveUrl("");
+      setJudul('');
+      setDriveUrl('');
+      fetchData(1, searchRef.current);
       router.refresh();
     } catch (err) {
       alert(`Koneksi gagal: ${(err as Error).message}`);
@@ -131,9 +168,9 @@ export default function DokumenClient({
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus dokumen ini?")) return;
-    setData((prev) => prev.filter((doc) => doc.id !== id));
+    if (!confirm('Apakah Anda yakin ingin menghapus dokumen ini?')) return;
     await deleteDocumentAction(id);
+    fetchData(currentPage, searchRef.current);
     router.refresh();
   };
 
@@ -148,7 +185,7 @@ export default function DokumenClient({
             </svg>
             <input
               type="text" placeholder="Cari dokumen…" value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#005621] bg-gray-50/60 placeholder-gray-400"
             />
           </div>
@@ -163,19 +200,23 @@ export default function DokumenClient({
 
         {/* Card Grid */}
         <div className="p-5">
-          {filtered.length === 0 ? (
+          {isFetching ? (
+            <div className="py-16 text-center text-gray-400">
+              <div className="w-6 h-6 border-2 border-[#005621] border-t-transparent rounded-full animate-spin mx-auto" />
+            </div>
+          ) : data.length === 0 ? (
             <div className="py-16 text-center text-gray-400">
               <div className="flex flex-col items-center gap-2">
                 <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <p className="text-sm font-semibold">{search ? "Tidak ada yang cocok" : "Belum ada dokumen"}</p>
+                <p className="text-sm font-semibold">{search ? 'Tidak ada yang cocok' : 'Belum ada dokumen'}</p>
                 {!search && <p className="text-xs text-gray-300">Klik &quot;Tambah Dokumen&quot; untuk menambahkan link dokumen baru.</p>}
               </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {filtered.map((item) => (
+              {data.map((item) => (
                 <div key={item.id} className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col">
                   {/* Cover Image */}
                   <div className="relative h-36 bg-gradient-to-br from-blue-50 to-blue-100 shrink-0 overflow-hidden">
@@ -227,18 +268,18 @@ export default function DokumenClient({
         {totalCount > 0 && (
           <div className="px-5 py-4 border-t border-gray-100 bg-gray-50/40 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-gray-500 font-medium">
-              Menampilkan <span className="font-bold text-gray-700">{filtered.length}</span> dari <span className="font-bold text-gray-700">{totalCount}</span> dokumen
+              Menampilkan <span className="font-bold text-gray-700">{data.length}</span> dari <span className="font-bold text-gray-700">{totalCount}</span> dokumen
             </p>
 
             {totalPages > 1 && (
               <div className="flex items-center gap-1.5">
                 {currentPage > 1 ? (
-                  <Link
-                    href={`/admin/dokumen?page=${currentPage - 1}`}
-                    className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors shadow-2xs"
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors shadow-2xs cursor-pointer"
                   >
                     « Prev
-                  </Link>
+                  </button>
                 ) : (
                   <span className="px-3 py-1.5 bg-gray-50 border border-gray-100 text-gray-300 text-xs font-bold rounded-lg cursor-not-allowed">
                     « Prev
@@ -264,27 +305,27 @@ export default function DokumenClient({
                     }
 
                     return (
-                      <Link
+                      <button
                         key={p}
-                        href={`/admin/dokumen?page=${p}`}
-                        className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-colors ${isActive
-                          ? "bg-[#005621] text-white shadow-xs"
-                          : "bg-white border border-gray-200 hover:bg-gray-100 text-gray-700"
+                        onClick={() => handlePageChange(p)}
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-colors cursor-pointer ${isActive
+                          ? 'bg-[#005621] text-white shadow-xs'
+                          : 'bg-white border border-gray-200 hover:bg-gray-100 text-gray-700'
                           }`}
                       >
                         {p}
-                      </Link>
+                      </button>
                     );
                   })}
                 </div>
 
                 {currentPage < totalPages ? (
-                  <Link
-                    href={`/admin/dokumen?page=${currentPage + 1}`}
-                    className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors shadow-2xs"
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors shadow-2xs cursor-pointer"
                   >
                     Next »
-                  </Link>
+                  </button>
                 ) : (
                   <span className="px-3 py-1.5 bg-gray-50 border border-gray-100 text-gray-300 text-xs font-bold rounded-lg cursor-not-allowed">
                     Next »
