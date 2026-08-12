@@ -51,9 +51,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    authorized() {
-      // TEMPORARY BYPASS: Allow checking all admin pages without login
-      return true;
+    authorized({ auth }) {
+      // Hanya izinkan akses jika sesi valid (sudah login sebagai admin)
+      return !!auth?.user;
     },
     async jwt({ token, user }) {
       if (user) {
