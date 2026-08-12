@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faFileText,
@@ -21,60 +21,76 @@ type RekapItem = {
   createdAt: string;
 };
 
+const ITEMS_PER_PAGE = 20;
+const DEBOUNCE_MS = 400;
+
 export default function AdminRekapZakatPage() {
   const [data, setData] = useState<RekapItem[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
 
-  async function loadData() {
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const latestReqRef = useRef(0);
+  const searchRef = useRef(search);
+
+  async function loadData(page = currentPage, searchVal = searchRef.current) {
+    const reqId = ++latestReqRef.current;
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/rekap-zakat');
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(ITEMS_PER_PAGE),
+        search: searchVal,
+      });
+      const res = await fetch(`/api/admin/rekap-zakat?${params}`);
       if (res.ok) {
         const json = await res.json();
-        setData(json);
+        if (reqId !== latestReqRef.current) return;
+        setData(json.data || []);
+        setTotalItems(json.total ?? 0);
+        setTotalPages(json.totalPages ?? 1);
       }
     } catch (err) {
       console.error('Error loading rekap zakat:', err);
     } finally {
-      setLoading(false);
+      if (reqId === latestReqRef.current) setLoading(false);
     }
   }
 
   useEffect(() => {
-    loadData();
+    loadData(1, '');
   }, []);
 
-  useEffect(() => {
+  function handleSearchChange(val: string) {
+    setSearch(val);
+    searchRef.current = val;
     setCurrentPage(1);
-  }, [search]);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      loadData(1, val);
+    }, DEBOUNCE_MS);
+  }
+
+  function handlePageChange(page: number) {
+    setCurrentPage(page);
+    loadData(page, searchRef.current);
+  }
 
   async function handleDelete(id: string) {
     if (!confirm('Hapus data rekap zakat ini?')) return;
     try {
       const res = await fetch(`/api/admin/rekap-zakat/${id}`, { method: 'DELETE' });
-      if (res.ok) loadData();
+      if (res.ok) loadData(currentPage, searchRef.current);
       else alert('Gagal menghapus data');
     } catch {
       alert('Terjadi kesalahan');
     }
   }
 
-  const filtered = data.filter(
-    (item) =>
-      item.dosenNIP.includes(search) ||
-      (item.dosen?.nama && item.dosen.nama.toLowerCase().includes(search.toLowerCase())) ||
-      item.tahunRekap.includes(search)
-  );
-
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginatedData = filtered.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
 
   return (
     <div className="space-y-6">
@@ -105,7 +121,7 @@ export default function AdminRekapZakatPage() {
           type="text"
           placeholder="Cari NIP, nama dosen, atau tahun..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
         />
       </div>
@@ -132,14 +148,14 @@ export default function AdminRekapZakatPage() {
                     <div className="w-5 h-5 border-2 border-[#063A1E] border-t-transparent rounded-full animate-spin mx-auto" />
                   </td>
                 </tr>
-              ) : filtered.length === 0 ? (
+              ) : data.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-10 text-gray-400">
                     Tidak ada data rekap zakat ditemukan.
                   </td>
                 </tr>
               ) : (
-                paginatedData.map((item) => (
+                data.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-3.5 px-4 font-mono font-bold text-gray-800">{item.dosenNIP}</td>
                     <td className="py-3.5 px-4 font-semibold text-gray-900">
@@ -183,9 +199,9 @@ export default function AdminRekapZakatPage() {
         <AdminPagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={filtered.length}
+          totalItems={totalItems}
           itemsPerPage={ITEMS_PER_PAGE}
-          onPageChange={setCurrentPage}
+          onPageChange={handlePageChange}
           itemLabel="rekap zakat"
         />
       </div>
@@ -194,7 +210,7 @@ export default function AdminRekapZakatPage() {
       <CsvImportModal
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
-        onSuccess={() => loadData()}
+        onSuccess={() => loadData(1, searchRef.current)}
         title="Import Rekap Zakat"
         endpoint="/api/admin/import/rekap-zakat"
         requiredColumns={['nip', 'tahun_rekap', 'file_url']}

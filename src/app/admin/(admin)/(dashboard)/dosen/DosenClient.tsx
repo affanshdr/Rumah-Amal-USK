@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createDosen, updateDosen, deleteDosen } from '@/actions/dosen';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faSearch, faEdit, faTrash, faUserTie, faFileArrowUp, faPhone } from '@fortawesome/free-solid-svg-icons';
@@ -17,8 +17,14 @@ type DosenItem = {
   createdAt: Date;
 };
 
-export default function DosenClient({ initialData }: { initialData: DosenItem[] }) {
-  const [data, setData] = useState<DosenItem[]>(initialData);
+const ITEMS_PER_PAGE = 20;
+const DEBOUNCE_MS = 400;
+
+export default function DosenClient({ initialData }: { initialData?: DosenItem[] }) {
+  const [data, setData] = useState<DosenItem[]>(initialData || []);
+  const [totalItems, setTotalItems] = useState(initialData?.length || 0);
+  const [totalPages, setTotalPages] = useState(Math.ceil((initialData?.length || 0) / ITEMS_PER_PAGE) || 1);
+  const [isFetching, setIsFetching] = useState(false);
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
@@ -26,11 +32,6 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search]);
 
   // Form states
   const [nip, setNip] = useState('');
@@ -40,19 +41,52 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
   const [unitKerja, setUnitKerja] = useState('');
   const [noHp, setNoHp] = useState('');
 
-  const filteredData = data.filter(
-    (item) =>
-      item.nama.toLowerCase().includes(search.toLowerCase()) ||
-      item.nip.toLowerCase().includes(search.toLowerCase()) ||
-      (item.unitKerja && item.unitKerja.toLowerCase().includes(search.toLowerCase())) ||
-      (item.noHp && item.noHp.includes(search))
-  );
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const latestReqRef = useRef(0);
+  const searchRef = useRef(search);
 
-  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  async function fetchData(page = currentPage, searchVal = searchRef.current) {
+    const reqId = ++latestReqRef.current;
+    setIsFetching(true);
+    try {
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(ITEMS_PER_PAGE),
+        search: searchVal,
+      });
+      const res = await fetch(`/api/admin/dosen?${params}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (reqId !== latestReqRef.current) return;
+        setData(json.data || []);
+        setTotalItems(json.total ?? 0);
+        setTotalPages(json.totalPages ?? 1);
+      }
+    } catch (err) {
+      console.error('Error fetching dosen:', err);
+    } finally {
+      if (reqId === latestReqRef.current) setIsFetching(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchData(1, '');
+  }, []);
+
+  function handleSearchChange(val: string) {
+    setSearch(val);
+    searchRef.current = val;
+    setCurrentPage(1);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchData(1, val);
+    }, DEBOUNCE_MS);
+  }
+
+  function handlePageChange(page: number) {
+    setCurrentPage(page);
+    fetchData(page, searchRef.current);
+  }
 
   function openAddModal() {
     setEditingDosen(null);
@@ -94,37 +128,11 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
     try {
       if (editingDosen) {
         await updateDosen(editingDosen.nip, formData);
-        setData((prev) =>
-          prev.map((item) =>
-            item.nip === editingDosen.nip
-              ? {
-                  ...item,
-                  nip,
-                  nama,
-                  npwp: npwp || null,
-                  alamat: alamat || null,
-                  unitKerja: unitKerja || null,
-                  noHp: noHp || null,
-                }
-              : item
-          )
-        );
       } else {
         await createDosen(formData);
-        setData((prev) => [
-          {
-            nip,
-            nama,
-            npwp: npwp || null,
-            alamat: alamat || null,
-            unitKerja: unitKerja || null,
-            noHp: noHp || null,
-            createdAt: new Date(),
-          },
-          ...prev,
-        ]);
       }
       setIsModalOpen(false);
+      fetchData(currentPage, searchRef.current);
     } catch (err: any) {
       setErrorMsg(err.message || 'Gagal menyimpan data dosen');
     } finally {
@@ -137,7 +145,7 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
 
     try {
       await deleteDosen(nipToDelete);
-      setData((prev) => prev.filter((item) => item.nip !== nipToDelete));
+      fetchData(currentPage, searchRef.current);
     } catch (err: any) {
       alert(err.message || 'Gagal menghapus data dosen');
     }
@@ -182,7 +190,7 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
           type="text"
           placeholder="Cari berdasarkan NIP, Nama, No. HP, atau Unit Kerja..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
         />
       </div>
@@ -203,14 +211,20 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredData.length === 0 ? (
+              {isFetching ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-10 text-gray-400">
+                    <div className="w-5 h-5 border-2 border-[#063A1E] border-t-transparent rounded-full animate-spin mx-auto" />
+                  </td>
+                </tr>
+              ) : data.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-10 text-gray-400">
                     Belum ada data dosen ditemukan.
                   </td>
                 </tr>
               ) : (
-                paginatedData.map((item) => (
+                data.map((item) => (
                   <tr key={item.nip} className="hover:bg-gray-50/50 transition-colors">
                     <td className="py-3.5 px-4 font-mono font-bold text-gray-800">{item.nip}</td>
                     <td className="py-3.5 px-4 font-semibold text-gray-900">{item.nama}</td>
@@ -255,9 +269,9 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
         <AdminPagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={filteredData.length}
+          totalItems={totalItems}
           itemsPerPage={ITEMS_PER_PAGE}
-          onPageChange={setCurrentPage}
+          onPageChange={handlePageChange}
           itemLabel="dosen"
         />
       </div>
@@ -383,14 +397,7 @@ export default function DosenClient({ initialData }: { initialData: DosenItem[] 
       <CsvImportModal
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
-        onSuccess={async () => {
-          // Reload data dari server
-          const res = await fetch('/api/admin/dosen');
-          if (res.ok) {
-            const json = await res.json();
-            setData(json);
-          }
-        }}
+        onSuccess={() => fetchData(1, searchRef.current)}
         title="Import Data Dosen"
         endpoint="/api/admin/import/dosen"
         requiredColumns={['nip', 'nama']}

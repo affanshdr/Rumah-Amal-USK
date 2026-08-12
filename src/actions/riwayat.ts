@@ -99,3 +99,71 @@ export async function cariRiwayat(nip: string) {
     })),
   };
 }
+
+export async function cariRiwayatByEmail(email: string) {
+  const cleanEmail = email.trim().toLowerCase();
+
+  const riwayatZakat = await prisma.zakat.findMany({
+    where: { email: cleanEmail },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      jenisZakat: true,
+      jumlahZakat: true,
+      sumberDana: true,
+      status: true,
+      createdAt: true,
+      nama: true,
+    },
+  });
+
+  const riwayatInfaq = await prisma.infaq.findMany({
+    where: { email: cleanEmail },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      jenisInfaq: true,
+      jumlahInfaq: true,
+      status: true,
+      createdAt: true,
+      nama: true,
+      kampanye: {
+        select: { judul: true },
+      },
+    },
+  });
+
+  const nama =
+    riwayatZakat[0]?.nama || riwayatInfaq[0]?.nama || null;
+
+  const totalZakatLunas = riwayatZakat
+    .filter((z) => z.status === 'lunas')
+    .reduce((acc, z) => acc + (z.jumlahZakat || 0), 0);
+
+  const totalInfaqLunas = riwayatInfaq
+    .filter((i) => i.status === 'lunas')
+    .reduce((acc, i) => acc + (i.jumlahInfaq || 0), 0);
+
+  return {
+    email: cleanEmail,
+    nama,
+    totalZakatLunas,
+    totalInfaqLunas,
+    riwayatZakat: riwayatZakat.map((z) => ({
+      id: z.id,
+      jenis_zakat: z.jenisZakat,
+      jumlah_zakat: z.jumlahZakat,
+      sumber_dana: z.sumberDana,
+      status: z.status as 'pending' | 'lunas' | 'ditolak',
+      created_at: z.createdAt,
+    })),
+    riwayatInfaq: riwayatInfaq.map((i) => ({
+      id: i.id,
+      jenis_infaq: i.jenisInfaq,
+      kampanye_judul: i.kampanye?.judul || null,
+      jumlah_infaq: i.jumlahInfaq,
+      status: i.status as 'pending' | 'lunas' | 'ditolak',
+      created_at: i.createdAt,
+    })),
+  };
+}

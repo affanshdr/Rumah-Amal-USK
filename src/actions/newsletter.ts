@@ -10,16 +10,25 @@ type UploadResult = {
     error?: string;
 };
 
-export async function getPaginatedNewsletter(page: number = 1, limit: number = 5) {
+export async function getPaginatedNewsletter(page: number = 1, limit: number = 5, search: string = '') {
     const skip = (page - 1) * limit;
+
+    const where: any = search
+        ? {
+            OR: [
+                { judul: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {};
 
     const [items, totalCount] = await Promise.all([
         prisma.newsletter.findMany({
+            where,
             orderBy: { tanggal: 'desc' },
             skip,
             take: limit,
         }),
-        prisma.newsletter.count(),
+        prisma.newsletter.count({ where }),
     ]);
 
     const totalPages = Math.ceil(totalCount / limit) || 1;

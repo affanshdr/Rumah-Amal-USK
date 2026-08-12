@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { updateZakatAdmin } from '@/actions/zakat';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -21,12 +21,14 @@ type DosenInfo = {
   npwp: string | null;
   alamat: string | null;
   unitKerja: string | null;
+  noHp: string | null;
 };
 
 type ZakatItem = {
   id: string;
   nama: string;
   nip: string | null;
+  noHp: string | null;
   dosen: DosenInfo | null;
   tipePembayar: string;
   jenisZakat: string;
@@ -39,13 +41,15 @@ type ZakatItem = {
   status: string;
 };
 
+type Counts = { all: number; pending: number; lunas: number; ditolak: number };
+
 function formatRupiah(angka: number) {
   return 'Rp ' + angka.toLocaleString('id-ID');
 }
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    lunas: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    lunas:   'bg-emerald-100 text-emerald-700 border-emerald-200',
     pending: 'bg-amber-100 text-amber-700 border-amber-200',
     ditolak: 'bg-red-100 text-red-700 border-red-200',
   };
@@ -57,44 +61,94 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+const ITEMS_PER_PAGE = 20;
+const DEBOUNCE_MS = 400;
+
 export default function AdminZakatPage() {
-  const [data, setData] = useState<ZakatItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [data, setData]               = useState<ZakatItem[]>([]);
+  const [totalItems, setTotalItems]   = useState(0);
+  const [totalPages, setTotalPages]   = useState(1);
+  const [counts, setCounts]           = useState<Counts>({ all: 0, pending: 0, lunas: 0, ditolak: 0 });
+  const [loading, setLoading]         = useState(true);
+  const [search, setSearch]           = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'lunas' | 'ditolak'>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
 
   // Edit Modal State
   const [editingItem, setEditingItem] = useState<ZakatItem | null>(null);
-  const [editNama, setEditNama] = useState('');
-  const [editNip, setEditNip] = useState('');
-  const [editJenis, setEditJenis] = useState('');
-  const [editJumlah, setEditJumlah] = useState<number>(0);
-  const [editStatus, setEditStatus] = useState('pending');
-  const [editPesan, setEditPesan] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [editNama, setEditNama]       = useState('');
+  const [editNip, setEditNip]         = useState('');
+  const [editJenis, setEditJenis]     = useState('');
+  const [editJumlah, setEditJumlah]   = useState<number>(0);
+  const [editStatus, setEditStatus]   = useState('pending');
+  const [editPesan, setEditPesan]     = useState('');
+  const [saving, setSaving]           = useState(false);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
 
-  async function loadData() {
+  const debounceRef     = useRef<NodeJS.Timeout | null>(null);
+  const latestReqRef    = useRef(0);
+  // Keep latest values in refs to avoid stale closures in async functions
+  const searchRef       = useRef(search);
+  const filterStatusRef = useRef(filterStatus);
+  const currentPageRef  = useRef(currentPage);
+
+  async function fetchData(page: number, searchVal: string, statusVal: string) {
+    const reqId = ++latestReqRef.current;
     setLoading(true);
-    const res = await fetch('/api/admin/zakat');
-    const json = await res.json();
-    setData(json);
-    setLoading(false);
+    try {
+      const params = new URLSearchParams({
+        page:   String(page),
+        limit:  String(ITEMS_PER_PAGE),
+        search: searchVal,
+        status: statusVal,
+      });
+      const res  = await fetch(`/api/admin/zakat?${params}`);
+      const json = await res.json();
+      if (reqId !== latestReqRef.current) return; // discard stale response
+      setData(json.data       || []);
+      setTotalItems(json.total      ?? 0);
+      setTotalPages(json.totalPages ?? 1);
+      setCounts(json.counts   || { all: 0, pending: 0, lunas: 0, ditolak: 0 });
+    } finally {
+      if (reqId === latestReqRef.current) setLoading(false);
+    }
   }
 
+  // Initial load
   useEffect(() => {
-    loadData();
+    fetchData(1, '', 'all');
   }, []);
 
-  useEffect(() => {
+  function handleSearchChange(val: string) {
+    setSearch(val);
+    searchRef.current = val;
     setCurrentPage(1);
-  }, [search, filterStatus]);
+    currentPageRef.current = 1;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchData(1, val, filterStatusRef.current);
+    }, DEBOUNCE_MS);
+  }
+
+  function handleStatusChange(status: 'all' | 'pending' | 'lunas' | 'ditolak') {
+    setFilterStatus(status);
+    filterStatusRef.current = status;
+    setCurrentPage(1);
+    currentPageRef.current = 1;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    fetchData(1, searchRef.current, status);
+  }
+
+  function handlePageChange(page: number) {
+    setCurrentPage(page);
+    currentPageRef.current = page;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    fetchData(page, searchRef.current, filterStatusRef.current);
+  }
 
   async function handleAction(id: string, action: 'approve' | 'reject') {
     await fetch(`/api/admin/zakat/${id}/${action}`, { method: 'PATCH' });
-    loadData();
+    fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current);
   }
 
   function openEditModal(item: ZakatItem) {
@@ -113,43 +167,21 @@ export default function AdminZakatPage() {
     setSaving(true);
     try {
       await updateZakatAdmin(editingItem.id, {
-        nama: editNama,
-        nip: editNip,
+        nama:       editNama,
+        nip:        editNip,
         jenisZakat: editJenis,
         jumlahZakat: editJumlah,
-        status: editStatus,
-        pesan: editPesan,
+        status:     editStatus,
+        pesan:      editPesan,
       });
       setEditingItem(null);
-      loadData();
+      fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current);
     } catch (err: any) {
       alert(err.message || 'Gagal menyimpan perubahan');
     } finally {
       setSaving(false);
     }
   }
-
-  const filtered = data.filter((item) => {
-    const matchSearch =
-      item.nama.toLowerCase().includes(search.toLowerCase()) ||
-      (item.nip && item.nip.includes(search)) ||
-      (item.dosen?.nama && item.dosen.nama.toLowerCase().includes(search.toLowerCase()));
-    const matchStatus = filterStatus === 'all' ? true : item.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
-
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginatedData = filtered.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  const counts = {
-    all: data.length,
-    pending: data.filter((d) => d.status === 'pending').length,
-    lunas: data.filter((d) => d.status === 'lunas').length,
-    ditolak: data.filter((d) => d.status === 'ditolak').length,
-  };
 
   return (
     <div className="space-y-6">
@@ -161,7 +193,7 @@ export default function AdminZakatPage() {
             Data Zakat
           </h1>
           <p className="text-xs text-gray-500 mt-1">
-            Kelola & verifikasi data pembayaran zakat dari Dosen/Pegawai maupun Masyarakat USK.
+            Kelola &amp; verifikasi data pembayaran zakat dari Dosen/Pegawai maupun Masyarakat USK.
           </p>
         </div>
         <button
@@ -177,15 +209,15 @@ export default function AdminZakatPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {(
           [
-            { key: 'all', label: 'Semua', color: 'bg-gray-100 text-gray-700' },
-            { key: 'pending', label: 'Pending', color: 'bg-amber-100 text-amber-700' },
-            { key: 'lunas', label: 'Lunas', color: 'bg-emerald-100 text-emerald-700' },
-            { key: 'ditolak', label: 'Ditolak', color: 'bg-red-100 text-red-700' },
+            { key: 'all',     label: 'Semua',   color: 'bg-gray-100 text-gray-700'     },
+            { key: 'pending', label: 'Pending',  color: 'bg-amber-100 text-amber-700'   },
+            { key: 'lunas',   label: 'Lunas',    color: 'bg-emerald-100 text-emerald-700' },
+            { key: 'ditolak', label: 'Ditolak',  color: 'bg-red-100 text-red-700'       },
           ] as const
         ).map(({ key, label, color }) => (
           <button
             key={key}
-            onClick={() => setFilterStatus(key)}
+            onClick={() => handleStatusChange(key)}
             className={`rounded-xl p-3 text-left transition-all border cursor-pointer ${
               filterStatus === key
                 ? 'border-[#063A1E] shadow-sm ring-1 ring-[#063A1E]/20'
@@ -207,7 +239,7 @@ export default function AdminZakatPage() {
           type="text"
           placeholder="Cari nama, NIP, atau nama dosen..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
         />
       </div>
@@ -219,7 +251,7 @@ export default function AdminZakatPage() {
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase tracking-wider font-bold">
                 <th className="py-3.5 px-4">Muzakki</th>
-                <th className="py-3.5 px-4">Dosen / Unit Kerja</th>
+                <th className="py-3.5 px-4">Unit Kerja / No. HP</th>
                 <th className="py-3.5 px-4">Jenis Zakat</th>
                 <th className="py-3.5 px-4">Jumlah</th>
                 <th className="py-3.5 px-4">Bukti</th>
@@ -236,14 +268,14 @@ export default function AdminZakatPage() {
                     <div className="w-5 h-5 border-2 border-[#063A1E] border-t-transparent rounded-full animate-spin mx-auto" />
                   </td>
                 </tr>
-              ) : filtered.length === 0 ? (
+              ) : data.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="text-center py-10 text-gray-400">
                     Tidak ada data ditemukan.
                   </td>
                 </tr>
               ) : (
-                paginatedData.map((item) => (
+                data.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                     {/* Muzakki */}
                     <td className="py-3.5 px-4">
@@ -256,17 +288,24 @@ export default function AdminZakatPage() {
                       <span className="block text-[10px] text-gray-400 capitalize mt-0.5">{item.tipePembayar}</span>
                     </td>
 
-                    {/* Dosen Info */}
+                    {/* Unit Kerja / No. HP */}
                     <td className="py-3.5 px-4">
                       {item.dosen ? (
                         <div>
-                          <p className="font-semibold text-gray-800">{item.dosen.nama}</p>
                           {item.dosen.unitKerja && (
-                            <p className="text-[10px] text-[#063A1E] mt-0.5">{item.dosen.unitKerja}</p>
+                            <p className="text-[10px] text-[#063A1E] font-semibold">{item.dosen.unitKerja}</p>
+                          )}
+                          {(item.dosen.noHp || item.noHp) && (
+                            <p className="text-[10px] text-gray-500 mt-0.5">{item.dosen.noHp || item.noHp}</p>
+                          )}
+                          {!item.dosen.unitKerja && !item.dosen.noHp && !item.noHp && (
+                            <span className="text-gray-400">—</span>
                           )}
                         </div>
                       ) : (
-                        <span className="text-gray-400">—</span>
+                        item.noHp
+                          ? <span className="text-[10px] text-gray-600 font-medium">{item.noHp}</span>
+                          : <span className="text-gray-400">—</span>
                       )}
                     </td>
 
@@ -336,9 +375,9 @@ export default function AdminZakatPage() {
         <AdminPagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={filtered.length}
+          totalItems={totalItems}
           itemsPerPage={ITEMS_PER_PAGE}
-          onPageChange={setCurrentPage}
+          onPageChange={handlePageChange}
           itemLabel="zakat"
         />
       </div>
@@ -447,7 +486,7 @@ export default function AdminZakatPage() {
       <CsvImportModal
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
-        onSuccess={() => loadData()}
+        onSuccess={() => fetchData(1, searchRef.current, filterStatusRef.current)}
         title="Import Zakat Dosen"
         endpoint="/api/admin/import/zakat"
         requiredColumns={['nip', 'jumlah_zakat', 'jenis_zakat']}

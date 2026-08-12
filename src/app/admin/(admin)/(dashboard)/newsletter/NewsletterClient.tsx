@@ -20,6 +20,7 @@ interface NewsletterClientProps {
   currentPage?: number;
   totalPages?: number;
   totalCount?: number;
+  initialSearch?: string;
 }
 
 function formatTanggal(date: Date | null) {
@@ -29,11 +30,14 @@ function formatTanggal(date: Date | null) {
   });
 }
 
+const DEBOUNCE_MS = 400;
+
 export default function NewsletterClient({
   initialData,
   currentPage = 1,
   totalPages = 1,
   totalCount = initialData.length,
+  initialSearch = "",
 }: NewsletterClientProps) {
   const router = useRouter();
   const [data, setData] = useState(initialData);
@@ -49,13 +53,23 @@ export default function NewsletterClient({
   const [tanggalInput, setTanggalInput] = useState(new Date().toISOString().slice(0, 10));
   const [imagePreview, setImagePreview] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialSearch);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const filtered = data.filter((item) =>
-    item.judul.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = data;
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (val) params.set("search", val);
+      params.set("page", "1");
+      router.push(`/admin/newsletter?${params.toString()}`);
+    }, DEBOUNCE_MS);
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -115,7 +129,7 @@ export default function NewsletterClient({
             </svg>
             <input
               type="text" placeholder="Cari newsletter / buletin…" value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#005621] bg-gray-50/60 placeholder-gray-400"
             />
           </div>
@@ -183,7 +197,7 @@ export default function NewsletterClient({
               <div className="flex items-center gap-1.5">
                 {currentPage > 1 ? (
                   <Link
-                    href={`/admin/newsletter?page=${currentPage - 1}`}
+                    href={`/admin/newsletter?page=${currentPage - 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
                     className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors shadow-2xs"
                   >
                     « Prev
@@ -215,7 +229,7 @@ export default function NewsletterClient({
                     return (
                       <Link
                         key={p}
-                        href={`/admin/newsletter?page=${p}`}
+                        href={`/admin/newsletter?page=${p}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
                         className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-colors ${isActive
                           ? "bg-[#005621] text-white shadow-xs"
                           : "bg-white border border-gray-200 hover:bg-gray-100 text-gray-700"
@@ -229,7 +243,7 @@ export default function NewsletterClient({
 
                 {currentPage < totalPages ? (
                   <Link
-                    href={`/admin/newsletter?page=${currentPage + 1}`}
+                    href={`/admin/newsletter?page=${currentPage + 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
                     className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors shadow-2xs"
                   >
                     Next »

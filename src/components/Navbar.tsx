@@ -213,11 +213,10 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => changeGlobalLanguage("id")}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                    currentLang === "id"
-                      ? "bg-[#0b6330] text-white shadow-xs"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
-                  }`}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${currentLang === "id"
+                    ? "bg-[#0b6330] text-white shadow-xs"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
+                    }`}
                 >
                   <span>🇮🇩</span>
                   <span>ID</span>
@@ -225,11 +224,10 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => changeGlobalLanguage("en")}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                    currentLang === "en"
-                      ? "bg-[#0b6330] text-white shadow-xs"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
-                  }`}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${currentLang === "en"
+                    ? "bg-[#0b6330] text-white shadow-xs"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
+                    }`}
                 >
                   <span>🇬🇧</span>
                   <span>EN</span>
@@ -237,11 +235,10 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => changeGlobalLanguage("ar")}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                    currentLang === "ar"
-                      ? "bg-[#0b6330] text-white shadow-xs"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
-                  }`}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${currentLang === "ar"
+                    ? "bg-[#0b6330] text-white shadow-xs"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
+                    }`}
                 >
                   <span>🇸🇦</span>
                   <span>AR</span>
@@ -288,11 +285,10 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => changeGlobalLanguage("id")}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                      currentLang === "id"
-                        ? "bg-[#0b6330] text-white shadow-xs"
-                        : "text-gray-600 hover:bg-gray-200/60"
-                    }`}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${currentLang === "id"
+                      ? "bg-[#0b6330] text-white shadow-xs"
+                      : "text-gray-600 hover:bg-gray-200/60"
+                      }`}
                   >
                     <span>🇮🇩</span>
                     <span>ID</span>
@@ -300,11 +296,10 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => changeGlobalLanguage("en")}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                      currentLang === "en"
-                        ? "bg-[#0b6330] text-white shadow-xs"
-                        : "text-gray-600 hover:bg-gray-200/60"
-                    }`}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${currentLang === "en"
+                      ? "bg-[#0b6330] text-white shadow-xs"
+                      : "text-gray-600 hover:bg-gray-200/60"
+                      }`}
                   >
                     <span>🇬🇧</span>
                     <span>EN</span>
@@ -312,11 +307,10 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => changeGlobalLanguage("ar")}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                      currentLang === "ar"
-                        ? "bg-[#0b6330] text-white shadow-xs"
-                        : "text-gray-600 hover:bg-gray-200/60"
-                    }`}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${currentLang === "ar"
+                      ? "bg-[#0b6330] text-white shadow-xs"
+                      : "text-gray-600 hover:bg-gray-200/60"
+                      }`}
                   >
                     <span>🇸🇦</span>
                     <span>AR</span>
