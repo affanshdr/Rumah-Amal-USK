@@ -28,6 +28,7 @@ export async function getDosenByNip(nip: string) {
 export async function createDosen(formData: FormData) {
   const nip = (formData.get('nip') as string)?.trim();
   const nama = (formData.get('nama') as string)?.trim();
+  const idDonatur = (formData.get('id_donatur') as string)?.trim() || (formData.get('idDonatur') as string)?.trim() || null;
   const npwp = (formData.get('npwp') as string)?.trim() || null;
   const alamat = (formData.get('alamat') as string)?.trim() || null;
   const unitKerja = (formData.get('unit_kerja') as string)?.trim() || (formData.get('unitKerja') as string)?.trim() || null;
@@ -42,10 +43,18 @@ export async function createDosen(formData: FormData) {
     throw new Error(`Dosen dengan NIP ${nip} sudah ada`);
   }
 
+  if (idDonatur) {
+    const existingId = await prisma.dosen.findUnique({ where: { idDonatur } });
+    if (existingId) {
+      throw new Error(`ID Donatur ${idDonatur} sudah digunakan oleh dosen lain`);
+    }
+  }
+
   await prisma.dosen.create({
     data: {
       nip,
       nama,
+      idDonatur,
       npwp,
       alamat,
       unitKerja,
@@ -60,6 +69,7 @@ export async function createDosen(formData: FormData) {
 export async function updateDosen(oldNip: string, formData: FormData) {
   const nip = (formData.get('nip') as string)?.trim();
   const nama = (formData.get('nama') as string)?.trim();
+  const idDonatur = (formData.get('id_donatur') as string)?.trim() || (formData.get('idDonatur') as string)?.trim() || null;
   const npwp = (formData.get('npwp') as string)?.trim() || null;
   const alamat = (formData.get('alamat') as string)?.trim() || null;
   const unitKerja = (formData.get('unit_kerja') as string)?.trim() || (formData.get('unitKerja') as string)?.trim() || null;
@@ -69,11 +79,24 @@ export async function updateDosen(oldNip: string, formData: FormData) {
     throw new Error('NIP dan Nama Dosen wajib diisi');
   }
 
+  if (idDonatur) {
+    const existingId = await prisma.dosen.findFirst({
+      where: {
+        idDonatur,
+        NOT: { nip: oldNip },
+      },
+    });
+    if (existingId) {
+      throw new Error(`ID Donatur ${idDonatur} sudah digunakan oleh dosen lain`);
+    }
+  }
+
   await prisma.dosen.update({
     where: { nip: oldNip },
     data: {
       nip,
       nama,
+      idDonatur,
       npwp,
       alamat,
       unitKerja,

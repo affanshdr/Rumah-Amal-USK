@@ -23,6 +23,7 @@ model User {
 model Dosen {
   nip       String   @id
   nama      String
+  idDonatur String?  @unique @map("id_donatur")
   npwp      String?
   alamat    String?
   unitKerja String?  @map("unit_kerja")

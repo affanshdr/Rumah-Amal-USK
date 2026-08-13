@@ -47,6 +47,7 @@ type RiwayatInfaqItem = {
 type RiwayatData = {
   // NIP mode
   nip?: string;
+  idDonatur?: string | null;
   unitKerja?: string | null;
   rekapZakat?: RekapZakatItem[];
   // Email mode
@@ -61,7 +62,9 @@ type RiwayatData = {
 
 export default function RiwayatPage() {
   const [mode, setMode] = useState<'nip' | 'email'>('nip');
-  const [query, setQuery] = useState('');
+  const [nipInput, setNipInput] = useState('');
+  const [idDonaturInput, setIdDonaturInput] = useState('');
+  const [emailInput, setEmailInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<RiwayatData | null>(null);
@@ -72,7 +75,9 @@ export default function RiwayatPage() {
 
   function handleModeChange(newMode: 'nip' | 'email') {
     setMode(newMode);
-    setQuery('');
+    setNipInput('');
+    setIdDonaturInput('');
+    setEmailInput('');
     setError(null);
     setData(null);
     setShowRekapSection(false);
@@ -82,18 +87,18 @@ export default function RiwayatPage() {
   async function handleCari(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!query.trim()) {
-      setError(
-        mode === 'nip'
-          ? 'Masukkan NIP / NIDN Anda terlebih dahulu.'
-          : 'Masukkan alamat email Anda terlebih dahulu.'
-      );
-      return;
-    }
-
-    if (mode === 'email') {
+    if (mode === 'nip') {
+      if (!nipInput.trim() || !idDonaturInput.trim()) {
+        setError('Masukkan NIP / NIDN dan ID Donatur Anda terlebih dahulu untuk verifikasi.');
+        return;
+      }
+    } else {
+      if (!emailInput.trim()) {
+        setError('Masukkan alamat email Anda terlebih dahulu.');
+        return;
+      }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(query.trim())) {
+      if (!emailRegex.test(emailInput.trim())) {
         setError('Format email tidak valid. Contoh: nama@email.com');
         return;
       }
@@ -105,21 +110,21 @@ export default function RiwayatPage() {
 
     try {
       if (mode === 'nip') {
-        const result = await cariRiwayat(query);
+        const result = await cariRiwayat(nipInput, idDonaturInput);
         if (
           !result.nama &&
           result.riwayatZakat.length === 0 &&
           result.riwayatInfaq.length === 0 &&
           result.rekapZakat.length === 0
         ) {
-          setError('Data riwayat pembayaran tidak ditemukan untuk NIP tersebut.');
+          setError('Data riwayat pembayaran tidak ditemukan untuk NIP dan ID Donatur tersebut.');
         } else {
           setData({ ...result });
           setShowRekapSection(false);
           setSelectedTahun('all');
         }
       } else {
-        const result = await cariRiwayatByEmail(query);
+        const result = await cariRiwayatByEmail(emailInput);
         if (
           !result.nama &&
           result.riwayatZakat.length === 0 &&
@@ -196,7 +201,7 @@ export default function RiwayatPage() {
               Cek Riwayat Zakat &amp; Infaq
             </h3>
             <p className="text-xs text-gray-500 mb-5">
-              Gunakan NIP / NIDN untuk dosen/pegawai, atau Email untuk masyarakat umum.
+              Gunakan NIP / NIDN dan ID Donatur untuk dosen/pegawai, atau Email untuk masyarakat umum.
             </p>
 
             {/* Mode Toggle */}
@@ -204,65 +209,95 @@ export default function RiwayatPage() {
               <button
                 type="button"
                 onClick={() => handleModeChange('nip')}
-                className={`flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  mode === 'nip'
-                    ? 'bg-white text-[#0b6330] shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
+                className={`flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${mode === 'nip'
+                  ? 'bg-white text-[#0b6330] shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+                  }`}
               >
                 <FontAwesomeIcon icon={faIdCard} className="w-3 h-3" />
-                NIP / NIDN (Dosen &amp; Pegawai)
+                NIP &amp; ID Donatur (Dosen &amp; Pegawai)
               </button>
               <button
                 type="button"
                 onClick={() => handleModeChange('email')}
-                className={`flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  mode === 'email'
-                    ? 'bg-white text-[#0b6330] shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
+                className={`flex items-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${mode === 'email'
+                  ? 'bg-white text-[#0b6330] shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+                  }`}
               >
                 <FontAwesomeIcon icon={faEnvelope} className="w-3 h-3" />
                 Email (Masyarakat Umum)
               </button>
             </div>
 
-            <form onSubmit={handleCari} className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <input
-                  type={mode === 'email' ? 'email' : 'text'}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder={
-                    mode === 'nip'
-                      ? 'Masukkan NIP / NIDN Anda (Contoh: 1985...)'
-                      : 'Masukkan alamat email Anda (Contoh: nama@email.com)'
-                  }
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0b6330] bg-gray-50/50 focus:bg-white transition-all font-medium"
-                />
+            <form onSubmit={handleCari} className="space-y-4">
+              {mode === 'nip' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      NIP / NIDN <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={nipInput}
+                      onChange={(e) => setNipInput(e.target.value)}
+                      placeholder="Masukkan NIP / NIDN Anda"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0b6330] bg-gray-50/50 focus:bg-white transition-all font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      ID Donatur <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={idDonaturInput}
+                      onChange={(e) => setIdDonaturInput(e.target.value)}
+                      placeholder="Masukkan ID Donatur Anda"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0b6330] bg-gray-50/50 focus:bg-white transition-all font-medium"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    placeholder="Masukkan alamat email Anda (Contoh: nama@email.com)"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0b6330] bg-gray-50/50 focus:bg-white transition-all font-medium"
+                  />
+                </div>
+              )}
+
+              <div className="flex justify-end pt-1">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="bg-[#0b6330] hover:bg-[#074722] text-white font-extrabold px-7 py-3 rounded-xl text-sm shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
+                >
+                  {loading ? (
+                    <>
+                      <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+                      Memverifikasi &amp; Mencari…
+                    </>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faSearch} />
+                      Cari Riwayat
+                    </>
+                  )}
+                </button>
               </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-[#0b6330] hover:bg-[#074722] text-white font-extrabold px-7 py-3 rounded-xl text-sm shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer shrink-0"
-              >
-                {loading ? (
-                  <>
-                    <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
-                    Mencari…
-                  </>
-                ) : (
-                  <>
-                    <FontAwesomeIcon icon={faSearch} />
-                    Cari Riwayat
-                  </>
-                )}
-              </button>
             </form>
 
             {error && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-xl">
-                ⚠️ {error}
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-xl flex items-center gap-2">
+                <span>⚠️</span>
+                <span>{error}</span>
               </div>
             )}
           </div>
@@ -284,6 +319,11 @@ export default function RiwayatPage() {
                         {isDosen ? (
                           <>
                             NIP: <span className="font-bold text-white">{data.nip}</span>
+                            {data.idDonatur && (
+                              <span className="ml-2 bg-white/10 px-2 py-0.5 rounded border border-white/20 text-white font-bold">
+                                ID Donatur: {data.idDonatur}
+                              </span>
+                            )}
                             {data.unitKerja && <span className="ml-2 opacity-80">• {data.unitKerja}</span>}
                           </>
                         ) : (

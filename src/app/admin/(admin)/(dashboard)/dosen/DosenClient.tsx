@@ -10,6 +10,7 @@ import AdminPagination from '@/components/admin/AdminPagination';
 type DosenItem = {
   nip: string;
   nama: string;
+  idDonatur: string | null;
   npwp: string | null;
   alamat: string | null;
   unitKerja: string | null;
@@ -36,6 +37,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
   // Form states
   const [nip, setNip] = useState('');
   const [nama, setNama] = useState('');
+  const [idDonatur, setIdDonatur] = useState('');
   const [npwp, setNpwp] = useState('');
   const [alamat, setAlamat] = useState('');
   const [unitKerja, setUnitKerja] = useState('');
@@ -92,6 +94,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
     setEditingDosen(null);
     setNip('');
     setNama('');
+    setIdDonatur('');
     setNpwp('');
     setAlamat('');
     setUnitKerja('');
@@ -104,6 +107,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
     setEditingDosen(item);
     setNip(item.nip);
     setNama(item.nama);
+    setIdDonatur(item.idDonatur || '');
     setNpwp(item.npwp || '');
     setAlamat(item.alamat || '');
     setUnitKerja(item.unitKerja || '');
@@ -120,6 +124,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
     const formData = new FormData();
     formData.append('nip', nip);
     formData.append('nama', nama);
+    formData.append('id_donatur', idDonatur);
     formData.append('npwp', npwp);
     formData.append('alamat', alamat);
     formData.append('unit_kerja', unitKerja);
@@ -161,7 +166,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
             Data Dosen & Pegawai
           </h1>
           <p className="text-xs text-gray-500 mt-1">
-            Kelola data Master Dosen USK (NIP, NPWP, No. HP, Alamat, Unit Kerja) untuk relasi Zakat dan Infaq.
+            Kelola data Master Dosen USK (NIP, ID Donatur, NPWP, No. HP, Alamat, Unit Kerja) untuk relasi Zakat dan Infaq.
           </p>
         </div>
 
@@ -188,7 +193,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         <FontAwesomeIcon icon={faSearch} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
         <input
           type="text"
-          placeholder="Cari berdasarkan NIP, Nama, No. HP, atau Unit Kerja..."
+          placeholder="Cari berdasarkan NIP, ID Donatur, Nama, No. HP, atau Unit Kerja..."
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
@@ -200,62 +205,80 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase tracking-wider font-bold">
-                <th className="py-3.5 px-4">NIP</th>
-                <th className="py-3.5 px-4">Nama Dosen</th>
-                <th className="py-3.5 px-4">No. HP</th>
-                <th className="py-3.5 px-4">NPWP</th>
-                <th className="py-3.5 px-4">Unit Kerja</th>
-                <th className="py-3.5 px-4">Alamat</th>
-                <th className="py-3.5 px-4 text-center">Aksi</th>
+              <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase tracking-wider font-bold text-[10px]">
+                <th className="py-2.5 px-2.5 whitespace-nowrap">NIP</th>
+                <th className="py-2.5 px-2.5 whitespace-nowrap">ID Donatur</th>
+                <th className="py-2.5 px-2.5">Nama Dosen</th>
+                <th className="py-2.5 px-2.5 whitespace-nowrap">No. HP</th>
+                <th className="py-2.5 px-2.5 whitespace-nowrap">NPWP</th>
+                <th className="py-2.5 px-2.5">Unit Kerja</th>
+                <th className="py-2.5 px-2.5">Alamat</th>
+                <th className="py-2.5 px-2 text-center whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 text-[11px]">
               {isFetching ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-10 text-gray-400">
+                  <td colSpan={8} className="text-center py-10 text-gray-400">
                     <div className="w-5 h-5 border-2 border-[#063A1E] border-t-transparent rounded-full animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-10 text-gray-400">
+                  <td colSpan={8} className="text-center py-10 text-gray-400">
                     Belum ada data dosen ditemukan.
                   </td>
                 </tr>
               ) : (
                 data.map((item) => (
                   <tr key={item.nip} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-bold text-gray-800">{item.nip}</td>
-                    <td className="py-3.5 px-4 font-semibold text-gray-900">{item.nama}</td>
-                    <td className="py-3.5 px-4 text-gray-700 font-mono">
+                    <td className="py-2.5 px-2.5 font-mono font-bold text-gray-800 whitespace-nowrap">{item.nip}</td>
+                    <td className="py-2.5 px-2.5 font-mono text-gray-700 font-bold whitespace-nowrap">
+                      {item.idDonatur ? (
+                        <span className="bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded text-[10px] font-semibold border border-emerald-200">
+                          {item.idDonatur}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 font-normal">-</span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-2.5 font-semibold text-gray-900 max-w-[150px] truncate" title={item.nama}>
+                      {item.nama}
+                    </td>
+                    <td className="py-2.5 px-2.5 text-gray-700 font-mono whitespace-nowrap">
                       {item.noHp ? (
-                        <span className="inline-flex items-center gap-1.5 text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md font-semibold">
-                          <FontAwesomeIcon icon={faPhone} className="text-emerald-600 text-[10px]" />
+                        <span className="inline-flex items-center gap-1 text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                          <FontAwesomeIcon icon={faPhone} className="text-emerald-600 text-[9px]" />
                           {item.noHp}
                         </span>
                       ) : (
                         <span className="text-gray-400 font-normal">-</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-gray-600 font-mono">{item.npwp || '-'}</td>
-                    <td className="py-3.5 px-4 text-gray-700">{item.unitKerja || '-'}</td>
-                    <td className="py-3.5 px-4 text-gray-600 max-w-[200px] truncate">{item.alamat || '-'}</td>
-                    <td className="py-3.5 px-4 text-center">
-                      <div className="inline-flex items-center gap-1.5">
+                    <td className="py-2.5 px-2.5 text-gray-600 font-mono whitespace-nowrap max-w-[110px] truncate" title={item.npwp || ''}>
+                      {item.npwp || '-'}
+                    </td>
+                    <td className="py-2.5 px-2.5 text-gray-700 max-w-[130px] truncate" title={item.unitKerja || ''}>
+                      {item.unitKerja || '-'}
+                    </td>
+                    <td className="py-2.5 px-2.5 text-gray-600 max-w-[140px] truncate" title={item.alamat || ''}>
+                      {item.alamat || '-'}
+                    </td>
+                    <td className="py-2.5 px-2 text-center whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1">
                         <button
                           onClick={() => openEditModal(item)}
-                          className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
+                          className="p-1 rounded text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
                           title="Edit Dosen"
                         >
-                          <FontAwesomeIcon icon={faEdit} className="w-3.5 h-3.5" />
+                          <FontAwesomeIcon icon={faEdit} className="w-3 h-3" />
                         </button>
                         <button
                           onClick={() => handleDelete(item.nip)}
-                          className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          className="p-1 rounded text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                           title="Hapus Dosen"
                         >
-                          <FontAwesomeIcon icon={faTrash} className="w-3.5 h-3.5" />
+                          <FontAwesomeIcon icon={faTrash} className="w-3 h-3" />
                         </button>
                       </div>
                     </td>
@@ -324,6 +347,19 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
                   value={nama}
                   onChange={(e) => setNama(e.target.value)}
                   placeholder="Contoh: Dr. Ir. Ahmad Subagyo, M.T."
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  ID Donatur <span className="text-gray-400 font-normal">(Kode Verifikasi Privasi Zakat)</span>
+                </label>
+                <input
+                  type="text"
+                  value={idDonatur}
+                  onChange={(e) => setIdDonatur(e.target.value)}
+                  placeholder="Contoh: DSN-001 / DON-198501"
                   className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
                 />
               </div>
@@ -401,10 +437,10 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         title="Import Data Dosen"
         endpoint="/api/admin/import/dosen"
         requiredColumns={['nip', 'nama']}
-        optionalColumns={['npwp', 'alamat', 'unit_kerja', 'no_hp']}
+        optionalColumns={['id_donatur', 'npwp', 'alamat', 'unit_kerja', 'no_hp']}
         templateRows={[
-          ['198501012010121001', 'Dr. Ahmad Subagyo, M.T.', '12.345.678.9-012.000', 'Jl. Kampus No.1 Banda Aceh', 'Fakultas Teknik', '081234567890'],
-          ['197803152005011002', 'Prof. Dr. Siti Rahma, M.Sc.', '', 'Jl. Darussalam No.5', 'Fakultas MIPA', '085298765432'],
+          ['198501012010121001', 'Dr. Ahmad Subagyo, M.T.', 'DON-1001', '12.345.678.9-012.000', 'Jl. Kampus No.1 Banda Aceh', 'Fakultas Teknik', '081234567890'],
+          ['197803152005011002', 'Prof. Dr. Siti Rahma, M.Sc.', 'DON-1002', '', 'Jl. Darussalam No.5', 'Fakultas MIPA', '085298765432'],
         ]}
       />
     </div>

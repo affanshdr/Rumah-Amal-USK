@@ -2,12 +2,23 @@
 
 import { prisma } from '@/lib/prisma';
 
-export async function cariRiwayat(nip: string) {
+export async function cariRiwayat(nip: string, idDonatur?: string) {
   const cleanNip = nip.trim();
+  const cleanIdDonatur = idDonatur?.trim() || '';
 
   const dosen = await prisma.dosen.findUnique({
     where: { nip: cleanNip },
   });
+
+  if (dosen) {
+    if (dosen.idDonatur) {
+      if (!cleanIdDonatur || cleanIdDonatur.toLowerCase() !== dosen.idDonatur.toLowerCase()) {
+        throw new Error('Verifikasi ID Donatur gagal. NIP dan ID Donatur tidak sesuai.');
+      }
+    } else if (cleanIdDonatur) {
+      throw new Error('Verifikasi ID Donatur gagal. NIP dan ID Donatur tidak sesuai.');
+    }
+  }
 
   const riwayatZakat = await prisma.zakat.findMany({
     where: { nip: cleanNip },
@@ -71,6 +82,7 @@ export async function cariRiwayat(nip: string) {
 
   return {
     nip: cleanNip,
+    idDonatur: dosen?.idDonatur || null,
     nama,
     unitKerja: dosen?.unitKerja || null,
     totalZakatLunas,
