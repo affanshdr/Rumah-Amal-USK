@@ -260,20 +260,7 @@ export default function PublicAnnouncementDetailPage({
     <div className="min-h-screen bg-[#f8fafc]/50 py-8 px-4 sm:px-6 lg:px-8 font-sans text-gray-800">
       <div className="max-w-[1340px] mx-auto">
 
-        {/* Top Header: Breadcrumb */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <nav className="text-xs font-semibold flex flex-wrap items-center gap-1.5 text-gray-600 leading-relaxed" dir="ltr">
-            <Link href="/" className="hover:text-[#0b6330] transition-colors">
-              {lang === 'ar' ? 'الرئيسية' : lang === 'en' ? 'Home' : 'Beranda'}
-            </Link>
-            <span className="text-gray-400 font-bold">/</span>
-            <Link href="/pengumuman" className="hover:text-[#0b6330] transition-colors">
-              {lang === 'ar' ? 'الإعلانات' : lang === 'en' ? 'Announcements' : 'Pengumuman'}
-            </Link>
-            <span className="text-gray-400 font-bold">/</span>
-            <span className="text-[#0b6330] font-extrabold uppercase line-clamp-1">{displayTitle}</span>
-          </nav>
-        </div>
+
 
         {/* Layout 2 Kolom */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -301,15 +288,6 @@ export default function PublicAnnouncementDetailPage({
             {/* Isi Konten Artikel */}
             <div className="prose max-w-none text-gray-800 mb-8">
               <style>{`
-                .public-article-content a[data-type="download-button"],
-                .public-article-content a[data-type="link-button"] {
-                  display: flex !important;
-                  width: 100% !important;
-                  justify-content: center !important;
-                  text-align: center !important;
-                  box-sizing: border-box !important;
-                  border-radius: 16px !important;
-                }
                 .public-article-content p { margin-bottom: 1.25rem; line-height: 1.8; font-size: 1.05rem; }
                 .public-article-content h1 { font-size: 1.75rem; font-weight: 800; margin-top: 1.75rem; margin-bottom: 0.75rem; }
                 .public-article-content h2 { font-size: 1.4rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.6rem; }
@@ -323,6 +301,36 @@ export default function PublicAnnouncementDetailPage({
                 .rtl-body { text-align: right; direction: rtl; font-family: serif, sans-serif; }
                 .rtl-body blockquote { border-left: none; border-right: 4px solid #d1d5db; padding-left: 0; padding-right: 1rem; }
                 .rtl-body ul, .rtl-body ol { padding-left: 0; padding-right: 1.5rem; }
+                div[data-type="bank-banner"] { direction: ltr !important; unicode-bidi: isolate !important; text-align: center !important; }
+                div[data-type="bank-banner"] div { direction: ltr !important; text-align: center !important; }
+                .public-article-content a[data-type="download-button"],
+                .public-article-content a[data-type="link-button"],
+                .public-article-content a[download],
+                .public-article-content div.my-4 a,
+                .public-article-content div:has(> a[data-type="download-button"]),
+                .public-article-content div:has(> a[data-type="link-button"]) {
+                  display: flex !important;
+                  width: 100% !important;
+                  justify-content: center !important;
+                  text-align: center !important;
+                  box-sizing: border-box !important;
+                  border-radius: 16px !important;
+                  direction: ltr !important;
+                  unicode-bidi: isolate !important;
+                }
+                .public-article-content a[data-type="download-button"],
+                .public-article-content a[data-type="link-button"],
+                .public-article-content a[download],
+                .public-article-content div.my-4 a {
+                  background: #0b6330 !important;
+                  color: #ffffff !important;
+                  padding: 12px 24px !important;
+                  font-weight: 700 !important;
+                  text-decoration: none !important;
+                  font-size: 14px !important;
+                  box-shadow: 0 2px 8px rgba(11, 99, 48, 0.25) !important;
+                  margin: 16px 0 !important;
+                }
               `}</style>
               <div
                 className={`public-article-content ${isContentRtl ? 'rtl-body' : 'ltr-body'}`}

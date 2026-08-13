@@ -137,7 +137,7 @@ export default function PublicAnnouncementListPage() {
   }[lang];
 
   return (
-    <div className={`min-h-screen bg-white py-6 px-4 sm:px-6 lg:px-8 font-sans ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-white py-6 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-[1340px] mx-auto">
 
         {/* Search Bar */}

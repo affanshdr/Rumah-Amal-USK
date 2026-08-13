@@ -88,24 +88,11 @@ export default function PublicProgramPage() {
   const t = programDictionary[lang] || programDictionary.id;
 
   return (
-    <div
-      className={`min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans ${
-        lang === 'ar' ? 'rtl' : 'ltr'
-      }`}
-      dir={lang === 'ar' ? 'rtl' : 'ltr'}
-    >
+    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-[1340px] mx-auto">
         {/* Header & Breadcrumb */}
         <div className="my-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-            <nav className="flex items-center gap-2 text-sm text-gray-500 font-medium" dir="ltr">
-              <Link href="/" className="hover:text-[#0b6330] transition-colors">
-                {t.home}
-              </Link>
-              <span>/</span>
-              <span className="text-[#0b6330] font-bold">{t.program}</span>
-            </nav>
-          </div>
+
 
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[#333333] tracking-tight uppercase mb-4 text-center">
             {t.pageTitle}

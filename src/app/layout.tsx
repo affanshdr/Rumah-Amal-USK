@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins, Montserrat } from "next/font/google";
+import { Poppins, Montserrat, Amiri } from "next/font/google";
 import "@/app/globals.css";
 
 const poppins = Poppins({
@@ -12,6 +12,12 @@ const montserrat = Montserrat({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-montserrat",
+});
+
+const amiri = Amiri({
+  subsets: ["arabic"],
+  weight: ["400", "700"],
+  variable: "--font-amiri",
 });
 
 export const metadata: Metadata = {
@@ -27,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className={`${poppins.variable} ${montserrat.variable} font-sans antialiased`}>
+    <html lang="id" className={`${poppins.variable} ${montserrat.variable} ${amiri.variable} font-sans antialiased`}>
       <body className="min-h-screen bg-gray-50/50 text-gray-800">
         {children}
       </body>

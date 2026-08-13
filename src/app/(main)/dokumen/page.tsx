@@ -107,7 +107,7 @@ export default function DokumenPage() {
   };
 
   return (
-    <div className={`min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-[1340px] mx-auto">
 
         {/* Title */}
@@ -115,16 +115,7 @@ export default function DokumenPage() {
           {dict.title}
         </h1>
 
-        {/* Breadcrumb */}
-        <div className="mb-8">
-          <nav className="text-[13.5px] font-semibold flex items-center gap-1.5">
-            <Link href="/" className="text-gray-700 hover:text-[#0b6330] transition-colors">
-              {dict.breadcrumbHome}
-            </Link>
-            <span className="text-[#0b6330] font-bold">/</span>
-            <span className="text-[#0b6330] font-bold">{dict.breadcrumbCurrent}</span>
-          </nav>
-        </div>
+
 
         {/* Form Search Bar */}
         <form onSubmit={handleSearchSubmit} className="max-w-2xl mx-auto mb-12 flex gap-3">

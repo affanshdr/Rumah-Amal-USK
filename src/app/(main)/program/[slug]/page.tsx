@@ -216,20 +216,7 @@ export default function PublicProgramDetailPage({
             {displayTitle}
           </h1>
 
-          {/* 2. Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 mb-8 max-w-4xl mx-auto justify-center" dir="ltr">
-            <Link href="/" className="hover:text-[#0b6330] transition-colors">
-              {lang === 'ar' ? 'الرئيسية' : lang === 'en' ? 'Home' : 'Beranda'}
-            </Link>
-            <span>/</span>
-            <Link href="/program" className="hover:text-[#0b6330] transition-colors">
-              {lang === 'ar' ? 'البرامج' : lang === 'en' ? 'Program' : 'Program'}
-            </Link>
-            <span>/</span>
-            <span className="text-[#0b6330] font-bold uppercase truncate max-w-xs sm:max-w-md">
-              {displayTitle}
-            </span>
-          </nav>
+
         </div>
 
         {/* 3. Centered Poster Image Card */}
@@ -248,6 +235,34 @@ export default function PublicProgramDetailPage({
         <div className="max-w-4xl mx-auto bg-white rounded-3xl p-6 sm:p-10 lg:p-12 shadow-sm border border-gray-100/90 mb-12">
           <div className="prose max-w-none text-gray-800">
             <style>{`
+              .program-detail-content a[data-type="download-button"],
+              .program-detail-content a[data-type="link-button"],
+              .program-detail-content a[download],
+              .program-detail-content div.my-4 a,
+              .program-detail-content div:has(> a[data-type="download-button"]),
+              .program-detail-content div:has(> a[data-type="link-button"]) {
+                display: flex !important;
+                width: 100% !important;
+                justify-content: center !important;
+                text-align: center !important;
+                box-sizing: border-box !important;
+                border-radius: 16px !important;
+                direction: ltr !important;
+                unicode-bidi: isolate !important;
+              }
+              .program-detail-content a[data-type="download-button"],
+              .program-detail-content a[data-type="link-button"],
+              .program-detail-content a[download],
+              .program-detail-content div.my-4 a {
+                background: #0b6330 !important;
+                color: #ffffff !important;
+                padding: 12px 24px !important;
+                font-weight: 700 !important;
+                text-decoration: none !important;
+                font-size: 14px !important;
+                box-shadow: 0 2px 8px rgba(11, 99, 48, 0.25) !important;
+                margin: 16px 0 !important;
+              }
               .program-detail-content p { margin-bottom: 1.25rem; line-height: 1.8; font-size: 1rem; color: #374151; }
               .program-detail-content h1 { font-size: 1.6rem; font-weight: 800; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #111827; }
               .program-detail-content h2 { font-size: 1.3rem; font-weight: 800; margin-top: 1.5rem; margin-bottom: 0.65rem; color: #111827; }
