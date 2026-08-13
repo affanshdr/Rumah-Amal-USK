@@ -37,6 +37,8 @@ export default function StrukturOrganisasiClient({ initialData }: StrukturOrgani
   const fileInputRef = useRef<HTMLInputElement>(null);
   const DEFAULT_IMAGE_URL = "/profil/struktur-organisasi.png";
 
+  const [isDragging, setIsDragging] = useState(false);
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -44,6 +46,34 @@ export default function StrukturOrganisasiClient({ initialData }: StrukturOrgani
     const localUrl = URL.createObjectURL(file);
     setImagePreview(localUrl);
     setUseCustomUrl(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      setSelectedFile(file);
+      const localUrl = URL.createObjectURL(file);
+      setImagePreview(localUrl);
+      setUseCustomUrl(false);
+    } else if (file) {
+      setStatusMsg({ type: "error", text: "File yang diunggah harus berupa file gambar (PNG, JPG, WEBP)." });
+    }
   };
 
   const handleResetDefault = async () => {
@@ -209,13 +239,24 @@ export default function StrukturOrganisasiClient({ initialData }: StrukturOrgani
                 />
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-emerald-300 hover:border-[#005621] bg-emerald-50/50 hover:bg-emerald-50 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all text-center group"
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all text-center group ${
+                    isDragging
+                      ? "border-[#005621] bg-emerald-100/80 scale-[1.02]"
+                      : "border-emerald-300 hover:border-[#005621] bg-emerald-50/50 hover:bg-emerald-50"
+                  }`}
                 >
                   <div className="w-12 h-12 rounded-2xl bg-emerald-100 group-hover:scale-110 text-[#005621] flex items-center justify-center mb-3 transition-transform shadow-xs">
                     <FontAwesomeIcon icon={faUpload} className="w-5 h-5" />
                   </div>
                   <p className="text-xs font-bold text-gray-800">
-                    {selectedFile ? selectedFile.name : "Klik untuk Pilih File Gambar Baru"}
+                    {selectedFile
+                      ? selectedFile.name
+                      : isDragging
+                      ? "Lepaskan file gambar di sini..."
+                      : "Klik atau Drag & Drop Gambar Baru di Sini"}
                   </p>
                   <p className="text-[11px] text-gray-500 mt-1">
                     Format PNG, JPG, WEBP (Maksimal 5MB)
