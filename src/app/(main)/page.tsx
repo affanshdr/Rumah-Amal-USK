@@ -11,7 +11,11 @@ import { homeDictionary, HomeLanguage } from "@/lib/i18n/home";
 interface KampanyeItem {
   id: string;
   judul: string;
+  judulAr?: string | null;
+  judulEn?: string | null;
   deskripsi: string | null;
+  deskripsiAr?: string | null;
+  deskripsiEn?: string | null;
   imageUrl: string;
   targetDana: number | null;
   terkumpul: number;
@@ -117,6 +121,17 @@ export default function Home() {
 
   const [banners, setBanners] = useState<BannerSlide[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
+
+  // Dynamic Aspect Ratio: mengunci tinggi slider ke gambar TERTIANGGI di antara seluruh slide
+  const [maxBannerRatio, setMaxBannerRatio] = useState<number | null>(null);
+
+  const handleBannerImageLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const { naturalWidth, naturalHeight } = e.currentTarget;
+    if (naturalWidth > 0 && naturalHeight > 0) {
+      const ratio = naturalHeight / naturalWidth;
+      setMaxBannerRatio((prev) => (prev === null ? ratio : Math.max(prev, ratio)));
+    }
+  };
 
   const [newsList, setNewsList] = useState<NewsItem[]>([]);
   const [loadingNews, setLoadingNews] = useState(true);
@@ -285,18 +300,21 @@ export default function Home() {
 
 
   return (
-    <main className={`min-h-screen bg-gray-50/50 pb-16 sm:pb-24 relative overflow-x-hidden ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <main className="min-h-screen bg-gray-50/50 pb-16 sm:pb-24 relative overflow-x-hidden font-sans">
 
-      {/* Hero Section - Full 100vw Banner */}
-      <section className="w-full pt-3 sm:pt-5">
+      {/* Hero Section - Non-Floating Flush Under Navbar */}
+      <section className="w-full">
 
         {/* Main Banner Slider with Smooth Transitions */}
         {isLoadingBanner ? (
-          <div className="w-full aspect-[16/6] bg-gray-200 animate-pulse" />
+          <div className="w-full aspect-[16/6] bg-gray-200/60 animate-pulse" />
         ) : activeSlides.length > 0 ? (
           <div
-            className="relative bg-gray-950 overflow-hidden w-full shadow-md group mx-auto"
-            style={{ maxWidth: '100vw' }}
+            className="relative bg-transparent overflow-hidden w-full group mx-auto transition-all duration-300 min-h-[200px]"
+            style={{
+              maxWidth: '100vw',
+              aspectRatio: maxBannerRatio ? `${1 / maxBannerRatio}` : '16 / 6',
+            }}
             onMouseEnter={() => { isHoveringSlider.current = true; }}
             onMouseLeave={() => { isHoveringSlider.current = false; }}
           >
@@ -327,26 +345,28 @@ export default function Home() {
               </button>
             )}
 
-            {/* Slide Images with Dynamic 100% Width & Smooth Fade Transitions */}
+            {/* Slide Images: Latar Belakang Menyatu dengan Page Background, Mentok Paling Atas */}
             {activeSlides.map((slide, index) => {
               const isActive = index === currentSlide;
               return (
                 <div
                   key={slide.id}
-                  className={`w-full transition-opacity duration-700 ease-in-out ${isActive
-                    ? "relative opacity-100 z-10 pointer-events-auto"
-                    : "absolute inset-0 opacity-0 z-0 pointer-events-none"
+                  className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out flex flex-col justify-start items-start bg-transparent ${isActive
+                    ? "opacity-100 z-10 pointer-events-auto"
+                    : "opacity-0 z-0 pointer-events-none"
                     }`}
                 >
                   <Link
                     href={slide.href}
-                    className="w-full block cursor-pointer"
+                    className="w-full h-full flex flex-col justify-start items-start cursor-pointer relative overflow-hidden bg-transparent"
                   >
+                    {/* Gambar Utama (100% Lebar, Mentok Atas, Tidak Terpotong) */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={slide.imageUrl}
                       alt={slide.title}
-                      className="w-full h-auto block group-hover:scale-[1.005] transition-transform duration-700"
+                      onLoad={handleBannerImageLoad}
+                      className="w-full h-auto max-h-full object-contain object-top group-hover:scale-[1.003] transition-transform duration-700 block"
                     />
                   </Link>
                 </div>
@@ -357,10 +377,10 @@ export default function Home() {
         ) : null}
 
         {/* 3 Action Cards */}
-        <div className="relative z-20 px-4 sm:px-6 lg:px-8 mt-6 sm:mt-8 md:mt-10 max-w-[1340px] mx-auto">
+        <div className="relative z-20 px-5 sm:px-6 lg:px-8 mt-5 sm:mt-8 md:mt-10 max-w-[1340px] mx-auto">
 
           {/* 3 Action Cards Container */}
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 md:gap-7 max-w-[1240px] mx-auto">
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-4.5 sm:gap-6 md:gap-7 max-w-[1240px] mx-auto">
 
             {/* CARD 1: INFAK */}
             <div className="bg-[#f6f8fa] rounded-[18px] sm:rounded-[22px] md:rounded-[26px] p-5 sm:p-6 md:p-8 shadow-xl border border-gray-100/90 text-center flex flex-col items-center justify-between min-h-[190px] sm:min-h-[220px] transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl group">
@@ -432,7 +452,7 @@ export default function Home() {
       </section>
 
       {/* ===== SECTION 1: KAMPANYE UNGGULAN ===== */}
-      <section id="kampanye" className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
+      <section id="kampanye" className="max-w-[1340px] mx-auto px-5 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
 
         <RevealOnScroll>
           {/* Section Heading */}
@@ -494,8 +514,8 @@ export default function Home() {
                     {/* Body Content */}
                     <div className="p-5 sm:p-6 flex flex-col flex-1">
                       {/* Title */}
-                      <h3 className="font-bold text-[#112b27] text-base sm:text-lg md:text-[19px] leading-tight mb-3 sm:mb-4 line-clamp-2 min-h-[44px] sm:min-h-[48px] group-hover:text-[#0b6330] transition-colors">
-                        {item.judul}
+                      <h3 className={`font-bold text-[#112b27] text-base sm:text-lg md:text-[19px] leading-tight mb-3 sm:mb-4 line-clamp-2 min-h-[44px] sm:min-h-[48px] group-hover:text-[#0b6330] transition-colors ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+                        {(lang === 'en' ? item.judulEn : lang === 'ar' ? item.judulAr : item.judul) || item.judul}
                       </h3>
 
                       {/* Durasi */}
@@ -558,7 +578,7 @@ export default function Home() {
       </section>
 
       {/* ===== SECTION 2: PROFIL ===== */}
-      <section id="profil" className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
+      <section id="profil" className="max-w-[1340px] mx-auto px-5 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
 
         <RevealOnScroll>
           {/* Section Heading */}
@@ -636,7 +656,7 @@ export default function Home() {
       </section>
 
       {/* ===== SECTION 3: PENGUMUMAN ===== */}
-      <section id="pengumuman" className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
+      <section id="pengumuman" className="max-w-[1340px] mx-auto px-5 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
 
         <RevealOnScroll>
           {/* Section Heading */}
@@ -741,7 +761,7 @@ export default function Home() {
       </section>
 
       {/* ===== SECTION 4: BERITA TERKINI ===== */}
-      <section id="berita" className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
+      <section id="berita" className="max-w-[1340px] mx-auto px-5 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
 
         <RevealOnScroll>
           {/* Section Heading */}
@@ -846,7 +866,7 @@ export default function Home() {
       </section>
 
       {/* ===== SECTION 5: NEWSLETTER ===== */}
-      <section id="newsletter" className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
+      <section id="newsletter" className="max-w-[1340px] mx-auto px-5 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
 
         <RevealOnScroll>
           {/* Section Heading */}

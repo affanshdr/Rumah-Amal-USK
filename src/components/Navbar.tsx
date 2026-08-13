@@ -52,8 +52,18 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileProgramOpen, setMobileProgramOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState<Language>("id");
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 80);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const saved = (localStorage.getItem("app_lang") ||
@@ -104,11 +114,20 @@ export default function Navbar() {
     { href: "/galeri", label: t.Galeri },
   ];
 
+  const isHomePage = pathname === "/";
+
   return (
     <>
       <header
-        className={`border-b sticky top-0 z-50 transition-colors duration-200 ${mobileMenuOpen ? "bg-[#383d42] border-transparent" : "bg-white border-gray-200"
-          }`}
+        className={`sticky top-0 z-50 transition-all duration-300 ease-in-out ${
+          mobileMenuOpen
+            ? "bg-[#383d42] border-b border-transparent shadow-none"
+            : isHomePage
+              ? isScrolled
+                ? "bg-white border-b border-gray-200 shadow-md lg:fixed lg:top-0 lg:inset-x-0 lg:translate-y-0 lg:opacity-100 lg:pointer-events-auto"
+                : "bg-white border-b border-gray-200 shadow-2xs lg:fixed lg:top-0 lg:inset-x-0 lg:-translate-y-full lg:opacity-0 lg:pointer-events-none"
+              : "bg-white border-b border-gray-200 shadow-2xs"
+        }`}
         dir={currentLang === 'ar' ? 'rtl' : 'ltr'}
       >
         <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8">

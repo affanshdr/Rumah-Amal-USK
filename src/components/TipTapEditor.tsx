@@ -31,7 +31,7 @@ export const DownloadButtonNode = Node.create({
   renderHTML({ HTMLAttributes, node }) {
     return [
       'div',
-      { class: 'my-4 w-full' },
+      { class: 'my-4 w-full', style: 'direction:ltr; unicode-bidi:isolate;' },
       [
         'a',
         mergeAttributes(
@@ -57,6 +57,8 @@ export const DownloadButtonNode = Node.create({
               'text-decoration:none',
               'font-size:14px',
               'box-shadow:0 2px 8px rgba(11,99,48,.25)',
+              'direction:ltr',
+              'unicode-bidi:isolate',
             ].join(';'),
           },
           HTMLAttributes
@@ -96,7 +98,7 @@ export const LinkButtonNode = Node.create({
   renderHTML({ HTMLAttributes, node }) {
     return [
       'div',
-      { class: 'my-4 w-full' },
+      { class: 'my-4 w-full', style: 'direction:ltr; unicode-bidi:isolate;' },
       [
         'a',
         mergeAttributes(
@@ -121,6 +123,8 @@ export const LinkButtonNode = Node.create({
               'text-decoration:none',
               'font-size:14px',
               'box-shadow:0 2px 8px rgba(0,86,33,.25)',
+              'direction:ltr',
+              'unicode-bidi:isolate',
             ].join(';'),
           },
           HTMLAttributes
@@ -174,23 +178,25 @@ export const BankBannerNode = Node.create({
             'font-size:15px',
             'margin:18px 0',
             'box-shadow:0 3px 10px rgba(11,99,48,0.2)',
+            'direction:ltr',
+            'unicode-bidi:isolate',
           ].join(';'),
         },
         HTMLAttributes
       ),
       [
         'div',
-        { style: 'font-size:14px; opacity:0.95; font-weight:600; margin-bottom:4px;' },
+        { style: 'font-size:14px; opacity:0.95; font-weight:600; margin-bottom:4px; direction:ltr; text-align:center;' },
         node.attrs.bankName || 'Bank Syariah Indonesia',
       ],
       [
         'div',
-        { style: 'font-size:16px; font-weight:800; letter-spacing:0.5px; margin-bottom:4px;' },
+        { style: 'font-size:16px; font-weight:800; letter-spacing:0.5px; margin-bottom:4px; direction:ltr; text-align:center;' },
         `No. Rek ${node.attrs.accountNumber || '7099400409'}`,
       ],
       [
         'div',
-        { style: 'font-size:14px; opacity:0.95; font-weight:600;' },
+        { style: 'font-size:14px; opacity:0.95; font-weight:600; direction:ltr; text-align:center;' },
         node.attrs.accountName || 'A.N. Rumah Amal Masjid Jamik USK',
       ],
     ];

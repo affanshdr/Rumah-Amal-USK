@@ -10,6 +10,8 @@ import { infaqDictionary, InfaqLanguage } from "@/lib/i18n/infaq";
 type KampanyeOption = {
   id: string;
   judul: string;
+  judulAr?: string | null;
+  judulEn?: string | null;
 };
 
 export default function InfaqClient({ programs }: { programs: KampanyeOption[] }) {
@@ -47,6 +49,12 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
     window.addEventListener("languageChange", readLang);
     return () => window.removeEventListener("languageChange", readLang);
   }, []);
+
+  const getKampanyeTitle = (p: KampanyeOption) => {
+    if (lang === "en" && p.judulEn) return p.judulEn;
+    if (lang === "ar" && p.judulAr) return p.judulAr;
+    return p.judul;
+  };
 
   // Sync selected Kampanye from URL parameter if provided
   useEffect(() => {
@@ -108,10 +116,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
   const selectedKampanyeObj = programs.find((p) => p.id === selectedKampanyeId);
 
   return (
-    <main
-      className={`flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full font-sans ${isRtl ? "rtl" : ""}`}
-      dir={isRtl ? "rtl" : "ltr"}
-    >
+    <main className="flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full font-sans">
       {/* Selector Tab Tipe Pembayar */}
       <div className="text-center mb-8">
         <div className="inline-flex rounded-xl p-1 bg-gray-200/80 shadow-inner">
@@ -194,7 +199,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                   <optgroup label={t.groupTerikat}>
                     {programs.map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.judul}
+                        {getKampanyeTitle(p)}
                       </option>
                     ))}
                   </optgroup>
@@ -206,7 +211,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                 <div className="mt-2 text-xs p-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl flex items-center gap-1.5 font-medium">
                   <span>🔗</span>
                   <span>
-                    {t.badgeTerikat} <strong>{selectedKampanyeObj.judul}</strong>
+                    {t.badgeTerikat} <strong>{getKampanyeTitle(selectedKampanyeObj)}</strong>
                   </span>
                 </div>
               ) : (

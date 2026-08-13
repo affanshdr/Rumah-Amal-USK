@@ -1,6 +1,7 @@
 import { getDashboardStats } from '@/lib/dashboard-stats';
 import { ChartBulanan, ChartJenis } from '@/components/DashboardCharts';
 import StatusBadge from '@/components/StatusBadge';
+import RetranslateButton from '@/components/RetranslateButton';
 
 function formatRupiah(angka: number) {
     return 'Rp ' + angka.toLocaleString('id-ID');
@@ -70,6 +71,9 @@ export default async function AdminDashboardPage() {
                     </table>
                 )}
             </div>
+
+            {/* Retranslate Tool */}
+            <RetranslateButton />
         </div>
     );
 }

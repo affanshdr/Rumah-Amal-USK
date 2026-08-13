@@ -100,27 +100,13 @@ export default function PublicNewsListPage() {
   const labels = beritaDictionary[lang] || beritaDictionary.id;
 
   return (
-    <div
-      className={`min-h-screen bg-white py-10 px-4 sm:px-6 lg:px-8 font-sans ${
-        lang === 'ar' ? 'rtl' : 'ltr'
-      }`}
-      dir={lang === 'ar' ? 'rtl' : 'ltr'}
-    >
+    <div className="min-h-screen bg-white py-10 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-[1340px] mx-auto">
-        {/* Big Page Title & Breadcrumb */}
+        {/* Big Page Title */}
         <div className="text-center mb-6">
           <h1 className="text-4xl sm:text-5xl font-extrabold text-[#374151] tracking-tight uppercase mb-6">
             {labels.pageTitle}
           </h1>
-
-          {/* Breadcrumb */}
-          <div className="flex items-center justify-start max-w-5xl mx-auto gap-2 text-sm font-extrabold mb-8 text-[#374151]">
-            <Link href="/" className="hover:text-[#0b6330] transition-colors">
-              {labels.home}
-            </Link>
-            <span className="text-gray-400">/</span>
-            <span className="text-[#0b6330]">{labels.news}</span>
-          </div>
         </div>
 
         {/* Search Bar */}

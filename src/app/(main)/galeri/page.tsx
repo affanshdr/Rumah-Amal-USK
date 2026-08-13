@@ -90,7 +90,7 @@ export default function GaleriPage() {
   }, [handleKeyDown]);
 
   return (
-    <div className={`min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-[1340px] mx-auto">
 
         {/* Title */}
@@ -98,14 +98,7 @@ export default function GaleriPage() {
           {dict.title}
         </h1>
 
-        {/* Breadcrumb */}
-        <nav className="text-[13.5px] font-semibold mb-8 flex items-center gap-1.5">
-          <Link href="/" className="text-gray-700 hover:text-[#0b6330] transition-colors">
-            {dict.breadcrumbHome}
-          </Link>
-          <span className="text-[#0b6330] font-bold">/</span>
-          <span className="text-[#0b6330] font-bold">{dict.breadcrumbCurrent}</span>
-        </nav>
+
 
         {/* Loading State */}
         {loading ? (

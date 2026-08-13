@@ -3,6 +3,8 @@
 @theme {
   --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   --font-montserrat: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-amiri), "Traditional Arabic", "Scheherazade New", serif;
+  --font-amiri: var(--font-amiri), "Traditional Arabic", "Scheherazade New", serif;
 }
 
 @layer base {
@@ -14,6 +16,13 @@
     font-family: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
   }
 
+  /* Traditional Arabic Font Rule for Arabic Language and font-serif */
+  .font-serif,
+  [lang="ar"],
+  [dir="rtl"] {
+    font-family: var(--font-amiri), "Traditional Arabic", "Scheherazade New", serif !important;
+  }
+
   h1,
   h2,
   h3,
@@ -21,6 +30,21 @@
   h5,
   h6 {
     font-family: var(--font-montserrat), var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3,
+  [dir="rtl"] h4,
+  [dir="rtl"] h5,
+  [dir="rtl"] h6,
+  [lang="ar"] h1,
+  [lang="ar"] h2,
+  [lang="ar"] h3,
+  [lang="ar"] h4,
+  [lang="ar"] h5,
+  [lang="ar"] h6 {
+    font-family: var(--font-amiri), "Traditional Arabic", serif !important;
   }
 }
 

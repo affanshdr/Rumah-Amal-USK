@@ -7,7 +7,11 @@ import { kampanyeDictionary, KampanyeLanguage } from '@/lib/i18n/kampanye';
 interface KampanyeItem {
   id: string;
   judul: string;
+  judulAr?: string | null;
+  judulEn?: string | null;
   deskripsi: string | null;
+  deskripsiAr?: string | null;
+  deskripsiEn?: string | null;
   imageUrl: string;
   targetDana: number | null;
   terkumpul: number;
@@ -37,6 +41,12 @@ export default function PublicKampanyePage() {
 
   const dict = kampanyeDictionary[lang] || kampanyeDictionary.id;
 
+  const getItemTitle = (item: KampanyeItem) => {
+    if (lang === 'en' && item.judulEn) return item.judulEn;
+    if (lang === 'ar' && item.judulAr) return item.judulAr;
+    return item.judul;
+  };
+
   const fetchKampanye = useCallback(async () => {
     setLoading(true);
     try {
@@ -63,7 +73,8 @@ export default function PublicKampanyePage() {
 
   const filteredItems = items.filter((item) => {
     if (!activeQuery.trim()) return true;
-    return item.judul.toLowerCase().includes(activeQuery.trim().toLowerCase());
+    const titleToSearch = getItemTitle(item).toLowerCase();
+    return titleToSearch.includes(activeQuery.trim().toLowerCase()) || item.judul.toLowerCase().includes(activeQuery.trim().toLowerCase());
   });
 
   const formatRupiah = (val: number | null) => {
@@ -86,21 +97,14 @@ export default function PublicKampanyePage() {
   };
 
   return (
-    <div className={`min-h-screen bg-[#fcfcfc] py-8 px-4 sm:px-6 lg:px-8 font-sans ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-[#fcfcfc] py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-[1340px] mx-auto">
 
-        {/* Page Title & Breadcrumb */}
+        {/* Page Title */}
         <div className="text-center my-6">
           <h1 className={`text-3xl sm:text-4xl font-extrabold text-[#333333] tracking-tight uppercase mb-4 ${lang === 'ar' ? 'font-serif' : ''}`}>
             {dict.title}
           </h1>
-          <nav className="flex justify-center items-center gap-2 text-sm text-gray-500 font-medium">
-            <Link href="/" className="hover:text-[#0b6330] transition-colors">
-              {dict.breadcrumbHome}
-            </Link>
-            <span>/</span>
-            <span className="text-[#0b6330] font-bold">{dict.breadcrumbCurrent}</span>
-          </nav>
         </div>
 
         {/* Search Bar */}
@@ -176,8 +180,8 @@ export default function PublicKampanyePage() {
                   {/* Body Content */}
                   <div className="p-6 flex flex-col flex-1">
                     {/* Title */}
-                    <h3 className="font-bold text-[#112b27] text-lg sm:text-[19px] leading-tight mb-5 line-clamp-2 min-h-[48px]">
-                      {item.judul}
+                    <h3 className={`font-bold text-[#112b27] text-lg sm:text-[19px] leading-tight mb-5 line-clamp-2 min-h-[48px] ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+                      {getItemTitle(item)}
                     </h3>
 
                     {/* Durasi */}

@@ -30,12 +30,133 @@ export function fixProperNouns(text: string, targetLang: 'en' | 'ar'): string {
   return result;
 }
 
+/**
+ * Extracts special HTML elements that must NOT be translated
+ * (custom buttons, banners, images, iframes) and replaces them
+ * with unique placeholders. Returns the sanitized text and a
+ * map to restore the originals after translation.
+ */
+function protectHtml(html: string): { protected: string; map: Map<string, string> } {
+  const map = new Map<string, string>();
+  let counter = 0;
+  let result = html;
+
+  // Match elements that must be kept intact:
+  // 1. <a data-type="link-button" ...>...</a> (and its wrapper div)
+  // 2. <a data-type="download-button" ...>...</a> (and its wrapper div)
+  // 3. <div data-type="bank-banner" ...>...</div>
+  // 4. <img ... />
+  // 5. <iframe ...></iframe>
+
+  const patterns = [
+    // div wrapping link-button or download-button (the outer wrapper div)
+    /<div[^>]*class="my-4 w-full"[^>]*>[\s\S]*?<\/div>/gi,
+    // bank-banner div
+    /<div[^>]*data-type="bank-banner"[\s\S]*?<\/div>/gi,
+    // standalone link/download buttons without wrapper
+    /<a[^>]*data-type="(?:link-button|download-button)"[\s\S]*?<\/a>/gi,
+    // images
+    /<img[^>]*\/?>/gi,
+    // iframes
+    /<iframe[\s\S]*?<\/iframe>/gi,
+  ];
+
+  for (const pattern of patterns) {
+    result = result.replace(pattern, (match) => {
+      const placeholder = `%%PROTECTED_${counter++}%%`;
+      map.set(placeholder, match);
+      return placeholder;
+    });
+  }
+
+  return { protected: result, map };
+}
+
+/**
+ * Translates inner text of protected custom buttons while keeping attributes intact
+ */
+function translateButtonLabelInHtml(html: string, targetLang: 'en' | 'ar'): string {
+  if (!html) return html;
+  return html.replace(
+    /(<a[^>]*data-type="(?:download-button|link-button)"[^>]*>)([\s\S]*?)(<\/a>)/gi,
+    (fullMatch, openTag, label, closeTag) => {
+      let translatedLabel = label;
+
+      if (targetLang === 'en') {
+        translatedLabel = translatedLabel
+          .replace(/Pengumuman Final BPRA UKT/gi, 'BPRA UKT Final Announcement')
+          .replace(/DOWNLOAD BERKAS \(PDF\)/gi, 'DOWNLOAD FILE (PDF)')
+          .replace(/LINK DOWNLOAD BERKAS/gi, 'FILE DOWNLOAD LINK')
+          .replace(/Hasil Seleksi Administrasi/gi, 'Administrative Selection Results')
+          .replace(/Hasil Seleksi Akhir/gi, 'Final Selection Results')
+          .replace(/Hasil Seleksi/gi, 'Selection Results')
+          .replace(/Hasil Akhir/gi, 'Final Results')
+          .replace(/Syarat & Ketentuan/gi, 'Terms & Conditions')
+          .replace(/Syarat dan Ketentuan/gi, 'Terms and Conditions')
+          .replace(/Pengumuman/gi, 'Announcement')
+          .replace(/Pendaftaran/gi, 'Registration')
+          .replace(/Beasiswa/gi, 'Scholarship')
+          .replace(/Panduan/gi, 'Guide')
+          .replace(/Formulir/gi, 'Form')
+          .replace(/Dokumen/gi, 'Document')
+          .replace(/Unduh/gi, 'Download')
+          .replace(/Download/gi, 'Download')
+          .replace(/Berkas/gi, 'File')
+          .replace(/Tautan/gi, 'Link');
+      } else if (targetLang === 'ar') {
+        translatedLabel = translatedLabel
+          .replace(/Pengumuman Final BPRA UKT/gi, 'إعلان BPRA UKT النهائي')
+          .replace(/DOWNLOAD BERKAS \(PDF\)/gi, 'تحميل الملف (PDF)')
+          .replace(/LINK DOWNLOAD BERKAS/gi, 'رابط تحميل الملف')
+          .replace(/Hasil Seleksi Administrasi/gi, 'نتائج التصفية الإدارية')
+          .replace(/Hasil Seleksi Akhir/gi, 'نتائج الاختيار النهائي')
+          .replace(/Hasil Seleksi/gi, 'نتائج الاختيار')
+          .replace(/Hasil Akhir/gi, 'النتائج النهائية')
+          .replace(/Syarat & Ketentuan/gi, 'الشروط والأحكام')
+          .replace(/Syarat dan Ketentuan/gi, 'الشروط والأحكام')
+          .replace(/Pengumuman/gi, 'إعلان')
+          .replace(/Pendaftaran/gi, 'تسجيل')
+          .replace(/Beasiswa/gi, 'منحة دراسية')
+          .replace(/Panduan/gi, 'دليل')
+          .replace(/Formulir/gi, 'استمارة')
+          .replace(/Dokumen/gi, 'وثيقة')
+          .replace(/Unduh/gi, 'تحميل')
+          .replace(/Download/gi, 'تحميل')
+          .replace(/Berkas/gi, 'الملف')
+          .replace(/Tautan/gi, 'رابط');
+      }
+
+      return `${openTag}${translatedLabel}${closeTag}`;
+    }
+  );
+}
+
+/**
+ * Restores placeholders back to their original HTML elements.
+ */
+function restoreHtml(text: string, map: Map<string, string>, targetLang?: 'en' | 'ar'): string {
+  let result = text;
+  for (const [placeholder, original] of map.entries()) {
+    // Translation APIs sometimes add spaces inside placeholders — normalize
+    const escaped = placeholder.replace(/%/g, '%').replace(/_/g, '[_ ]?');
+    let restoredMatch = original;
+    if (targetLang) {
+      restoredMatch = translateButtonLabelInHtml(restoredMatch, targetLang);
+    }
+    result = result.replace(new RegExp(escaped, 'g'), () => restoredMatch);
+  }
+  return result;
+}
+
 export async function autoTranslate(
   text: string,
   targetLang: 'en' | 'ar',
   sourceLang: string = 'id'
 ): Promise<string> {
   if (!text || !text.trim()) return text;
+
+  // Protect special HTML elements from translation
+  const { protected: safeText, map: protectedMap } = protectHtml(text);
 
   const apiKey = process.env.DEEPL_API_KEY;
 
@@ -52,8 +173,10 @@ export async function autoTranslate(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          text: [text],
+          text: [safeText],
           target_lang: targetLang.toUpperCase(),
+          tag_handling: 'html',
+          ignore_tags: ['a', 'img', 'iframe'],
         }),
       });
 
@@ -61,7 +184,8 @@ export async function autoTranslate(
         const data = await res.json();
         const translated = data.translations?.[0]?.text;
         if (translated) {
-          return fixProperNouns(translated, targetLang);
+          const restored = restoreHtml(translated, protectedMap, targetLang);
+          return fixProperNouns(restored, targetLang);
         }
       } else {
         console.warn(`[DeepL API Warning ${res.status}] Falling back to Google Translate...`);
@@ -75,19 +199,20 @@ export async function autoTranslate(
   try {
     const res = await fetch(
       `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(
-        text
+        safeText
       )}`
     );
 
     if (!res.ok) return text;
 
     const data = await res.json();
-    let translated = text;
+    let translated = safeText;
     if (Array.isArray(data) && Array.isArray(data[0])) {
       translated = data[0].map((item: any) => item[0] || '').join('');
     }
 
-    return fixProperNouns(translated, targetLang);
+    const restored = restoreHtml(translated, protectedMap, targetLang);
+    return fixProperNouns(restored, targetLang);
   } catch (error) {
     console.error('Google Translation error:', error);
     return text;
@@ -126,3 +251,4 @@ export async function autoTranslateAll(data: {
     contentAr,
   };
 }
+

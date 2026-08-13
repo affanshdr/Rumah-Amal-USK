@@ -10,6 +10,8 @@ export default async function InfaqPage() {
   const programs = kampanyes.map((k) => ({
     id: k.id,
     judul: k.judul,
+    judulEn: k.judulEn,
+    judulAr: k.judulAr,
   }));
 
   return (

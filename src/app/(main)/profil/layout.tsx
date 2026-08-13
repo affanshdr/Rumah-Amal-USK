@@ -53,21 +53,10 @@ export default function ProfilLayout({
 
   return (
     <ProfilContext.Provider value={{ lang, setLang: changeLanguage, dict }}>
-      <main className={`min-h-screen bg-white pb-24 font-sans ${lang === 'ar' ? 'rtl' : 'ltr'}`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+      <main className="min-h-screen bg-white pb-24 font-sans">
         <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8 pt-8">
 
-          {/* Top Header: Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm font-semibold text-gray-600 mb-8 flex-wrap" dir="ltr">
-            <Link href="/" className="hover:text-[#0b6330] transition-colors">
-              {dict.breadcrumbHome}
-            </Link>
-            <span className="text-gray-400">/</span>
-            <Link href="/profil" className="hover:text-[#0b6330] transition-colors">
-              {dict.breadcrumbProfil}
-            </Link>
-            <span className="text-gray-400">/</span>
-            <span className="text-[#0b6330] font-bold">{activeLabel}</span>
-          </div>
+
 
           {/* Content Layout Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">

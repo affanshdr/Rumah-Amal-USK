@@ -240,16 +240,34 @@ export default function PublicNewsDetailPage({
             )}
 
             {/* Content Body */}
-            <div className="prose max-w-none text-gray-800 text-base sm:text-lg leading-relaxed">
               <style>{`
                 .article-body a[data-type="download-button"],
-                .article-body a[data-type="link-button"] {
+                .article-body a[data-type="link-button"],
+                .article-body a[download],
+                .article-body div.my-4 a,
+                .article-body div:has(> a[data-type="download-button"]),
+                .article-body div:has(> a[data-type="link-button"]) {
                   display: flex !important;
                   width: 100% !important;
                   justify-content: center !important;
                   text-align: center !important;
                   box-sizing: border-box !important;
                   border-radius: 16px !important;
+                  direction: ltr !important;
+                  unicode-bidi: isolate !important;
+                }
+                .article-body a[data-type="download-button"],
+                .article-body a[data-type="link-button"],
+                .article-body a[download],
+                .article-body div.my-4 a {
+                  background: #0b6330 !important;
+                  color: #ffffff !important;
+                  padding: 12px 24px !important;
+                  font-weight: 700 !important;
+                  text-decoration: none !important;
+                  font-size: 14px !important;
+                  box-shadow: 0 2px 8px rgba(11, 99, 48, 0.25) !important;
+                  margin: 16px 0 !important;
                 }
                 .article-body p { margin-bottom: 1.25rem; line-height: 1.8; }
                 .article-body h1 { font-size: 1.75rem; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; color: #111827; }
@@ -264,7 +282,10 @@ export default function PublicNewsDetailPage({
                 .rtl-body { text-align: right; direction: rtl; font-family: serif, sans-serif; }
                 .rtl-body blockquote { border-left: none; border-right: 4px solid #0b6330; padding-left: 0; padding-right: 1.25rem; border-radius: 0.75rem 0 0 0.75rem; }
                 .rtl-body ul, .rtl-body ol { padding-left: 0; padding-right: 1.5rem; }
+                div[data-type="bank-banner"] { direction: ltr !important; unicode-bidi: isolate !important; text-align: center !important; }
+                div[data-type="bank-banner"] div { direction: ltr !important; text-align: center !important; }
               `}</style>
+            <div className="prose max-w-none text-gray-800 text-base sm:text-lg leading-relaxed">
               <div
                 className={`article-body ${isContentRtl ? 'rtl-body' : 'ltr-body'}`}
                 dir={isContentRtl ? 'rtl' : 'ltr'}

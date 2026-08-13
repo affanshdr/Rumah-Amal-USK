@@ -28,7 +28,11 @@ const TipTapEditor = dynamic(() => import("@/components/TipTapEditor"), {
 type KampanyeRow = {
   id: string;
   judul: string;
+  judulAr?: string | null;
+  judulEn?: string | null;
   deskripsi: string | null;
+  deskripsiAr?: string | null;
+  deskripsiEn?: string | null;
   imageUrl: string | null;
   targetDana: number | null;
   terkumpul: number;
@@ -156,13 +160,18 @@ export default function KampanyeClient({
   const [editing, setEditing] = useState<KampanyeRow | null>(null);
   const [previewingItem, setPreviewingItem] = useState<KampanyeRow | null>(null);
 
+  const [formTab, setFormTab] = useState<"id" | "en" | "ar">("id");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [coverPreview, setCoverPreview] = useState("");
   const [deskripsiHtml, setDeskripsiHtml] = useState("<p></p>");
+  const [deskripsiEnHtml, setDeskripsiEnHtml] = useState("<p></p>");
+  const [deskripsiArHtml, setDeskripsiArHtml] = useState("<p></p>");
   const [showPreviewPanel, setShowPreviewPanel] = useState(false);
 
   const [liveJudul, setLiveJudul] = useState("");
+  const [liveJudulEn, setLiveJudulEn] = useState("");
+  const [liveJudulAr, setLiveJudulAr] = useState("");
   const [liveTarget, setLiveTarget] = useState<number>(0);
   const [liveTerkumpul, setLiveTerkumpul] = useState<number>(0);
   const [liveDate, setLiveDate] = useState("");
@@ -186,18 +195,27 @@ export default function KampanyeClient({
 
   const openAdd = () => {
     setEditing(null);
+    setFormTab("id");
     setCoverPreview("");
     setDeskripsiHtml("<p></p>");
-    setLiveJudul(""); setLiveTarget(0); setLiveTerkumpul(0); setLiveDate("");
+    setDeskripsiEnHtml("<p></p>");
+    setDeskripsiArHtml("<p></p>");
+    setLiveJudul(""); setLiveJudulEn(""); setLiveJudulAr("");
+    setLiveTarget(0); setLiveTerkumpul(0); setLiveDate("");
     setShowPreviewPanel(false);
     setModalMode("add");
   };
 
   const openEdit = (item: KampanyeRow) => {
     setEditing(item);
+    setFormTab("id");
     setCoverPreview(item.imageUrl || "");
     setDeskripsiHtml(item.deskripsi || "<p></p>");
+    setDeskripsiEnHtml(item.deskripsiEn || "<p></p>");
+    setDeskripsiArHtml(item.deskripsiAr || "<p></p>");
     setLiveJudul(item.judul);
+    setLiveJudulEn(item.judulEn || "");
+    setLiveJudulAr(item.judulAr || "");
     setLiveTarget(item.targetDana || 0);
     setLiveTerkumpul(item.terkumpul || 0);
     setLiveDate(item.tanggalSelesai ? new Date(item.tanggalSelesai).toISOString().slice(0, 10) : "");
@@ -238,7 +256,12 @@ export default function KampanyeClient({
     try {
       const fd = new FormData(e.currentTarget);
       fd.set("imageUrl", coverPreview);
+      fd.set("judul", liveJudul);
+      fd.set("judulEn", liveJudulEn);
+      fd.set("judulAr", liveJudulAr);
       fd.set("deskripsi", deskripsiHtml);
+      fd.set("deskripsiEn", deskripsiEnHtml);
+      fd.set("deskripsiAr", deskripsiArHtml);
       if (editing) { fd.append("id", editing.id); await updateKampanye(fd); }
       else { await addKampanye(fd); }
       closeModal();
@@ -505,29 +528,8 @@ export default function KampanyeClient({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Judul Kampanye <span className="text-red-500">*</span></label>
-                      <input
-                        type="text" name="judul" required
-                        value={liveJudul}
-                        onChange={(e) => setLiveJudul(e.target.value)}
-                        placeholder="Contoh: Beasiswa Anak Yatim USK 2026"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Batas Waktu Kampanye</label>
-                      <input
-                        type="date" name="tanggalSelesai"
-                        value={liveDate}
-                        onChange={(e) => setLiveDate(e.target.value)}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* General Configs: Target Dana, Terkumpul, Tanggal, Status */}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-gray-50/80 p-4 rounded-xl border border-gray-200">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5">Target Dana (Rp)</label>
                       <input
@@ -539,7 +541,7 @@ export default function KampanyeClient({
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Dana Terkumpul Saat Ini (Rp)</label>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Dana Terkumpul (Rp)</label>
                       <input
                         type="number" name="terkumpul"
                         value={liveTerkumpul || ""}
@@ -548,7 +550,16 @@ export default function KampanyeClient({
                         className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
                       />
                     </div>
-                    <div className="flex flex-col justify-end pb-1">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Batas Waktu</label>
+                      <input
+                        type="date" name="tanggalSelesai"
+                        value={liveDate}
+                        onChange={(e) => setLiveDate(e.target.value)}
+                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
+                      />
+                    </div>
+                    <div className="flex flex-col justify-end pb-2">
                       <div className="flex items-center gap-2.5">
                         <input type="checkbox" id="published" name="published" value="1"
                           defaultChecked={editing ? editing.isActive : true}
@@ -558,15 +569,162 @@ export default function KampanyeClient({
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                      Rincian Deskripsi Kampanye
-                    </label>
-                    <TipTapEditor
-                      content={deskripsiHtml}
-                      onChange={(html) => setDeskripsiHtml(html)}
-                      minHeight="320px"
-                    />
+                  {/* 🌐 Multilingual Tabs (ID, EN, AR) */}
+                  <div className="border border-gray-200 rounded-2xl p-4 bg-white space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-200 pb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-extrabold text-gray-700 uppercase tracking-wide">
+                          🌐 Konten 3 Bahasa (Multilingual)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!liveJudul.trim()) {
+                              alert("Silakan isi Judul Kampanye (Indonesia) terlebih dahulu!");
+                              return;
+                            }
+                            setIsSubmitting(true);
+                            try {
+                              const res = await fetch("/api/translate", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  title: liveJudul,
+                                  content: deskripsiHtml,
+                                }),
+                              });
+                              if (res.ok) {
+                                const data = await res.json();
+                                if (data.titleEn) setLiveJudulEn(data.titleEn);
+                                if (data.titleAr) setLiveJudulAr(data.titleAr);
+                                if (data.contentEn) setDeskripsiEnHtml(data.contentEn);
+                                if (data.contentAr) setDeskripsiArHtml(data.contentAr);
+                                alert("✨ Berhasil menerjemahkan judul & deskripsi ke Bahasa Inggris (EN) & Arab (AR)!");
+                              } else {
+                                alert("Gagal melakukan terjemahan otomatis.");
+                              }
+                            } catch (err: any) {
+                              alert(err.message || "Gagal menerjemahkan.");
+                            } finally {
+                              setIsSubmitting(false);
+                            }
+                          }}
+                          className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                        >
+                          ✨ Auto Translate ke EN & AR
+                        </button>
+                      </div>
+
+                      {/* Tab Buttons */}
+                      <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+                        <button
+                          type="button"
+                          onClick={() => setFormTab("id")}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${formTab === "id" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                        >
+                          🇮🇩 Indonesia
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormTab("en")}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${formTab === "en" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                        >
+                          🇬🇧 English
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormTab("ar")}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${formTab === "ar" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                        >
+                          🇸🇦 العربية
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* TAB ID */}
+                    {formTab === "id" && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Judul Kampanye (Indonesia) <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={liveJudul}
+                            onChange={(e) => setLiveJudul(e.target.value)}
+                            placeholder="Contoh: Beasiswa Anak Yatim USK 2026"
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Rincian Deskripsi Kampanye (Indonesia)
+                          </label>
+                          <TipTapEditor
+                            content={deskripsiHtml}
+                            onChange={(html) => setDeskripsiHtml(html)}
+                            minHeight="280px"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB EN */}
+                    {formTab === "en" && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Campaign Title (English)
+                          </label>
+                          <input
+                            type="text"
+                            value={liveJudulEn}
+                            onChange={(e) => setLiveJudulEn(e.target.value)}
+                            placeholder="Enter campaign title in English…"
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                            Campaign Description (English)
+                          </label>
+                          <TipTapEditor
+                            content={deskripsiEnHtml}
+                            onChange={(html) => setDeskripsiEnHtml(html)}
+                            minHeight="280px"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* TAB AR */}
+                    {formTab === "ar" && (
+                      <div className="space-y-4" dir="rtl">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5 font-serif text-right">
+                            عنوان الحملة (العربية)
+                          </label>
+                          <input
+                            type="text"
+                            value={liveJudulAr}
+                            onChange={(e) => setLiveJudulAr(e.target.value)}
+                            placeholder="أدخل عنوان الحملة باللغة العربية…"
+                            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white font-serif text-right"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1.5 font-serif text-right">
+                            تفاصيل الحملة (العربية)
+                          </label>
+                          <TipTapEditor
+                            content={deskripsiArHtml}
+                            onChange={(html) => setDeskripsiArHtml(html)}
+                            minHeight="280px"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
