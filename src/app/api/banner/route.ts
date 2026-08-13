@@ -9,12 +9,12 @@ export async function GET(req: NextRequest) {
     const client = (prisma.banner ? prisma : getPrismaInstance()) as any;
     const banners = client.banner?.findMany
       ? await client.banner.findMany({
-          where: showAll ? undefined : { isActive: true },
-          orderBy: [
-            { order: 'asc' },
-            { createdAt: 'desc' },
-          ],
-        })
+        where: showAll ? undefined : { isActive: true },
+        orderBy: [
+          { order: 'asc' },
+          { createdAt: 'desc' },
+        ],
+      })
       : [];
 
     return NextResponse.json({ success: true, banners });

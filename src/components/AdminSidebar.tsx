@@ -18,6 +18,7 @@ import {
   faUserTie,
   faFileText,
   faScaleBalanced,
+  faSitemap,
 } from '@fortawesome/free-solid-svg-icons';
 import { logoutAdmin } from '@/actions/admin-auth';
 import { useTransition } from 'react';
@@ -61,6 +62,7 @@ const menuGroups = [
       { href: '/admin/dokumen', label: 'Dokumen', icon: faFile },
       { href: '/admin/mitra', label: 'Mitra', icon: faBuilding },
       { href: '/admin/newsletter', label: 'Newsletter', icon: faNewspaper },
+      { href: '/admin/struktur-organisasi', label: 'Struktur Organisasi', icon: faSitemap },
     ],
   },
 ];

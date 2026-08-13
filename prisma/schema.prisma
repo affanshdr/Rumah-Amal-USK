@@ -299,3 +299,12 @@ model Banner {
   @@map("banners")
 }
 
+model StrukturOrganisasi {
+  id        String   @id @default("default")
+  imageUrl  String   @map("image_url")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("struktur_organisasi")
+}
+
+

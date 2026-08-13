@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const PRIMARY_BUCKET = 'Berita';
-const FALLBACK_BUCKETS = ['announcements', 'Galeri', 'Program', 'Kampanye', 'Newsletter', 'Mitra', 'Dokumen'];
+const FALLBACK_BUCKETS = ['announcements', 'Galeri', 'Program', 'Kampanye', 'Newsletter', 'Mitra', 'Dokumen', 'StrukturOrganisasi'];
 
 
 
