@@ -12,7 +12,7 @@ if (!password) {
 }
 
 const hash = bcrypt.hashSync(password, 10);
-console.log('\n=== Salin ke .env.local ===');
+console.log('\n=== Salin ke .env ===');
 console.log(`ADMIN_EMAIL=admin@contoh.com (ganti dengan email admin Anda)`);
 console.log(`ADMIN_PASSWORD_HASH=${hash}`);
 console.log('===========================\n');
