@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { cariRiwayat, cariRiwayatByEmail } from '@/actions/riwayat';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -18,6 +18,7 @@ import {
   faIdCard,
   faEnvelope,
 } from '@fortawesome/free-solid-svg-icons';
+import { riwayatDictionary, RiwayatLanguage } from '@/lib/i18n/riwayat';
 
 type RiwayatZakatItem = {
   id: string;
@@ -61,6 +62,7 @@ type RiwayatData = {
 };
 
 export default function RiwayatPage() {
+  const [lang, setLang] = useState<RiwayatLanguage>('id');
   const [mode, setMode] = useState<'nip' | 'email'>('nip');
   const [nipInput, setNipInput] = useState('');
   const [idDonaturInput, setIdDonaturInput] = useState('');
@@ -72,6 +74,23 @@ export default function RiwayatPage() {
   // Rekap Zakat section state
   const [showRekapSection, setShowRekapSection] = useState(false);
   const [selectedTahun, setSelectedTahun] = useState<string>('all');
+
+  useEffect(() => {
+    const readLang = () => {
+      const saved = (localStorage.getItem('language') ||
+        localStorage.getItem('app_lang') ||
+        'id') as RiwayatLanguage;
+      if (['id', 'en', 'ar'].includes(saved)) {
+        setLang(saved);
+      }
+    };
+    readLang();
+    window.addEventListener('languageChange', readLang);
+    return () => window.removeEventListener('languageChange', readLang);
+  }, []);
+
+  const t = riwayatDictionary[lang] || riwayatDictionary.id;
+  const isAr = lang === 'ar';
 
   function handleModeChange(newMode: 'nip' | 'email') {
     setMode(newMode);
@@ -89,17 +108,17 @@ export default function RiwayatPage() {
 
     if (mode === 'nip') {
       if (!nipInput.trim() || !idDonaturInput.trim()) {
-        setError('Masukkan NIP / NIDN dan ID Donatur Anda terlebih dahulu untuk verifikasi.');
+        setError(t.errNipEmpty);
         return;
       }
     } else {
       if (!emailInput.trim()) {
-        setError('Masukkan alamat email Anda terlebih dahulu.');
+        setError(t.errEmailEmpty);
         return;
       }
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(emailInput.trim())) {
-        setError('Format email tidak valid. Contoh: nama@email.com');
+        setError(t.errEmailInvalid);
         return;
       }
     }
@@ -117,7 +136,7 @@ export default function RiwayatPage() {
           result.riwayatInfaq.length === 0 &&
           result.rekapZakat.length === 0
         ) {
-          setError('Data riwayat pembayaran tidak ditemukan untuk NIP dan ID Donatur tersebut.');
+          setError(t.errNotFoundNip);
         } else {
           setData({ ...result });
           setShowRekapSection(false);
@@ -130,7 +149,7 @@ export default function RiwayatPage() {
           result.riwayatZakat.length === 0 &&
           result.riwayatInfaq.length === 0
         ) {
-          setError('Data riwayat pembayaran tidak ditemukan untuk email tersebut.');
+          setError(t.errNotFoundEmail);
         } else {
           setData({ ...result });
         }
@@ -143,12 +162,14 @@ export default function RiwayatPage() {
   }
 
   function formatRupiah(angka: number) {
-    return 'Rp ' + Number(angka || 0).toLocaleString('id-ID');
+    const localeMap: Record<string, string> = { id: 'id-ID', en: 'en-US', ar: 'ar-SA' };
+    return 'Rp ' + Number(angka || 0).toLocaleString(localeMap[lang] || 'id-ID');
   }
 
   function formatTanggal(date: Date) {
     try {
-      return new Date(date).toLocaleDateString('id-ID', {
+      const localeMap: Record<string, string> = { id: 'id-ID', en: 'en-US', ar: 'ar-SA' };
+      return new Date(date).toLocaleDateString(localeMap[lang] || 'id-ID', {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
@@ -165,9 +186,9 @@ export default function RiwayatPage() {
       ditolak: 'bg-red-100 text-red-700 border-red-200',
     };
     const labelMap: Record<string, string> = {
-      lunas: 'Lunas',
-      pending: 'Pending',
-      ditolak: 'Ditolak',
+      lunas: t.statusLunas,
+      pending: t.statusPending,
+      ditolak: t.statusDitolak,
     };
     return (
       <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${map[status] || 'bg-gray-100 text-gray-500'}`}>
@@ -189,7 +210,7 @@ export default function RiwayatPage() {
   const isDosen = mode === 'nip';
 
   return (
-    <main className="flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full font-sans">
+    <main className={`flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full font-sans ${isAr ? 'text-right' : ''}`}>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <Sidebar />
 
@@ -198,14 +219,14 @@ export default function RiwayatPage() {
           <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100">
             <h3 className="text-xl font-extrabold text-gray-900 mb-1 flex items-center gap-2">
               <FontAwesomeIcon icon={faSearch} className="text-[#0b6330] w-5 h-5" />
-              Cek Riwayat Zakat &amp; Infaq
+              {t.pageTitle}
             </h3>
             <p className="text-xs text-gray-500 mb-5">
-              Gunakan NIP / NIDN dan ID Donatur untuk dosen/pegawai, atau Email untuk masyarakat umum.
+              {t.pageSubtitle}
             </p>
 
             {/* Mode Toggle */}
-            <div className="inline-flex rounded-xl p-1 bg-gray-100/80 shadow-inner gap-1 mb-5">
+            <div className="inline-flex rounded-xl p-1 bg-gray-100/80 shadow-inner gap-1 mb-5 flex-wrap">
               <button
                 type="button"
                 onClick={() => handleModeChange('nip')}
@@ -215,7 +236,7 @@ export default function RiwayatPage() {
                   }`}
               >
                 <FontAwesomeIcon icon={faIdCard} className="w-3 h-3" />
-                NIP &amp; ID Donatur (Dosen &amp; Pegawai)
+                {t.modeNip}
               </button>
               <button
                 type="button"
@@ -226,7 +247,7 @@ export default function RiwayatPage() {
                   }`}
               >
                 <FontAwesomeIcon icon={faEnvelope} className="w-3 h-3" />
-                Email (Masyarakat Umum)
+                {t.modeEmail}
               </button>
             </div>
 
@@ -235,25 +256,25 @@ export default function RiwayatPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-1">
-                      NIP / NIDN <span className="text-red-500">*</span>
+                      {t.labelNip} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={nipInput}
                       onChange={(e) => setNipInput(e.target.value)}
-                      placeholder="Masukkan NIP / NIDN Anda"
+                      placeholder={t.placeholderNip}
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0b6330] bg-gray-50/50 focus:bg-white transition-all font-medium"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-1">
-                      ID Donatur <span className="text-red-500">*</span>
+                      {t.labelIdDonatur} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={idDonaturInput}
                       onChange={(e) => setIdDonaturInput(e.target.value)}
-                      placeholder="Masukkan ID Donatur Anda"
+                      placeholder={t.placeholderIdDonatur}
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0b6330] bg-gray-50/50 focus:bg-white transition-all font-medium"
                     />
                   </div>
@@ -261,13 +282,13 @@ export default function RiwayatPage() {
               ) : (
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Email <span className="text-red-500">*</span>
+                    {t.labelEmail} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
-                    placeholder="Masukkan alamat email Anda (Contoh: nama@email.com)"
+                    placeholder={t.placeholderEmail}
                     className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#0b6330] bg-gray-50/50 focus:bg-white transition-all font-medium"
                   />
                 </div>
@@ -282,12 +303,12 @@ export default function RiwayatPage() {
                   {loading ? (
                     <>
                       <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
-                      Memverifikasi &amp; Mencari…
+                      {t.searchingBtn}
                     </>
                   ) : (
                     <>
                       <FontAwesomeIcon icon={faSearch} />
-                      Cari Riwayat
+                      {t.searchBtn}
                     </>
                   )}
                 </button>
@@ -313,7 +334,7 @@ export default function RiwayatPage() {
                     </div>
                     <div>
                       <h2 className="text-xl sm:text-2xl font-black text-white leading-tight">
-                        {data.nama || 'Donatur'}
+                        {data.nama || t.donaturDefault}
                       </h2>
                       <p className="text-xs text-emerald-200 font-mono mt-0.5">
                         {isDosen ? (
@@ -321,7 +342,7 @@ export default function RiwayatPage() {
                             NIP: <span className="font-bold text-white">{data.nip}</span>
                             {data.idDonatur && (
                               <span className="ml-2 bg-white/10 px-2 py-0.5 rounded border border-white/20 text-white font-bold">
-                                ID Donatur: {data.idDonatur}
+                                {t.labelIdDonatur}: {data.idDonatur}
                               </span>
                             )}
                             {data.unitKerja && <span className="ml-2 opacity-80">• {data.unitKerja}</span>}
@@ -344,7 +365,7 @@ export default function RiwayatPage() {
                     </div>
                     <div>
                       <p className="text-[11px] font-bold text-emerald-200 uppercase tracking-wider">
-                        Total Zakat Lunas
+                        {t.totalZakatLunas}
                       </p>
                       <p className="text-xl sm:text-2xl font-black text-white">
                         {formatRupiah(data.totalZakatLunas)}
@@ -358,7 +379,7 @@ export default function RiwayatPage() {
                     </div>
                     <div>
                       <p className="text-[11px] font-bold text-emerald-200 uppercase tracking-wider">
-                        Total Infaq Lunas
+                        {t.totalInfaqLunas}
                       </p>
                       <p className="text-xl sm:text-2xl font-black text-white">
                         {formatRupiah(data.totalInfaqLunas)}
@@ -373,23 +394,23 @@ export default function RiwayatPage() {
                 <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                   <h4 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
                     <FontAwesomeIcon icon={faCoins} className="text-[#0b6330]" />
-                    Riwayat Pembayaran Zakat
+                    {t.titleRiwayatZakat}
                   </h4>
                   <span className="text-xs text-gray-400 font-bold">
-                    {data.riwayatZakat.length} Transaksi
+                    {data.riwayatZakat.length} {t.transaksiSuffix}
                   </span>
                 </div>
 
                 {data.riwayatZakat.length > 0 ? (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-xs text-left text-gray-700">
+                    <table className={`w-full text-xs text-gray-700 ${isAr ? 'text-right' : 'text-left'}`}>
                       <thead>
                         <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 uppercase font-bold">
-                          <th className="py-3 px-4">Tanggal</th>
-                          <th className="py-3 px-4">Jenis Zakat</th>
-                          <th className="py-3 px-4">Sumber Dana</th>
-                          <th className="py-3 px-4">Jumlah</th>
-                          <th className="py-3 px-4 text-center">Status</th>
+                          <th className="py-3 px-4">{t.thTanggal}</th>
+                          <th className="py-3 px-4">{t.thJenisZakat}</th>
+                          <th className="py-3 px-4">{t.thSumberDana}</th>
+                          <th className="py-3 px-4">{t.thJumlah}</th>
+                          <th className="py-3 px-4 text-center">{t.thStatus}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
@@ -417,7 +438,7 @@ export default function RiwayatPage() {
                   </div>
                 ) : (
                   <p className="text-xs text-gray-400 italic py-4 text-center">
-                    Belum ada riwayat pembayaran zakat.
+                    {t.noZakatData}
                   </p>
                 )}
               </div>
@@ -430,10 +451,10 @@ export default function RiwayatPage() {
                     <div>
                       <h4 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
                         <FontAwesomeIcon icon={faFileInvoice} className="text-[#0b6330]" />
-                        Rekap Zakat Tahunan
+                        {t.titleRekapTahunan}
                       </h4>
                       <p className="text-xs text-gray-500 mt-1">
-                        Unduh dan tinjau berkas bukti rekapitulasi zakat resmi dari Rumah Amal USK.
+                        {t.subRekapTahunan}
                       </p>
                     </div>
 
@@ -442,7 +463,7 @@ export default function RiwayatPage() {
                       onClick={() => setShowRekapSection((prev) => !prev)}
                       className="inline-flex items-center justify-center gap-2 bg-[#0b6330] hover:bg-[#074722] text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-2xs cursor-pointer shrink-0 self-start sm:self-auto"
                     >
-                      <span>{showRekapSection ? 'Sembunyikan Rekap' : 'Lihat Rekap Zakat'}</span>
+                      <span>{showRekapSection ? t.btnSembunyikanRekap : t.btnLihatRekap}</span>
                       <FontAwesomeIcon icon={showRekapSection ? faChevronUp : faChevronDown} className="w-3 h-3" />
                     </button>
                   </div>
@@ -454,7 +475,7 @@ export default function RiwayatPage() {
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-gray-200">
                         <div className="flex items-center gap-2 text-xs font-bold text-gray-700">
                           <FontAwesomeIcon icon={faCalendarAlt} className="text-[#0b6330]" />
-                          <span>Filter Tahun Rekap Zakat:</span>
+                          <span>{t.filterTahunLabel}</span>
                         </div>
 
                         <select
@@ -462,10 +483,10 @@ export default function RiwayatPage() {
                           onChange={(e) => setSelectedTahun(e.target.value)}
                           className="px-3.5 py-2 border border-gray-300 rounded-xl text-xs font-bold bg-white text-gray-800 focus:outline-none focus:border-[#0b6330] cursor-pointer"
                         >
-                          <option value="all">Semua Tahun</option>
+                          <option value="all">{t.semuaTahun}</option>
                           {availableYears.map((yr) => (
                             <option key={yr} value={yr}>
-                              Tahun {yr}
+                              {t.tahunPrefix} {yr}
                             </option>
                           ))}
                         </select>
@@ -485,10 +506,10 @@ export default function RiwayatPage() {
                                 </div>
                                 <div>
                                   <h5 className="font-extrabold text-sm text-gray-900">
-                                    Rekap Zakat Tahun {rekap.tahunRekap}
+                                    {t.rekapZakatTahun} {rekap.tahunRekap}
                                   </h5>
                                   <p className="text-[11px] text-gray-400 font-medium">
-                                    Diupload: {formatTanggal(rekap.createdAt)}
+                                    {t.diupload} {formatTanggal(rekap.createdAt)}
                                   </p>
                                 </div>
                               </div>
@@ -500,7 +521,7 @@ export default function RiwayatPage() {
                                 className="px-3.5 py-2 bg-[#0b6330] hover:bg-[#074722] text-white text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1.5 shrink-0 shadow-2xs"
                               >
                                 <FontAwesomeIcon icon={faDownload} className="w-3 h-3" />
-                                Buka PDF
+                                {t.bukaPdf}
                               </a>
                             </div>
                           ))}
@@ -508,7 +529,7 @@ export default function RiwayatPage() {
                       ) : (
                         <div className="p-8 text-center bg-white rounded-xl border border-gray-200 text-gray-400">
                           <p className="text-xs font-semibold">
-                            Belum ada data berkas rekap zakat untuk tahun yang dipilih ({selectedTahun === 'all' ? 'Semua Tahun' : selectedTahun}).
+                            {t.noRekapData} ({selectedTahun === 'all' ? t.semuaTahun : selectedTahun}).
                           </p>
                         </div>
                       )}
@@ -522,22 +543,22 @@ export default function RiwayatPage() {
                 <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                   <h4 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
                     <FontAwesomeIcon icon={faHandHoldingHeart} className="text-[#0b6330]" />
-                    Riwayat Pembayaran Infaq
+                    {t.titleRiwayatInfaq}
                   </h4>
                   <span className="text-xs text-gray-400 font-bold">
-                    {data.riwayatInfaq.length} Transaksi
+                    {data.riwayatInfaq.length} {t.transaksiSuffix}
                   </span>
                 </div>
 
                 {data.riwayatInfaq.length > 0 ? (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-xs text-left text-gray-700">
+                    <table className={`w-full text-xs text-gray-700 ${isAr ? 'text-right' : 'text-left'}`}>
                       <thead>
                         <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 uppercase font-bold">
-                          <th className="py-3 px-4">Tanggal</th>
-                          <th className="py-3 px-4">Jenis Infaq / Kampanye</th>
-                          <th className="py-3 px-4">Jumlah</th>
-                          <th className="py-3 px-4 text-center">Status</th>
+                          <th className="py-3 px-4">{t.thTanggal}</th>
+                          <th className="py-3 px-4">{t.thJenisInfaq}</th>
+                          <th className="py-3 px-4">{t.thJumlah}</th>
+                          <th className="py-3 px-4 text-center">{t.thStatus}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
@@ -550,7 +571,7 @@ export default function RiwayatPage() {
                               <p className="font-bold capitalize">{item.jenis_infaq}</p>
                               {item.kampanye_judul && (
                                 <p className="text-[11px] text-gray-500 font-medium mt-0.5">
-                                  Program: {item.kampanye_judul}
+                                  {t.programPrefix} {item.kampanye_judul}
                                 </p>
                               )}
                             </td>
@@ -567,7 +588,7 @@ export default function RiwayatPage() {
                   </div>
                 ) : (
                   <p className="text-xs text-gray-400 italic py-4 text-center">
-                    Belum ada riwayat pembayaran infaq.
+                    {t.noInfaqData}
                   </p>
                 )}
               </div>

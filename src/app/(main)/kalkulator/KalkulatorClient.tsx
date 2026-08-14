@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import { hitungZakat, formatRupiah } from "@/lib/kalkulator";
 import { JenisZakat, JenisPerusahaan, KalkulatorResult } from "@/types";
+import { kalkulatorDictionary, KalkulatorLanguage } from "@/lib/i18n/kalkulator";
 
 interface FieldItem {
   name: string;
@@ -49,11 +50,29 @@ const fieldConfigPerusahaan: Record<string, FieldItem[]> = {
 };
 
 export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabConfigType }) {
+  const [lang, setLang] = useState<KalkulatorLanguage>("id");
   const [jenisZakat, setJenisZakat] = useState<string>("");
   const [jenisPerusahaan, setJenisPerusahaan] = useState<string>("");
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [modalResult, setModalResult] = useState<KalkulatorResult | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
+
+  useEffect(() => {
+    const readLang = () => {
+      const saved = (localStorage.getItem("language") ||
+        localStorage.getItem("app_lang") ||
+        "id") as KalkulatorLanguage;
+      if (["id", "en", "ar"].includes(saved)) {
+        setLang(saved);
+      }
+    };
+    readLang();
+    window.addEventListener("languageChange", readLang);
+    return () => window.removeEventListener("languageChange", readLang);
+  }, []);
+
+  const t = kalkulatorDictionary[lang] || kalkulatorDictionary.id;
+  const isAr = lang === "ar";
 
   const handleInputChange = (fieldName: string, value: string) => {
     setFieldValues((prev) => ({ ...prev, [fieldName]: value }));
@@ -61,12 +80,12 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
 
   const handleHitung = () => {
     if (!jenisZakat) {
-      alert("Silakan pilih jenis zakat terlebih dahulu.");
+      alert(t.alertSelectZakat);
       return;
     }
 
     if (jenisZakat === "perusahaan" && !jenisPerusahaan) {
-      alert("Silakan pilih jenis perusahaan terlebih dahulu.");
+      alert(t.alertSelectCompany);
       return;
     }
 
@@ -87,38 +106,66 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
       : fieldConfig[jenisZakat] || [];
 
   return (
-    <main className="flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full">
+    <main
+      className={`flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full ${
+        isAr ? "text-right" : ""
+      }`}
+    >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-
         {/* Sidebar Navigasi */}
         <Sidebar />
 
         {/* Konten Kalkulator */}
         <div className="lg:col-span-9 bg-white p-6 sm:p-8 rounded-2xl shadow-md border border-gray-100 space-y-6">
           <h3 className="text-xl font-black text-[#000] border-b border-gray-100 pb-3">
-            Kalkulator Zakat Interaktif
+            {t.pageTitle}
           </h3>
 
           {/* Informasi Acuan Nisab */}
-          <div className="bg-amber-50/70 border-l-4 border-[#FFBB0C] p-4 rounded-r-xl text-xs sm:text-sm text-gray-800 space-y-1.5">
-            <p className="font-extrabold text-[#000]">Ketentuan Perhitungan Zakat (BMA / USK):</p>
+          <div
+            className={`bg-amber-50/70 border-l-4 border-[#FFBB0C] p-4 rounded-r-xl text-xs sm:text-sm text-gray-800 space-y-1.5 ${
+              isAr ? "border-l-0 border-r-4 rounded-r-none rounded-l-xl" : ""
+            }`}
+          >
+            <p className="font-extrabold text-[#000]">{t.nisabTitle}</p>
             <ul className="list-disc list-inside space-y-1.5 text-gray-700 font-medium leading-relaxed">
-              <li>{nisabConfig.aturanQanun || 'Qanun Aceh No. 10/2018 tentang Baitul Mal'}</li>
               <li>
-                {nisabConfig.skNisabProfesi || 'SK DPS BMA No. 04/KPTS/2025'}: Nisab Zakat Profesi 2,5% dari Penghasilan Min. <span className="font-bold text-gray-900">{formatRupiah(nisabConfig.nisabProfesiBulan)} / bulan</span>
+                {(() => {
+                  const text = nisabConfig.aturanQanun || 'Qanun Aceh No. 10/2018 tentang Baitul Mal';
+                  if (lang === 'en') return text.replace('tentang', 'regarding');
+                  if (lang === 'ar') return text.replace('Qanun Aceh No. 10/2018 tentang Baitul Mal', 'قانون أتشيه رقم ١٠/٢٠١٨ بشأن بيت المال').replace('tentang', 'بشأن');
+                  return text;
+                })()}
               </li>
               <li>
-                Nisab Zakat setara <span className="font-bold text-gray-900">{nisabConfig.nisabEmasGram} gram</span> Emas murni (<span className="font-bold text-gray-900">{formatRupiah(nisabConfig.nisabEmasGram * nisabConfig.hargaEmasPerGram)}</span>)
+                {nisabConfig.skNisabProfesi || 'SK DPS BMA No. 04/KPTS/2025'}: {t.nisabProfesi}{" "}
+                <span className="font-bold text-gray-900">
+                  {formatRupiah(nisabConfig.nisabProfesiBulan)} {t.perBulan}
+                </span>
               </li>
               <li>
-                Harga Emas murni acuan: <span className="font-bold text-gray-900">{formatRupiah(nisabConfig.hargaEmasPerGram)} / gram</span>
+                {t.nisabEmasSetara}{" "}
+                <span className="font-bold text-gray-900">{nisabConfig.nisabEmasGram}</span>{" "}
+                {t.gramEmasMurni} (
+                <span className="font-bold text-gray-900">
+                  {formatRupiah(nisabConfig.nisabEmasGram * nisabConfig.hargaEmasPerGram)}
+                </span>
+                )
+              </li>
+              <li>
+                {t.hargaEmasAcuan}{" "}
+                <span className="font-bold text-gray-900">
+                  {formatRupiah(nisabConfig.hargaEmasPerGram)} {t.perGram}
+                </span>
               </li>
             </ul>
           </div>
 
           {/* Pilih Jenis Zakat */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1.5">Pilih Jenis Zakat</label>
+            <label className="block text-xs font-bold text-gray-700 mb-1.5">
+              {t.selectJenisZakatLabel}
+            </label>
             <select
               value={jenisZakat}
               onChange={(e) => {
@@ -128,19 +175,21 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
               }}
               className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white"
             >
-              <option value="">-- Pilih Jenis Zakat --</option>
-              <option value="maal">Zakat Maal (Harta / Tabungan)</option>
-              <option value="emas">Zakat Emas</option>
-              <option value="profesi">Zakat Profesi (Penghasilan / Gaji)</option>
-              <option value="perniagaan">Zakat Perniagaan (Usaha / Dagang)</option>
-              <option value="perusahaan">Zakat Perusahaan</option>
+              <option value="">{t.selectJenisZakatDefault}</option>
+              <option value="maal">{t.optMaal}</option>
+              <option value="emas">{t.optEmas}</option>
+              <option value="profesi">{t.optProfesi}</option>
+              <option value="perniagaan">{t.optPerniagaan}</option>
+              <option value="perusahaan">{t.optPerusahaan}</option>
             </select>
           </div>
 
           {/* Pilih Jenis Perusahaan */}
           {jenisZakat === "perusahaan" && (
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">Jenis Perusahaan</label>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                {t.jenisPerusahaanLabel}
+              </label>
               <select
                 value={jenisPerusahaan}
                 onChange={(e) => {
@@ -149,9 +198,9 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
                 }}
                 className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white"
               >
-                <option value="">-- Pilih Jenis Perusahaan --</option>
-                <option value="dagang_industri">Perusahaan Dagang / Industri</option>
-                <option value="jasa">Perusahaan Jasa</option>
+                <option value="">{t.selectJenisPerusahaanDefault}</option>
+                <option value="dagang_industri">{t.optDagangIndustri}</option>
+                <option value="jasa">{t.optJasa}</option>
               </select>
             </div>
           )}
@@ -161,12 +210,14 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
             <div className="space-y-4 pt-2 border-t border-gray-100">
               {activeFields.map((field) => (
                 <div key={field.name}>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">{field.label}</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                    {t[`field_${field.name}`] || field.label}
+                  </label>
                   <input
                     type="number"
                     value={fieldValues[field.name] || ""}
                     onChange={(e) => handleInputChange(field.name, e.target.value)}
-                    placeholder="Masukkan besaran angka..."
+                    placeholder={t.inputPlaceholder}
                     className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white"
                   />
                 </div>
@@ -180,10 +231,9 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
             onClick={handleHitung}
             className="w-full sm:w-auto bg-[#FFBB0C] hover:bg-[#e8b500] text-[#000] font-black py-3 px-8 rounded-xl text-sm shadow-md transition-all cursor-pointer"
           >
-            Hitung Zakat Sekarang
+            {t.calculateBtn}
           </button>
         </div>
-
       </div>
 
       {/* Modal Hasil Perhitungan */}
@@ -197,9 +247,9 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h4 className="text-xl font-extrabold text-[#000]">Wajib Berzakat</h4>
+                <h4 className="text-xl font-extrabold text-[#000]">{t.wajibTitle}</h4>
                 <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
-                  Harta Anda telah mencapai nisab. Besaran zakat yang wajib ditunaikan adalah:
+                  {t.wajibDesc}
                 </p>
                 <div className="text-2xl font-black text-[#000] bg-green-50 py-3 rounded-xl border border-green-200">
                   {formatRupiah(modalResult.jumlah_zakat)}
@@ -210,13 +260,13 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
                     onClick={() => setShowModal(false)}
                     className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-5 py-2.5 rounded-xl text-xs transition-colors cursor-pointer"
                   >
-                    Tutup
+                    {t.closeModalBtn}
                   </button>
                   <Link
                     href={`/zakat?jenis_zakat=${modalResult.jenis_zakat}&jumlah_zakat=${modalResult.jumlah_zakat}`}
                     className="bg-[#FFBB0C] hover:bg-[#e8b500] text-[#000] font-extrabold px-6 py-2.5 rounded-xl text-xs shadow-sm transition-all"
                   >
-                    Bayar Zakat Sekarang
+                    {t.bayarZakatBtn}
                   </Link>
                 </div>
               </>
@@ -227,9 +277,9 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h4 className="text-xl font-extrabold text-gray-800">Belum Wajib Zakat</h4>
+                <h4 className="text-xl font-extrabold text-gray-800">{t.belumTitle}</h4>
                 <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                  Harta Anda saat ini belum mencapai nisab zakat, sehingga belum diwajibkan berzakat. Namun, Anda tetap dapat meraih keberkahan dengan berinfaq secara sukarela.
+                  {t.belumDesc}
                 </p>
                 <div className="pt-3 flex gap-3 justify-center">
                   <button
@@ -237,13 +287,13 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
                     onClick={() => setShowModal(false)}
                     className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-5 py-2.5 rounded-xl text-xs transition-colors cursor-pointer"
                   >
-                    Tutup
+                    {t.closeModalBtn}
                   </button>
                   <Link
                     href="/infaq"
                     className="bg-[#FFBB0C] hover:bg-[#e8b500] text-[#000] font-extrabold px-6 py-2.5 rounded-xl text-xs shadow-sm transition-all"
                   >
-                    Bayar Infaq
+                    {t.bayarInfaqBtn}
                   </Link>
                 </div>
               </>
