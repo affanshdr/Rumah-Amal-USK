@@ -63,7 +63,7 @@ export default function AdminLoginPage() {
                                     required
                                     autoComplete="email"
                                     className="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-uskGreen/40 focus:border-uskGreen"
-                                    placeholder="rumahamal@usk.ac.id"
+                                    placeholder="Masukkan Email Admin"
                                     disabled={loading}
                                 />
                             </div>
