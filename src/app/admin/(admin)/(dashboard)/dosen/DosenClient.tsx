@@ -18,7 +18,7 @@ type DosenItem = {
   createdAt: Date;
 };
 
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = 10;
 const DEBOUNCE_MS = 400;
 
 export default function DosenClient({ initialData }: { initialData?: DosenItem[] }) {
@@ -206,13 +206,11 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase tracking-wider font-bold text-[10px]">
-                <th className="py-2.5 px-2.5 whitespace-nowrap">NIP</th>
+                <th className="py-2.5 px-2.5 whitespace-nowrap">Muzakki</th>
                 <th className="py-2.5 px-2.5 whitespace-nowrap">ID Donatur</th>
-                <th className="py-2.5 px-2.5">Nama Dosen</th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap">No. HP</th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap">NPWP</th>
-                <th className="py-2.5 px-2.5">Unit Kerja</th>
-                <th className="py-2.5 px-2.5">Alamat</th>
+                <th className="py-2.5 px-2.5 whitespace-nowrap">NPWP/No. HP</th>
+                <th className="py-2.5 px-2.5 whitespace-nowrap">Unit Kerja</th>
+                <th className="py-2.5 px-2.5 whitespace-nowrap">Alamat</th>
                 <th className="py-2.5 px-2 text-center whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
@@ -232,7 +230,12 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
               ) : (
                 data.map((item) => (
                   <tr key={item.nip} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-2.5 px-2.5 font-mono font-bold text-gray-800 whitespace-nowrap">{item.nip}</td>
+                    <td className="py-3.5 px-4">
+                      <p className="font-bold text-gray-900 text-xs">{item.nama}</p>
+                      {item.nip && (
+                        <span className="text-[10px] text-gray-500 font-mono">NIP: {item.nip}</span>
+                      )}
+                    </td>
                     <td className="py-2.5 px-2.5 font-mono text-gray-700 font-bold whitespace-nowrap">
                       {item.idDonatur ? (
                         <span className="bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded text-[10px] font-semibold border border-emerald-200">
@@ -242,10 +245,9 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
                         <span className="text-gray-400 font-normal">-</span>
                       )}
                     </td>
-                    <td className="py-2.5 px-2.5 font-semibold text-gray-900 max-w-[150px] truncate" title={item.nama}>
-                      {item.nama}
-                    </td>
                     <td className="py-2.5 px-2.5 text-gray-700 font-mono whitespace-nowrap">
+                      <span className=''>{item.npwp || '-'}</span>
+                      <br />
                       {item.noHp ? (
                         <span className="inline-flex items-center gap-1 text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] font-semibold">
                           <FontAwesomeIcon icon={faPhone} className="text-emerald-600 text-[9px]" />
@@ -255,13 +257,10 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
                         <span className="text-gray-400 font-normal">-</span>
                       )}
                     </td>
-                    <td className="py-2.5 px-2.5 text-gray-600 font-mono whitespace-nowrap max-w-[110px] truncate" title={item.npwp || ''}>
-                      {item.npwp || '-'}
-                    </td>
-                    <td className="py-2.5 px-2.5 text-gray-700 max-w-[130px] truncate" title={item.unitKerja || ''}>
+                    <td className="py-2.5 px-2.5 text-gray-700" title={item.unitKerja || ''}>
                       {item.unitKerja || '-'}
                     </td>
-                    <td className="py-2.5 px-2.5 text-gray-600 max-w-[140px] truncate" title={item.alamat || ''}>
+                    <td className="py-2.5 px-2.5 text-gray-600" title={item.alamat || ''}>
                       {item.alamat || '-'}
                     </td>
                     <td className="py-2.5 px-2 text-center whitespace-nowrap">
