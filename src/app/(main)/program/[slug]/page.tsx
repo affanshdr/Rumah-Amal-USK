@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, use } from 'react';
 import Link from 'next/link';
+import ShareAndLikeBar from '@/components/ShareAndLikeBar';
 
 interface ProgramDetail {
   id: string;
@@ -15,6 +16,7 @@ interface ProgramDetail {
   contentAr?: string | null;
   contentEn?: string | null;
   viewsCount: number;
+  likesCount?: number;
   publishedAt: string | null;
   createdAt: string;
 }
@@ -223,8 +225,6 @@ export default function PublicProgramDetailPage({
           <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#333333] tracking-tight uppercase max-w-4xl mx-auto leading-tight mb-4 ${isTitleRtl ? 'font-serif' : ''}`}>
             {displayTitle}
           </h1>
-
-
         </div>
 
         {/* 3. Centered Poster Image Card */}
@@ -293,8 +293,8 @@ export default function PublicProgramDetailPage({
             />
           </div>
 
-          {/* Jumlah Pembaca / Views Count dengan Icon Mata */}
-          <div className="flex items-center gap-2 text-gray-600 text-sm font-semibold pt-4 mb-2" title="Jumlah Pembaca / Views">
+          {/* Jumlah Pembaca / Views Count */}
+          <div className="flex items-center gap-2 text-gray-600 text-sm font-semibold pt-6 mb-6 border-t border-gray-100" title="Jumlah Pembaca / Views">
             <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -305,32 +305,25 @@ export default function PublicProgramDetailPage({
             </span>
           </div>
 
+          {/* Share & Like Section */}
+          <div className="bg-gray-50 p-5 rounded-2xl border border-gray-200/80 shadow-2xs mb-6">
+            <ShareAndLikeBar
+              contentType="program"
+              contentId={program.id}
+              title={displayTitle}
+              initialLikesCount={program.likesCount || 0}
+              lang={lang}
+            />
+          </div>
+
           {/* Bottom Back Button */}
-          <div className="pt-8 border-t border-gray-100 mt-8 flex justify-between items-center">
+          <div className="pt-6 border-t border-gray-100 flex justify-between items-center">
             <Link
               href="/program"
               className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#0b6330] hover:underline"
             >
               ← {lang === 'ar' ? 'العودة إلى قائمة البرامج' : lang === 'en' ? 'Back to Program List' : 'Kembali ke Daftar Program'}
             </Link>
-
-            <button
-              onClick={() => {
-                if (navigator.clipboard) {
-                  navigator.clipboard.writeText(window.location.href);
-                  alert(
-                    lang === 'ar'
-                      ? 'تم نسخ رابط البرنامج!'
-                      : lang === 'en'
-                      ? 'Program link copied!'
-                      : 'Link program berhasil disalin!'
-                  );
-                }
-              }}
-              className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3.5 py-1.5 rounded-lg border border-gray-200 transition-colors cursor-pointer"
-            >
-              📋 {lang === 'ar' ? 'نسخ الرابط' : lang === 'en' ? 'Copy Link' : 'Salin Link'}
-            </button>
           </div>
         </div>
 

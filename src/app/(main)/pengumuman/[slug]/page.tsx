@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, use } from 'react';
 import Link from 'next/link';
+import ShareAndLikeBar from '@/components/ShareAndLikeBar';
 
 interface Tag {
   id: string;
@@ -35,6 +36,7 @@ interface AnnouncementDetail {
   contentAr?: string | null;
   contentEn?: string | null;
   viewsCount: number;
+  likesCount?: number;
   publishedAt: string;
   tags?: Tag[];
 }
@@ -260,8 +262,6 @@ export default function PublicAnnouncementDetailPage({
     <div className="min-h-screen bg-[#f8fafc]/50 py-8 px-4 sm:px-6 lg:px-8 font-sans text-gray-800">
       <div className="max-w-[1340px] mx-auto">
 
-
-
         {/* Layout 2 Kolom */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
@@ -340,8 +340,8 @@ export default function PublicAnnouncementDetailPage({
             </div>
 
             {/* Informasi Views, Tags & Bagikan */}
-            <div className="pt-6 border-t border-gray-200 mb-8">
-              <div className="flex items-center gap-6 text-gray-600 text-sm font-semibold mb-4">
+            <div className="pt-6 border-t border-gray-200 mb-8 space-y-6">
+              <div className="flex items-center gap-6 text-gray-600 text-sm font-semibold flex-wrap">
                 <div className="flex items-center gap-2" title="Jumlah Pembaca / Views">
                   <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -373,21 +373,15 @@ export default function PublicAnnouncementDetailPage({
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 pt-2">
-                <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  {lang === 'ar' ? 'مشاركة:' : lang === 'en' ? 'Share:' : 'Bagikan:'}
-                </span>
-                <button
-                  onClick={() => {
-                    if (navigator.clipboard) {
-                      navigator.clipboard.writeText(window.location.href);
-                      alert(lang === 'ar' ? 'تم نسخ رابط الإعلان!' : lang === 'en' ? 'Announcement link copied!' : 'Link pengumuman berhasil disalin!');
-                    }
-                  }}
-                  className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 py-1 rounded-md border border-gray-200 transition-colors cursor-pointer"
-                >
-                  📋 {lang === 'ar' ? 'نسخ الرابط' : lang === 'en' ? 'Copy Link' : 'Salin Link'}
-                </button>
+              {/* Share & Like Bar */}
+              <div className="bg-gray-50 p-5 rounded-2xl border border-gray-200/80 shadow-2xs">
+                <ShareAndLikeBar
+                  contentType="announcements"
+                  contentId={announcement.id}
+                  title={displayTitle}
+                  initialLikesCount={announcement.likesCount || 0}
+                  lang={lang}
+                />
               </div>
             </div>
 

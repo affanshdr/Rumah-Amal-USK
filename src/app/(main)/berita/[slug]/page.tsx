@@ -3,6 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { beritaDictionary, BeritaLanguage } from '@/lib/i18n/berita';
+import ShareAndLikeBar from '@/components/ShareAndLikeBar';
 
 interface TagItem {
   id: string;
@@ -22,6 +23,7 @@ interface NewsDetail {
   contentAr?: string | null;
   contentEn?: string | null;
   viewsCount: number;
+  likesCount?: number;
   publishedAt: string;
   createdAt: string;
   tags: TagItem[];
@@ -248,51 +250,51 @@ export default function PublicNewsDetailPage({
             )}
 
             {/* Content Body */}
-              <style>{`
-                .article-body a[data-type="download-button"],
-                .article-body a[data-type="link-button"],
-                .article-body a[download],
-                .article-body div.my-4 a,
-                .article-body div:has(> a[data-type="download-button"]),
-                .article-body div:has(> a[data-type="link-button"]) {
-                  display: flex !important;
-                  width: 100% !important;
-                  justify-content: center !important;
-                  text-align: center !important;
-                  box-sizing: border-box !important;
-                  border-radius: 16px !important;
-                  direction: ltr !important;
-                  unicode-bidi: isolate !important;
-                }
-                .article-body a[data-type="download-button"],
-                .article-body a[data-type="link-button"],
-                .article-body a[download],
-                .article-body div.my-4 a {
-                  background: #0b6330 !important;
-                  color: #ffffff !important;
-                  padding: 12px 24px !important;
-                  font-weight: 700 !important;
-                  text-decoration: none !important;
-                  font-size: 14px !important;
-                  box-shadow: 0 2px 8px rgba(11, 99, 48, 0.25) !important;
-                  margin: 16px 0 !important;
-                }
-                .article-body p { margin-bottom: 1.25rem; line-height: 1.8; }
-                .article-body h1 { font-size: 1.75rem; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; color: #111827; }
-                .article-body h2 { font-size: 1.4rem; font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.75rem; color: #111827; }
-                .article-body h3 { font-size: 1.15rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #111827; }
-                .article-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.25rem; }
-                .article-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1.25rem; }
-                .article-body li { margin-bottom: 0.35rem; }
-                .article-body blockquote { border-left: 4px solid #0b6330; padding-left: 1.25rem; color: #4b5563; font-style: italic; margin: 1.5rem 0; background: #f9fafb; padding: 1rem; border-radius: 0 0.75rem 0.75rem 0; }
-                .article-body a { color: #0b6330; text-decoration: underline; font-weight: 600; }
-                .article-body img { max-width: 100%; height: auto; border-radius: 1rem; margin: 1.5rem 0; shadow: 0 4px 12px rgba(0,0,0,0.05); }
-                .rtl-body { text-align: right; direction: rtl; font-family: serif, sans-serif; }
-                .rtl-body blockquote { border-left: none; border-right: 4px solid #0b6330; padding-left: 0; padding-right: 1.25rem; border-radius: 0.75rem 0 0 0.75rem; }
-                .rtl-body ul, .rtl-body ol { padding-left: 0; padding-right: 1.5rem; }
-                div[data-type="bank-banner"] { direction: ltr !important; unicode-bidi: isolate !important; text-align: center !important; }
-                div[data-type="bank-banner"] div { direction: ltr !important; text-align: center !important; }
-              `}</style>
+            <style>{`
+              .article-body a[data-type="download-button"],
+              .article-body a[data-type="link-button"],
+              .article-body a[download],
+              .article-body div.my-4 a,
+              .article-body div:has(> a[data-type="download-button"]),
+              .article-body div:has(> a[data-type="link-button"]) {
+                display: flex !important;
+                width: 100% !important;
+                justify-content: center !important;
+                text-align: center !important;
+                box-sizing: border-box !important;
+                border-radius: 16px !important;
+                direction: ltr !important;
+                unicode-bidi: isolate !important;
+              }
+              .article-body a[data-type="download-button"],
+              .article-body a[data-type="link-button"],
+              .article-body a[download],
+              .article-body div.my-4 a {
+                background: #0b6330 !important;
+                color: #ffffff !important;
+                padding: 12px 24px !important;
+                font-weight: 700 !important;
+                text-decoration: none !important;
+                font-size: 14px !important;
+                box-shadow: 0 2px 8px rgba(11, 99, 48, 0.25) !important;
+                margin: 16px 0 !important;
+              }
+              .article-body p { margin-bottom: 1.25rem; line-height: 1.8; }
+              .article-body h1 { font-size: 1.75rem; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; color: #111827; }
+              .article-body h2 { font-size: 1.4rem; font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.75rem; color: #111827; }
+              .article-body h3 { font-size: 1.15rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #111827; }
+              .article-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.25rem; }
+              .article-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1.25rem; }
+              .article-body li { margin-bottom: 0.35rem; }
+              .article-body blockquote { border-left: 4px solid #0b6330; padding-left: 1.25rem; color: #4b5563; font-style: italic; margin: 1.5rem 0; background: #f9fafb; padding: 1rem; border-radius: 0 0.75rem 0.75rem 0; }
+              .article-body a { color: #0b6330; text-decoration: underline; font-weight: 600; }
+              .article-body img { max-width: 100%; height: auto; border-radius: 1rem; margin: 1.5rem 0; shadow: 0 4px 12px rgba(0,0,0,0.05); }
+              .rtl-body { text-align: right; direction: rtl; font-family: serif, sans-serif; }
+              .rtl-body blockquote { border-left: none; border-right: 4px solid #0b6330; padding-left: 0; padding-right: 1.25rem; border-radius: 0.75rem 0 0 0.75rem; }
+              .rtl-body ul, .rtl-body ol { padding-left: 0; padding-right: 1.5rem; }
+              div[data-type="bank-banner"] { direction: ltr !important; unicode-bidi: isolate !important; text-align: center !important; }
+              div[data-type="bank-banner"] div { direction: ltr !important; text-align: center !important; }
+            `}</style>
             <div className="prose max-w-none text-gray-800 text-base sm:text-lg leading-relaxed">
               <div
                 className={`article-body ${isContentRtl ? 'rtl-body' : 'ltr-body'}`}
@@ -302,50 +304,46 @@ export default function PublicNewsDetailPage({
             </div>
 
             {/* Tags & Meta Section */}
-            <div className="pt-6 border-t border-gray-200 mt-8">
-              {/* Jumlah Pembaca / Views Count dengan Icon Mata */}
-              <div className="flex items-center gap-2 text-gray-600 text-sm font-semibold mb-5" title="Jumlah Pembaca / Views">
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span className="text-gray-800 font-extrabold text-base">{news.viewsCount || 0}</span>
-                <span className="text-xs text-gray-500 font-medium">
-                  {lang === 'ar' ? 'مشاهدة' : lang === 'en' ? 'views' : 'pembaca'}
-                </span>
+            <div className="pt-6 border-t border-gray-200 mt-8 space-y-6">
+              <div className="flex items-center gap-6 flex-wrap">
+                {/* Jumlah Pembaca / Views Count dengan Icon Mata */}
+                <div className="flex items-center gap-2 text-gray-600 text-sm font-semibold" title="Jumlah Pembaca / Views">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <span className="text-gray-800 font-extrabold text-base">{news.viewsCount || 0}</span>
+                  <span className="text-xs text-gray-500 font-medium">
+                    {lang === 'ar' ? 'مشاهدة' : lang === 'en' ? 'views' : 'pembaca'}
+                  </span>
+                </div>
+
+                {news.tags && news.tags.length > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      {t.tags}
+                    </span>
+                    {news.tags.map((tag) => (
+                      <span
+                        key={tag.id}
+                        className="text-xs bg-gray-100 text-gray-700 font-semibold px-3 py-1 rounded-full border border-gray-200"
+                      >
+                        #{tag.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {news.tags && news.tags.length > 0 && (
-                <div className="flex items-center gap-2 flex-wrap mb-6">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                    {t.tags}
-                  </span>
-                  {news.tags.map((tag) => (
-                    <span
-                      key={tag.id}
-                      className="text-xs bg-gray-100 text-gray-700 font-semibold px-3 py-1 rounded-full border border-gray-200"
-                    >
-                      #{tag.name}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Share */}
-              <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                  {t.shareNews}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    alert(t.copiedMsg);
-                  }}
-                  className="px-3.5 py-1.5 bg-white hover:bg-gray-100 text-gray-800 font-extrabold text-xs rounded-lg border border-gray-300 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
-                >
-                  📋 {t.copyLink}
-                </button>
+              {/* Share & Like Section */}
+              <div className="bg-gray-50 p-5 rounded-2xl border border-gray-200/80 shadow-2xs">
+                <ShareAndLikeBar
+                  contentType="news"
+                  contentId={news.id}
+                  title={displayTitle}
+                  initialLikesCount={news.likesCount || 0}
+                  lang={lang}
+                />
               </div>
             </div>
 

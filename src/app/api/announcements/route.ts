@@ -52,6 +52,8 @@ export async function GET(req: NextRequest) {
         coverImageUrl: true,
         publishedAt: true,
         createdAt: true,
+        viewsCount: true,
+        likesCount: true,
         tags: true,
       },
     });
