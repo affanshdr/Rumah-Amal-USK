@@ -165,17 +165,15 @@ export default function ShareAndLikeBar({
             type="button"
             onClick={handleToggleLike}
             disabled={isLiking}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl border transition-all duration-200 cursor-pointer shadow-2xs ${
-              isLiked
-                ? 'bg-rose-50 border-rose-200 text-rose-600 font-extrabold hover:bg-rose-100'
-                : 'bg-white border-gray-200 text-gray-700 font-bold hover:bg-gray-50 hover:border-gray-300 hover:text-rose-600'
-            }`}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl border transition-all duration-200 cursor-pointer shadow-2xs ${isLiked
+              ? 'bg-rose-50 border-rose-200 text-rose-600 font-extrabold hover:bg-rose-100'
+              : 'bg-white border-gray-200 text-gray-700 font-bold hover:bg-gray-50 hover:border-gray-300 hover:text-rose-600'
+              }`}
             title={isLiked ? 'Batal Suka' : 'Sukai Konten Ini'}
           >
             <svg
-              className={`w-5 h-5 transition-transform duration-200 ${
-                isLiked ? 'scale-110 fill-rose-500 stroke-rose-500' : 'fill-none stroke-current'
-              }`}
+              className={`w-5 h-5 transition-transform duration-200 ${isLiked ? 'scale-110 fill-rose-500 stroke-rose-500' : 'fill-none stroke-current'
+                }`}
               viewBox="0 0 24 24"
               strokeWidth="2"
             >
@@ -204,7 +202,7 @@ export default function ShareAndLikeBar({
             className="relative group w-12 h-12 rounded-2xl bg-[#ea4c89] hover:bg-[#e1306c] text-white flex items-center justify-center shadow-md hover:scale-105 transition-all duration-200 cursor-pointer"
             title="Bagikan ke Instagram"
           >
-            <FontAwesomeIcon icon={faInstagram} className="w-[28px] h-[28px] text-white" />
+            <FontAwesomeIcon icon={faInstagram} className="!w-[30px] !h-[30px] text-white" />
             {copiedInstagram && (
               <span className="absolute -top-12 left-1/2 -translate-x-1/2 bg-[#006400] text-white text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-lg whitespace-nowrap z-20 animate-bounce">
                 Tautan disalin!
@@ -219,7 +217,7 @@ export default function ShareAndLikeBar({
             className="w-12 h-12 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center shadow-md hover:scale-105 transition-all duration-200 cursor-pointer"
             title="Bagikan ke WhatsApp"
           >
-            <FontAwesomeIcon icon={faWhatsapp} className="w-[28px] h-[28px] text-white" />
+            <FontAwesomeIcon icon={faWhatsapp} className="!w-[30px] !h-[30px] text-white" />
           </button>
 
           {/* Facebook Button */}
@@ -229,7 +227,7 @@ export default function ShareAndLikeBar({
             className="w-12 h-12 rounded-2xl bg-[#1877F2] hover:bg-[#1565d8] text-white flex items-center justify-center shadow-md hover:scale-105 transition-all duration-200 cursor-pointer"
             title="Bagikan ke Facebook"
           >
-            <FontAwesomeIcon icon={faFacebookF} className="w-[25px] h-[25px] text-white" />
+            <FontAwesomeIcon icon={faFacebookF} className="!w-6 !h-6 text-white" />
           </button>
 
           {/* Copy Link Button with Speech-Bubble Tooltip */}
@@ -252,7 +250,7 @@ export default function ShareAndLikeBar({
               className="w-12 h-12 rounded-2xl bg-[#e5e7eb] hover:bg-gray-300 text-gray-700 flex items-center justify-center shadow-xs hover:scale-105 transition-all duration-200 cursor-pointer"
               title="Salin Tautan"
             >
-              <svg className="w-[28px] h-[28px] text-[#374151] fill-current" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-[#374151] fill-current" viewBox="0 0 24 24">
                 <path d="M13.59 11.59a3 3 0 0 0-4.24 0l-4.25 4.24a3 3 0 0 0 4.25 4.25l1.41-1.42a1 1 0 0 1 1.42 1.42l-1.42 1.41a5 5 0 0 1-7.07-7.07l4.24-4.24a5 5 0 0 1 7.07 0 1 1 0 0 1-1.41 1.41z" />
                 <path d="M10.41 12.41a3 3 0 0 0 4.24 0l4.25-4.24a3 3 0 0 0-4.25-4.25l-1.41 1.42a1 1 0 0 1-1.42-1.42l1.42-1.41a5 5 0 0 1 7.07 7.07l-4.24 4.24a5 5 0 0 1-7.07 0 1 1 0 0 1 1.41-1.41z" />
               </svg>
