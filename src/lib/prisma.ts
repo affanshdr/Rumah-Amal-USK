@@ -11,10 +11,14 @@ const globalForPrisma = globalThis as unknown as {
 export function getPrismaInstance(): PrismaClient {
   if (
     globalForPrisma.prisma &&
-    (!(globalForPrisma.prisma as any).program || !(globalForPrisma.prisma as any).news || !(globalForPrisma.prisma as any).banner)
+    (!(globalForPrisma.prisma as any).program ||
+      !(globalForPrisma.prisma as any).news ||
+      !(globalForPrisma.prisma as any).banner ||
+      !(globalForPrisma.prisma as any)._likesCountRefreshed)
   ) {
     globalForPrisma.prisma = undefined;
   }
+
   if (!globalForPrisma.prisma) {
     try {
       Object.keys(require.cache).forEach((key) => {
@@ -26,10 +30,12 @@ export function getPrismaInstance(): PrismaClient {
       // ignore
     }
     const FreshPrismaClient = require('@prisma/client').PrismaClient;
-    globalForPrisma.prisma = new FreshPrismaClient({
+    const clientInstance = new FreshPrismaClient({
       adapter,
       log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     });
+    (clientInstance as any)._likesCountRefreshed = true;
+    globalForPrisma.prisma = clientInstance;
   }
   return globalForPrisma.prisma!;
 }

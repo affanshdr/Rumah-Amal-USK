@@ -3,10 +3,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { galeriDictionary, GaleriLanguage } from '@/lib/i18n/galeri';
+import ShareAndLikeBar from '@/components/ShareAndLikeBar';
 
 interface GalleryItem {
   id: string;
   imageUrl: string;
+  likesCount?: number;
   createdAt: string;
 }
 
@@ -98,8 +100,6 @@ export default function GaleriPage() {
           {dict.title}
         </h1>
 
-
-
         {/* Loading State */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 animate-pulse mb-10">
@@ -114,11 +114,7 @@ export default function GaleriPage() {
             <p className="text-sm text-gray-400">{dict.emptyDesc}</p>
           </div>
         ) : (
-          /*
-           * Grid 4 kolom — konsisten & rapi.
-           * object-contain: foto tampil utuh (tidak terpotong),
-           * sisi kosong diisi warna abu tipis.
-           */
+          /* Grid 4 kolom */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
             {images.map((img, idx) => (
               <div
@@ -221,13 +217,13 @@ export default function GaleriPage() {
 
           {/* Card Container Putih */}
           <div
-            className="relative bg-white rounded-2xl shadow-2xl p-3 sm:p-4 max-w-4xl max-h-[85vh] flex flex-col items-center justify-center z-10"
+            className="relative bg-white rounded-2xl shadow-2xl p-4 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto flex flex-col items-center justify-center z-10"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Tombol Close (X) di Pojok Kanan Atas Card */}
             <button
               onClick={() => setSelectedIndex(null)}
-              className="absolute -top-3 -right-3 bg-white text-gray-700 hover:text-black w-8 h-8 rounded-full shadow-lg border border-gray-200 flex items-center justify-center text-sm font-bold transition-all hover:scale-110 z-20 cursor-pointer"
+              className="absolute top-3 right-3 bg-gray-100 text-gray-700 hover:bg-gray-200 w-8 h-8 rounded-full shadow-xs border border-gray-200 flex items-center justify-center text-sm font-bold transition-all z-20 cursor-pointer"
               aria-label={dict.closeModal}
             >
               ✕
@@ -238,8 +234,19 @@ export default function GaleriPage() {
             <img
               src={images[selectedIndex].imageUrl}
               alt="Dokumentasi Fullsize"
-              className="max-w-full max-h-[75vh] object-contain rounded-xl"
+              className="max-w-full max-h-[60vh] object-contain rounded-xl mb-4"
             />
+
+            {/* Share & Like Section */}
+            <div className="w-full bg-gray-50 p-4 rounded-xl border border-gray-200">
+              <ShareAndLikeBar
+                contentType="gallery"
+                contentId={images[selectedIndex].id}
+                title="Dokumentasi Galeri Rumah Amal"
+                initialLikesCount={images[selectedIndex].likesCount || 0}
+                lang={lang}
+              />
+            </div>
           </div>
 
           {/* Tombol Panah Kanan (Next) */}
@@ -260,4 +267,3 @@ export default function GaleriPage() {
     </div>
   );
 }
-
