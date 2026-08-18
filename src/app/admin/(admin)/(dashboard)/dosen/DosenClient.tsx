@@ -301,113 +301,115 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
       {/* Modal Form Tambah / Edit */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-lg w-full overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
               <h3 className="font-bold text-sm text-gray-900">
                 {editingDosen ? 'Edit Data Dosen' : 'Tambah Data Dosen Baru'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 font-bold text-base cursor-pointer"
+                className="w-7 h-7 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-gray-600 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-5 overflow-y-auto">
               {errorMsg && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-medium">
+                <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-medium">
                   {errorMsg}
                 </div>
               )}
 
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  NIP <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  disabled={!!editingDosen}
-                  value={nip}
-                  onChange={(e) => setNip(e.target.value)}
-                  placeholder="Contoh: 198501012010121001"
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E] disabled:bg-gray-100"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    NIP <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    disabled={!!editingDosen}
+                    value={nip}
+                    onChange={(e) => setNip(e.target.value)}
+                    placeholder="Contoh: 198501012010121001"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E] disabled:bg-gray-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Nama Lengkap <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={nama}
+                    onChange={(e) => setNama(e.target.value)}
+                    placeholder="Contoh: Dr. Ir. Ahmad Subagyo, M.T."
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    ID Donatur <span className="text-gray-400 font-normal">(Kode Privasi Zakat)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={idDonatur}
+                    onChange={(e) => setIdDonatur(e.target.value)}
+                    placeholder="Contoh: DSN-001 / DON-198501"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">No. HP / WhatsApp</label>
+                  <input
+                    type="text"
+                    value={noHp}
+                    onChange={(e) => setNoHp(e.target.value)}
+                    placeholder="Contoh: 081234567890"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">NPWP</label>
+                  <input
+                    type="text"
+                    value={npwp}
+                    onChange={(e) => setNpwp(e.target.value)}
+                    placeholder="Contoh: 12.345.678.9-012.000"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Unit Kerja / Fakultas / Prodi</label>
+                  <input
+                    type="text"
+                    value={unitKerja}
+                    onChange={(e) => setUnitKerja(e.target.value)}
+                    placeholder="Contoh: Fakultas Teknik / Informatika"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Alamat</label>
+                  <textarea
+                    rows={2}
+                    value={alamat}
+                    onChange={(e) => setAlamat(e.target.value)}
+                    placeholder="Alamat domisili dosen"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Nama Lengkap <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={nama}
-                  onChange={(e) => setNama(e.target.value)}
-                  placeholder="Contoh: Dr. Ir. Ahmad Subagyo, M.T."
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  ID Donatur <span className="text-gray-400 font-normal">(Kode Verifikasi Privasi Zakat)</span>
-                </label>
-                <input
-                  type="text"
-                  value={idDonatur}
-                  onChange={(e) => setIdDonatur(e.target.value)}
-                  placeholder="Contoh: DSN-001 / DON-198501"
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">No. HP / WhatsApp</label>
-                <input
-                  type="text"
-                  value={noHp}
-                  onChange={(e) => setNoHp(e.target.value)}
-                  placeholder="Contoh: 081234567890"
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">NPWP</label>
-                <input
-                  type="text"
-                  value={npwp}
-                  onChange={(e) => setNpwp(e.target.value)}
-                  placeholder="Contoh: 12.345.678.9-012.000"
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Unit Kerja / Fakultas / Prodi</label>
-                <input
-                  type="text"
-                  value={unitKerja}
-                  onChange={(e) => setUnitKerja(e.target.value)}
-                  placeholder="Contoh: Fakultas Teknik / Informatika"
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Alamat</label>
-                <textarea
-                  rows={2}
-                  value={alamat}
-                  onChange={(e) => setAlamat(e.target.value)}
-                  placeholder="Alamat domisili dosen"
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2.5 pt-2">
+              <div className="flex justify-end gap-2.5 pt-4 mt-2 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}

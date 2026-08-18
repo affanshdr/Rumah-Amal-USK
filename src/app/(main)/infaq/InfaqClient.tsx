@@ -123,22 +123,20 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
           <button
             type="button"
             onClick={() => handleTipeSwitch("dosen")}
-            className={`text-xs sm:text-sm font-extrabold px-8 py-2.5 rounded-lg transition-all cursor-pointer ${
-              tipePembayar === "dosen"
-                ? "bg-[#FFBB0C] text-[#000] shadow-sm"
-                : "text-gray-600 hover:text-[#000]"
-            }`}
+            className={`text-xs sm:text-sm font-extrabold px-8 py-2.5 rounded-lg transition-all cursor-pointer ${tipePembayar === "dosen"
+              ? "bg-[#FFBB0C] text-[#000] shadow-sm"
+              : "text-gray-600 hover:text-[#000]"
+              }`}
           >
             {t.tipeDosen}
           </button>
           <button
             type="button"
             onClick={() => handleTipeSwitch("masyarakat")}
-            className={`text-xs sm:text-sm font-extrabold px-8 py-2.5 rounded-lg transition-all cursor-pointer ${
-              tipePembayar === "masyarakat"
-                ? "bg-[#FFBB0C] text-[#000] shadow-sm"
-                : "text-gray-600 hover:text-[#000]"
-            }`}
+            className={`text-xs sm:text-sm font-extrabold px-8 py-2.5 rounded-lg transition-all cursor-pointer ${tipePembayar === "masyarakat"
+              ? "bg-[#FFBB0C] text-[#000] shadow-sm"
+              : "text-gray-600 hover:text-[#000]"
+              }`}
           >
             {t.tipeMasyarakat}
           </button>
@@ -274,9 +272,9 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                     readOnly={isHambaAllah}
                     required
                     placeholder={t.namaPlaceholder}
-                    className={`w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] ${
-                      isHambaAllah ? "bg-gray-100 text-gray-500" : "bg-white"
-                    }`}
+                    className={`w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] 
+                      ${isHambaAllah ? "bg-gray-100 text-gray-500" : "bg-white"
+                      }`}
                   />
                 </div>
 
