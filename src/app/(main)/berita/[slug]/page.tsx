@@ -57,11 +57,16 @@ export default function PublicNewsDetailPage({
   const [commentSuccessMsg, setCommentSuccessMsg] = useState('');
 
   useEffect(() => {
-    const savedLang = (localStorage.getItem('app_lang') ||
-      localStorage.getItem('announcement_lang')) as BeritaLanguage;
-    if (savedLang && ['id', 'en', 'ar'].includes(savedLang)) {
-      setLang(savedLang);
-    }
+    const readLang = () => {
+      const savedLang = (localStorage.getItem('app_lang') ||
+        localStorage.getItem('announcement_lang')) as BeritaLanguage;
+      if (savedLang && ['id', 'en', 'ar'].includes(savedLang)) {
+        setLang(savedLang);
+      }
+    };
+    readLang();
+    window.addEventListener('languageChange', readLang);
+    return () => window.removeEventListener('languageChange', readLang);
   }, []);
 
   const t = beritaDictionary[lang] || beritaDictionary.id;
@@ -75,6 +80,9 @@ export default function PublicNewsDetailPage({
         if (res.ok) {
           const data = await res.json();
           setNews(data.news);
+          if (data.news?.id) {
+            fetch(`/api/news/${data.news.id}/views`, { method: 'POST' }).catch(() => {});
+          }
         } else {
           setError(t.notFoundDetailDesc);
         }
@@ -191,8 +199,8 @@ export default function PublicNewsDetailPage({
   const displayContent = getContent(news);
 
   return (
-    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-[1240px] mx-auto">
+    <div className="min-h-screen bg-[#f8fafc]/50 py-8 px-4 sm:px-6 lg:px-8 font-sans text-gray-800">
+      <div className="max-w-[1340px] mx-auto">
         {/* Back Link Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <Link
@@ -203,9 +211,9 @@ export default function PublicNewsDetailPage({
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Main Article Content (8 cols) */}
-          <article className="lg:col-span-8">
+          <article className="lg:col-span-8 bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-100/90">
             {/* Category & Date */}
             <div className="flex items-center gap-2 text-xs font-extrabold text-[#0b6330] uppercase tracking-wider mb-3">
               <span className="bg-[#ffc800] text-[#111827] px-3 py-1 rounded-md text-[11px] font-extrabold uppercase tracking-wider shadow-2xs">
@@ -294,7 +302,19 @@ export default function PublicNewsDetailPage({
             </div>
 
             {/* Tags & Meta Section */}
-            <div className="pt-6 border-t border-gray-200 mt-10">
+            <div className="pt-6 border-t border-gray-200 mt-8">
+              {/* Jumlah Pembaca / Views Count dengan Icon Mata */}
+              <div className="flex items-center gap-2 text-gray-600 text-sm font-semibold mb-5" title="Jumlah Pembaca / Views">
+                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span className="text-gray-800 font-extrabold text-base">{news.viewsCount || 0}</span>
+                <span className="text-xs text-gray-500 font-medium">
+                  {lang === 'ar' ? 'مشاهدة' : lang === 'en' ? 'views' : 'pembaca'}
+                </span>
+              </div>
+
               {news.tags && news.tags.length > 0 && (
                 <div className="flex items-center gap-2 flex-wrap mb-6">
                   <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">

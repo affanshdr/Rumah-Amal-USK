@@ -27,10 +27,15 @@ export default function PublicAnnouncementListPage() {
   const ITEMS_PER_PAGE = 9;
 
   useEffect(() => {
-    const savedLang = (localStorage.getItem('app_lang') || localStorage.getItem('announcement_lang')) as Language;
-    if (savedLang && ['id', 'en', 'ar'].includes(savedLang)) {
-      setLang(savedLang);
-    }
+    const readLang = () => {
+      const savedLang = (localStorage.getItem('app_lang') || localStorage.getItem('announcement_lang')) as Language;
+      if (savedLang && ['id', 'en', 'ar'].includes(savedLang)) {
+        setLang(savedLang);
+      }
+    };
+    readLang();
+    window.addEventListener('languageChange', readLang);
+    return () => window.removeEventListener('languageChange', readLang);
   }, []);
 
   const changeLanguage = (newLang: Language) => {
@@ -105,6 +110,7 @@ export default function PublicAnnouncementListPage() {
 
   const labels = {
     id: {
+      pageTitle: 'PENGUMUMAN',
       searchPlaceholder: 'Cari pengumuman berdasarkan judul...',
       searchBtn: 'Cari',
       badge: 'PENGUMUMAN',
@@ -115,6 +121,7 @@ export default function PublicAnnouncementListPage() {
       next: 'Berikutnya >',
     },
     en: {
+      pageTitle: 'ANNOUNCEMENTS',
       searchPlaceholder: 'Search announcements by title...',
       searchBtn: 'Search',
       badge: 'ANNOUNCEMENT',
@@ -125,6 +132,7 @@ export default function PublicAnnouncementListPage() {
       next: 'Next >',
     },
     ar: {
+      pageTitle: 'الإعلانات',
       searchPlaceholder: 'ابحث عن الإعلانات بالعنوان...',
       searchBtn: 'بحث',
       badge: 'إعلان',
@@ -137,8 +145,14 @@ export default function PublicAnnouncementListPage() {
   }[lang];
 
   return (
-    <div className="min-h-screen bg-white py-6 px-4 sm:px-6 lg:px-8 font-sans">
+    <div className="min-h-screen bg-white py-10 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-[1340px] mx-auto">
+        {/* Big Page Title */}
+        <div className="text-center mb-6">
+          <h1 className={`text-4xl sm:text-5xl font-extrabold text-[#374151] tracking-tight uppercase mb-6 ${lang === 'ar' ? 'font-serif' : ''}`}>
+            {labels.pageTitle}
+          </h1>
+        </div>
 
         {/* Search Bar */}
         <form onSubmit={handleSearchSubmit} className="max-w-xl mx-auto mb-10 flex gap-2.5">

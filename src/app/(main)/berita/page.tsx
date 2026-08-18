@@ -26,11 +26,16 @@ export default function PublicNewsListPage() {
   const ITEMS_PER_PAGE = 9;
 
   useEffect(() => {
-    const savedLang = (localStorage.getItem('app_lang') ||
-      localStorage.getItem('announcement_lang')) as BeritaLanguage;
-    if (savedLang && ['id', 'en', 'ar'].includes(savedLang)) {
-      setLang(savedLang);
-    }
+    const readLang = () => {
+      const savedLang = (localStorage.getItem('app_lang') ||
+        localStorage.getItem('announcement_lang')) as BeritaLanguage;
+      if (savedLang && ['id', 'en', 'ar'].includes(savedLang)) {
+        setLang(savedLang);
+      }
+    };
+    readLang();
+    window.addEventListener('languageChange', readLang);
+    return () => window.removeEventListener('languageChange', readLang);
   }, []);
 
   const fetchNews = useCallback(async () => {
