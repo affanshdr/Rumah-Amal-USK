@@ -14,6 +14,7 @@ import {
   faExternalLinkAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { updateStrukturOrganisasi, resetStrukturOrganisasi } from "@/actions/struktur-organisasi";
+import ConfirmModal from "@/components/admin/ConfirmModal";
 
 interface StrukturOrganisasiClientProps {
   initialData: {
@@ -33,6 +34,7 @@ export default function StrukturOrganisasiClient({ initialData }: StrukturOrgani
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const DEFAULT_IMAGE_URL = "/profil/struktur-organisasi.png";
@@ -76,8 +78,7 @@ export default function StrukturOrganisasiClient({ initialData }: StrukturOrgani
     }
   };
 
-  const handleResetDefault = async () => {
-    if (!confirm("Apakah Anda yakin ingin mengembalikan gambar ke versi default? Data custom di database akan dihapus.")) return;
+  const handleConfirmResetDefault = async () => {
     setIsSubmitting(true);
     setStatusMsg(null);
     try {
@@ -97,6 +98,7 @@ export default function StrukturOrganisasiClient({ initialData }: StrukturOrgani
       setStatusMsg({ type: "error", text: "Terjadi kesalahan koneksi." });
     } finally {
       setIsSubmitting(false);
+      setIsResetConfirmOpen(false);
     }
   };
 
@@ -169,7 +171,7 @@ export default function StrukturOrganisasiClient({ initialData }: StrukturOrgani
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={handleResetDefault}
+            onClick={() => setIsResetConfirmOpen(true)}
             disabled={isSubmitting || imageUrl === DEFAULT_IMAGE_URL}
             className="px-3.5 py-2 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
           >
@@ -337,6 +339,16 @@ export default function StrukturOrganisasiClient({ initialData }: StrukturOrgani
           </div>
         </div>
       </div>
+      {/* Confirm Reset Modal */}
+      <ConfirmModal
+        isOpen={isResetConfirmOpen}
+        onClose={() => setIsResetConfirmOpen(false)}
+        onConfirm={handleConfirmResetDefault}
+        title="Reset Gambar ke Default?"
+        message="Apakah Anda yakin ingin mengembalikan gambar ke versi default? Data custom di database akan dihapus secara permanen."
+        confirmText="Reset Gambar"
+        loading={isSubmitting}
+      />
     </div>
   );
 }

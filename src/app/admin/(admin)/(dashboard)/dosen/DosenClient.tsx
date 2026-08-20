@@ -6,6 +6,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faSearch, faEdit, faTrash, faUserTie, faFileArrowUp, faPhone } from '@fortawesome/free-solid-svg-icons';
 import CsvImportModal from '@/components/admin/CsvImportModal';
 import AdminPagination from '@/components/admin/AdminPagination';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import AdminToast, { ToastState } from '@/components/admin/AdminToast';
 
 type DosenItem = {
   nip: string;
@@ -33,6 +35,9 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteConfirmNip, setDeleteConfirmNip] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
 
   // Form states
   const [nip, setNip] = useState('');
@@ -137,6 +142,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         await createDosen(formData);
       }
       setIsModalOpen(false);
+      setToast({ message: editingDosen ? "Data dosen berhasil diperbarui." : "Dosen baru berhasil ditambahkan.", type: "success" });
       fetchData(currentPage, searchRef.current);
     } catch (err: any) {
       setErrorMsg(err.message || 'Gagal menyimpan data dosen');
@@ -145,14 +151,18 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
     }
   }
 
-  async function handleDelete(nipToDelete: string) {
-    if (!confirm(`Apakah Anda yakin ingin menghapus data dosen dengan NIP ${nipToDelete}?`)) return;
-
+  async function handleConfirmDelete() {
+    if (!deleteConfirmNip) return;
+    setIsDeleting(true);
     try {
-      await deleteDosen(nipToDelete);
+      await deleteDosen(deleteConfirmNip);
+      setToast({ message: "Data dosen berhasil dihapus.", type: "success" });
       fetchData(currentPage, searchRef.current);
     } catch (err: any) {
-      alert(err.message || 'Gagal menghapus data dosen');
+      setToast({ message: err.message || "Gagal menghapus data dosen", type: "error" });
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmNip(null);
     }
   }
 
@@ -273,7 +283,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
                           <FontAwesomeIcon icon={faEdit} className="w-3 h-3" />
                         </button>
                         <button
-                          onClick={() => handleDelete(item.nip)}
+                          onClick={() => setDeleteConfirmNip(item.nip)}
                           className="p-1 rounded text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                           title="Hapus Dosen"
                         >
@@ -444,6 +454,19 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
           ['197803152005011002', 'Prof. Dr. Siti Rahma, M.Sc.', 'DON-1002', '', 'Jl. Darussalam No.5', 'Fakultas MIPA', '085298765432'],
         ]}
       />
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteConfirmNip)}
+        onClose={() => setDeleteConfirmNip(null)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Data Dosen?"
+        message={`Apakah Anda yakin ingin menghapus data dosen dengan NIP ${deleteConfirmNip}? Data yang dihapus tidak dapat dikembalikan.`}
+        confirmText="Hapus Dosen"
+        loading={isDeleting}
+      />
+
+      {/* Toast Notification */}
+      <AdminToast toast={toast} onClose={() => setToast(null)} />
     </div>
   );
 }

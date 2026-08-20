@@ -6,6 +6,8 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faSpinner, faSave } from "@fortawesome/free-solid-svg-icons";
 import { addGalleryImage, deleteGalleryImage, uploadGalleryImages } from "@/actions/gallery";
+import ConfirmModal from "@/components/admin/ConfirmModal";
+import AdminToast, { ToastState } from "@/components/admin/AdminToast";
 
 type GalleryRow = {
   id: string;
@@ -52,6 +54,10 @@ export default function GaleriClient({
   const [titleInput, setTitleInput] = useState("");
   const [uploadedPreview, setUploadedPreview] = useState("");
 
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<GalleryRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,18 +69,26 @@ export default function GaleriClient({
       fd.append("file", file);
       fd.append("bucket", "Galeri");
       const res = await fetch("/api/upload", { method: "POST", body: fd });
-      if (!res.ok) { const err = await res.json(); alert(`Upload gagal: ${err.error}`); return; }
+      if (!res.ok) {
+        const err = await res.json();
+        setToast({ message: `Upload gagal: ${err.error}`, type: "error" });
+        return;
+      }
       const result = await res.json();
       setUploadedPreview(result.url);
       setImageUrlInput(result.url);
-    } catch (err) { alert(`Kesalahan: ${(err as Error).message}`); }
-    finally { setUploading(false); }
+      setToast({ message: "Foto galeri berhasil diupload.", type: "success" });
+    } catch (err) {
+      setToast({ message: `Kesalahan: ${(err as Error).message}`, type: "error" });
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!imageUrlInput.trim()) {
-      alert("Pilih file gambar atau masukkan URL gambar.");
+      setToast({ message: "Pilih file gambar atau masukkan URL gambar.", type: "error" });
       return;
     }
     setUploading(true);
@@ -84,19 +98,29 @@ export default function GaleriClient({
       setImageUrlInput("");
       setTitleInput("");
       setUploadedPreview("");
+      setToast({ message: "Foto galeri berhasil disimpan.", type: "success" });
       router.refresh();
     } catch (err: any) {
-      alert(err.message || "Gagal menyimpan foto");
+      setToast({ message: err.message || "Gagal menyimpan foto", type: "error" });
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDelete = async (id: string, url: string) => {
-    if (!confirm("Hapus foto galeri ini? Data tidak dapat dikembalikan.")) return;
-    setData((prev) => prev.filter((item) => item.id !== id));
-    await deleteGalleryImage(id, url);
-    router.refresh();
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmItem) return;
+    setIsDeleting(true);
+    try {
+      setData((prev) => prev.filter((item) => item.id !== deleteConfirmItem.id));
+      await deleteGalleryImage(deleteConfirmItem.id, deleteConfirmItem.imageUrl);
+      setToast({ message: "Foto galeri berhasil dihapus.", type: "success" });
+      router.refresh();
+    } catch (err: any) {
+      setToast({ message: err.message || "Gagal menghapus foto galeri.", type: "error" });
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmItem(null);
+    }
   };
 
   return (
@@ -145,7 +169,7 @@ export default function GaleriClient({
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                       </button>
                       <button
-                        onClick={() => handleDelete(item.id, item.imageUrl)}
+                        onClick={() => setDeleteConfirmItem(item)}
                         className="w-9 h-9 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg hover:bg-red-700 transition-colors cursor-pointer"
                         title="Hapus"
                       >
@@ -312,6 +336,19 @@ export default function GaleriClient({
           </div>
         </div>
       )}
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteConfirmItem)}
+        onClose={() => setDeleteConfirmItem(null)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Foto Galeri?"
+        message="Apakah Anda yakin ingin menghapus foto galeri ini? Data yang dihapus tidak dapat dikembalikan."
+        confirmText="Hapus Foto"
+        loading={isDeleting}
+      />
+
+      {/* Toast Notification */}
+      <AdminToast toast={toast} onClose={() => setToast(null)} />
     </>
   );
 }

@@ -5,6 +5,7 @@ import { updateNisabConfig } from '@/actions/nisab';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSave, faCheckCircle, faCoins, faScaleBalanced, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { formatRupiah } from '@/lib/kalkulator';
+import { formatThousand, parseRawNumber } from '@/lib/formatNumber';
 
 type NisabConfigType = {
   id: string;
@@ -136,12 +137,11 @@ export default function NisabClient({ initialData }: { initialData: NisabConfigT
                 Harga Emas per Gram (Rp)
               </label>
               <input
-                type="number"
+                type="text"
                 required
-                min={0}
-                value={hargaEmasPerGram}
-                onChange={(e) => setHargaEmasPerGram(Number(e.target.value))}
-                className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330]"
+                value={formatThousand(hargaEmasPerGram)}
+                onChange={(e) => setHargaEmasPerGram(Number(parseRawNumber(e.target.value)))}
+                className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] font-medium"
               />
               <p className="text-[11px] text-gray-500 mt-1">
                 Acuan harga pasar emas murni saat ini.
@@ -172,12 +172,11 @@ export default function NisabClient({ initialData }: { initialData: NisabConfigT
               Nisab Zakat Profesi per Bulan (Rp)
             </label>
             <input
-              type="number"
+              type="text"
               required
-              min={0}
-              value={nisabProfesiBulan}
-              onChange={(e) => setNisabProfesiBulan(Number(e.target.value))}
-              className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330]"
+              value={formatThousand(nisabProfesiBulan)}
+              onChange={(e) => setNisabProfesiBulan(Number(parseRawNumber(e.target.value)))}
+              className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] font-medium"
             />
             <p className="text-[11px] text-gray-500 mt-1">
               Batas minimum penghasilan bulanan untuk diwajibkan zakat profesi (2,5%).

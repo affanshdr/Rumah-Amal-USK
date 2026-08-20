@@ -12,6 +12,8 @@ import {
   deleteNews,
   toggleNewsPublished,
 } from "@/actions/berita";
+import ConfirmModal from "@/components/admin/ConfirmModal";
+import AdminToast, { ToastState } from "@/components/admin/AdminToast";
 
 const TipTapEditor = dynamic(() => import("@/components/TipTapEditor"), {
   ssr: false,
@@ -177,6 +179,10 @@ export default function BeritaClient({
 
   const filtered = data;
 
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<NewsRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
+
   const handleSearchChange = (val: string) => {
     setSearch(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -242,11 +248,20 @@ export default function BeritaClient({
       fd.append("file", file);
       fd.append("bucket", "Berita");
       const res = await fetch("/api/upload", { method: "POST", body: fd });
-      if (!res.ok) { const err = await res.json(); alert(`Upload gagal: ${err.error}`); return; }
+      if (!res.ok) {
+        const err = await res.json();
+        setToast({ message: `Upload gagal: ${err.error}`, type: "error" });
+        return;
+      }
       const result = await res.json();
       setCoverPreview(result.url);
-    } catch (err) { alert(`Kesalahan: ${(err as Error).message}`); }
-    finally { setUploadingCover(false); if (coverInputRef.current) coverInputRef.current.value = ""; }
+      setToast({ message: "Cover berita berhasil diupload.", type: "success" });
+    } catch (err) {
+      setToast({ message: `Kesalahan: ${(err as Error).message}`, type: "error" });
+    } finally {
+      setUploadingCover(false);
+      if (coverInputRef.current) coverInputRef.current.value = "";
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -267,25 +282,44 @@ export default function BeritaClient({
       fd.set("category", liveCategory);
       fd.set("publishedAt", liveDate);
 
-      if (editing) { fd.append("id", editing.id); await updateNews(fd); }
-      else { await addNews(fd); }
+      if (editing) {
+        fd.append("id", editing.id);
+        await updateNews(fd);
+        setToast({ message: "Berita berhasil diperbarui.", type: "success" });
+      } else {
+        await addNews(fd);
+        setToast({ message: "Berita baru berhasil dibuat.", type: "success" });
+      }
       closeModal();
       router.refresh();
-    } catch (error: any) { alert(error.message || "Terjadi kesalahan sistem."); }
-    finally { setIsSubmitting(false); }
+    } catch (error: any) {
+      setToast({ message: error.message || "Terjadi kesalahan sistem.", type: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleToggle = async (id: string, current: boolean) => {
     setData((prev) => prev.map((item) => item.id === id ? { ...item, published: !current } : item));
     await toggleNewsPublished(id, current);
+    setToast({ message: `Status berita diubah ke ${!current ? 'Tayang' : 'Draft'}.`, type: "info" });
     router.refresh();
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Hapus berita ini? Data tidak dapat dikembalikan.")) return;
-    setData((prev) => prev.filter((item) => item.id !== id));
-    await deleteNews(id);
-    router.refresh();
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmItem) return;
+    setIsDeleting(true);
+    try {
+      setData((prev) => prev.filter((item) => item.id !== deleteConfirmItem.id));
+      await deleteNews(deleteConfirmItem.id);
+      setToast({ message: "Berita berhasil dihapus.", type: "success" });
+      router.refresh();
+    } catch (err: any) {
+      setToast({ message: err.message || "Gagal menghapus berita.", type: "error" });
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmItem(null);
+    }
   };
 
   return (
@@ -376,7 +410,7 @@ export default function BeritaClient({
                       <button onClick={() => openEdit(item)} title="Edit" className="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center transition-colors cursor-pointer">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                       </button>
-                      <button onClick={() => handleDelete(item.id)} title="Hapus" className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer">
+                      <button onClick={() => setDeleteConfirmItem(item)} title="Hapus" className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       </button>
                     </div>
@@ -568,7 +602,7 @@ export default function BeritaClient({
                           type="button"
                           onClick={async () => {
                             if (!liveTitle.trim()) {
-                              alert("Silakan isi Judul Berita (Indonesia) terlebih dahulu!");
+                              setToast({ message: "Silakan isi Judul Berita (Indonesia) terlebih dahulu!", type: "error" });
                               return;
                             }
                             setIsSubmitting(true);
@@ -590,12 +624,12 @@ export default function BeritaClient({
                                 if (data.excerptAr) setLiveExcerptAr(data.excerptAr);
                                 if (data.contentEn) setContentEnHtml(data.contentEn);
                                 if (data.contentAr) setContentArHtml(data.contentAr);
-                                alert("✨ Berhasil menerjemahkan konten ke Bahasa Inggris (EN) & Arab (AR)!");
+                                setToast({ message: "✨ Berhasil menerjemahkan ke EN & AR!", type: "success" });
                               } else {
-                                alert("Gagal melakukan terjemahan otomatis.");
+                                setToast({ message: "Gagal melakukan terjemahan otomatis.", type: "error" });
                               }
                             } catch (err: any) {
-                              alert(err.message || "Gagal menerjemahkan.");
+                              setToast({ message: err.message || "Gagal menerjemahkan.", type: "error" });
                             } finally {
                               setIsSubmitting(false);
                             }
@@ -852,6 +886,20 @@ export default function BeritaClient({
           </div>
         </div>
       )}
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteConfirmItem)}
+        onClose={() => setDeleteConfirmItem(null)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Berita?"
+        message={`Apakah Anda yakin ingin menghapus "${deleteConfirmItem?.title || 'berita ini'}"? Data yang dihapus tidak dapat dikembalikan.`}
+        confirmText="Hapus Berita"
+        loading={isDeleting}
+      />
+
+      {/* Toast Notification */}
+      <AdminToast toast={toast} onClose={() => setToast(null)} />
     </>
   );
 }

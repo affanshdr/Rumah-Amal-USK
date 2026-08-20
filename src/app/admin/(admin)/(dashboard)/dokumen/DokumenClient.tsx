@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSave } from '@fortawesome/free-solid-svg-icons';
 import { deleteDocumentAction, updateDocumentAction } from '@/actions/dokumen';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import AdminToast, { ToastState } from '@/components/admin/AdminToast';
 
 type DocumentRow = {
   id: string;
@@ -54,6 +56,9 @@ export default function DokumenClient({
   const [judul, setJudul] = useState('');
   const [driveUrl, setDriveUrl] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const latestReqRef = useRef(0);
@@ -114,8 +119,8 @@ export default function DokumenClient({
 
   const handleSubmitDocument = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!judul.trim()) { alert('Judul dokumen wajib diisi.'); return; }
-    if (!driveUrl.trim()) { alert('Link Google Drive wajib diisi.'); return; }
+    if (!judul.trim()) { setToast({ message: 'Judul dokumen wajib diisi.', type: 'error' }); return; }
+    if (!driveUrl.trim()) { setToast({ message: 'Link Google Drive wajib diisi.', type: 'error' }); return; }
 
     setUploading(true);
     if (editingItem) {
@@ -128,10 +133,11 @@ export default function DokumenClient({
         setEditingItem(null);
         setJudul('');
         setDriveUrl('');
+        setToast({ message: 'Dokumen berhasil diperbarui.', type: 'success' });
         fetchData(currentPage, searchRef.current);
         router.refresh();
       } catch (err) {
-        alert(`Gagal mengedit dokumen: ${(err as Error).message}`);
+        setToast({ message: `Gagal mengedit dokumen: ${(err as Error).message}`, type: 'error' });
       } finally {
         setUploading(false);
       }
@@ -150,7 +156,7 @@ export default function DokumenClient({
       });
       const resData = await res.json();
       if (!res.ok || !resData.success) {
-        alert(resData.error ?? 'Gagal menambahkan dokumen');
+        setToast({ message: resData.error ?? 'Gagal menambahkan dokumen', type: 'error' });
         setUploading(false);
         return;
       }
@@ -158,20 +164,30 @@ export default function DokumenClient({
       setIsAddModalOpen(false);
       setJudul('');
       setDriveUrl('');
+      setToast({ message: 'Dokumen baru berhasil ditambahkan.', type: 'success' });
       fetchData(1, searchRef.current);
       router.refresh();
     } catch (err) {
-      alert(`Koneksi gagal: ${(err as Error).message}`);
+      setToast({ message: `Koneksi gagal: ${(err as Error).message}`, type: 'error' });
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus dokumen ini?')) return;
-    await deleteDocumentAction(id);
-    fetchData(currentPage, searchRef.current);
-    router.refresh();
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmId) return;
+    setIsDeleting(true);
+    try {
+      await deleteDocumentAction(deleteConfirmId);
+      setToast({ message: 'Dokumen berhasil dihapus.', type: 'success' });
+      fetchData(currentPage, searchRef.current);
+      router.refresh();
+    } catch (err: any) {
+      setToast({ message: err.message || 'Gagal menghapus dokumen.', type: 'error' });
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmId(null);
+    }
   };
 
   return (
@@ -251,7 +267,7 @@ export default function DokumenClient({
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                       </button>
                       <button
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => setDeleteConfirmId(item.id)}
                         title="Hapus"
                         className="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                       >
@@ -384,6 +400,19 @@ export default function DokumenClient({
           </div>
         </div>
       )}
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteConfirmId)}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Dokumen?"
+        message="Apakah Anda yakin ingin menghapus dokumen ini? Data yang dihapus tidak dapat dikembalikan."
+        confirmText="Hapus Dokumen"
+        loading={isDeleting}
+      />
+
+      {/* Toast Notification */}
+      <AdminToast toast={toast} onClose={() => setToast(null)} />
     </>
   );
 }

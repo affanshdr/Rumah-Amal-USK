@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import { submitInfaq } from "@/actions/infaq";
 import Image from "next/image";
 import { infaqDictionary, InfaqLanguage } from "@/lib/i18n/infaq";
+import { formatThousand, parseRawNumber } from "@/lib/formatNumber";
 
 type KampanyeOption = {
   id: string;
@@ -238,14 +239,14 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                   Rp.
                 </span>
                 <input
-                  type="number"
-                  name="jumlah_infaq"
+                  type="text"
                   value={jumlahInfaq}
-                  onChange={(e) => setJumlahInfaq(e.target.value)}
+                  onChange={(e) => setJumlahInfaq(formatThousand(e.target.value))}
                   required
                   placeholder={t.jumlahPlaceholder}
-                  className="flex-1 block w-full px-3.5 py-2.5 text-sm focus:outline-none bg-white"
+                  className="flex-1 block w-full px-3.5 py-2.5 text-sm focus:outline-none bg-white font-medium"
                 />
+                <input type="hidden" name="jumlah_infaq" value={parseRawNumber(jumlahInfaq)} />
               </div>
             </div>
 

@@ -6,6 +6,8 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faSync, faSpinner, faSave } from "@fortawesome/free-solid-svg-icons";
 import { addMitra, updateMitra, deleteMitra } from "@/actions/mitra";
+import ConfirmModal from "@/components/admin/ConfirmModal";
+import AdminToast, { ToastState } from "@/components/admin/AdminToast";
 
 type MitraRow = {
   id: string;
@@ -60,6 +62,10 @@ export default function MitraClient({
   const [search, setSearch] = useState(initialSearch);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<MitraRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
+
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const filtered = data;
@@ -103,33 +109,63 @@ export default function MitraClient({
       fd.append("file", file);
       fd.append("bucket", "Mitra");
       const res = await fetch("/api/upload", { method: "POST", body: fd });
-      if (!res.ok) { const err = await res.json(); alert(`Upload gagal: ${err.error}`); return; }
+      if (!res.ok) {
+        const err = await res.json();
+        setToast({ message: `Upload gagal: ${err.error}`, type: "error" });
+        return;
+      }
       const result = await res.json();
       setLogoPreview(result.url);
-    } catch (err) { alert(`Kesalahan: ${(err as Error).message}`); }
-    finally { setUploadingLogo(false); if (logoInputRef.current) logoInputRef.current.value = ""; }
+      setToast({ message: "Logo mitra berhasil diupload.", type: "success" });
+    } catch (err) {
+      setToast({ message: `Kesalahan: ${(err as Error).message}`, type: "error" });
+    } finally {
+      setUploadingLogo(false);
+      if (logoInputRef.current) logoInputRef.current.value = "";
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!logoPreview) { alert("Logo mitra wajib diunggah."); return; }
+    if (!logoPreview) {
+      setToast({ message: "Logo mitra wajib diunggah.", type: "error" });
+      return;
+    }
     setIsSubmitting(true);
     try {
       const fd = new FormData(e.currentTarget);
       fd.set("logoUrl", logoPreview);
-      if (editing) { fd.append("id", editing.id); await updateMitra(fd); }
-      else { await addMitra(fd); }
+      if (editing) {
+        fd.append("id", editing.id);
+        await updateMitra(fd);
+        setToast({ message: "Data mitra berhasil diperbarui.", type: "success" });
+      } else {
+        await addMitra(fd);
+        setToast({ message: "Mitra baru berhasil ditambahkan.", type: "success" });
+      }
       closeModal();
       router.refresh();
-    } catch (error: any) { alert(error.message || "Terjadi kesalahan sistem."); }
-    finally { setIsSubmitting(false); }
+    } catch (error: any) {
+      setToast({ message: error.message || "Terjadi kesalahan sistem.", type: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Hapus mitra kerjasama ini? Data tidak dapat dikembalikan.")) return;
-    setData((prev) => prev.filter((item) => item.id !== id));
-    await deleteMitra(id);
-    router.refresh();
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmItem) return;
+    setIsDeleting(true);
+    try {
+      setData((prev) => prev.filter((item) => item.id !== deleteConfirmItem.id));
+      await deleteMitra(deleteConfirmItem.id);
+      setToast({ message: "Data mitra berhasil dihapus.", type: "success" });
+      router.refresh();
+    } catch (err: any) {
+      setToast({ message: err.message || "Gagal menghapus data mitra.", type: "error" });
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmItem(null);
+    }
   };
 
   return (
@@ -204,7 +240,7 @@ export default function MitraClient({
                         <button onClick={() => openEdit(item)} title="Edit" className="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center transition-colors cursor-pointer">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                         </button>
-                        <button onClick={() => handleDelete(item.id)} title="Hapus" className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer">
+                        <button onClick={() => setDeleteConfirmItem(item)} title="Hapus" className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
                       </div>
@@ -358,6 +394,19 @@ export default function MitraClient({
           </div>
         </div>
       )}
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteConfirmItem)}
+        onClose={() => setDeleteConfirmItem(null)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Mitra Kerjasama?"
+        message={`Apakah Anda yakin ingin menghapus "${deleteConfirmItem?.nama || 'mitra ini'}"? Data yang dihapus tidak dapat dikembalikan.`}
+        confirmText="Hapus Mitra"
+        loading={isDeleting}
+      />
+
+      {/* Toast Notification */}
+      <AdminToast toast={toast} onClose={() => setToast(null)} />
     </>
   );
 }

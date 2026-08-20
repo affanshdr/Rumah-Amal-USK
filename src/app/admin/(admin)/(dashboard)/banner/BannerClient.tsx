@@ -4,6 +4,8 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faSync, faSpinner, faSave, faExternalLinkAlt, faTrash, faEdit, faCheckCircle, faTimesCircle, faPlus } from "@fortawesome/free-solid-svg-icons";
+import ConfirmModal from "@/components/admin/ConfirmModal";
+import AdminToast, { ToastState } from "@/components/admin/AdminToast";
 
 export type BannerRow = {
   id: string;
@@ -43,6 +45,10 @@ export default function BannerClient({ initialData }: BannerClientProps) {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [search, setSearch] = useState("");
+
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<BannerRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -113,22 +119,23 @@ export default function BannerClient({ initialData }: BannerClientProps) {
         setData((prev) =>
           prev.map((b) => (b.id === item.id ? { ...b, isActive: item.isActive } : b))
         );
-        alert("Gagal mengubah status banner.");
+        setToast({ message: "Gagal mengubah status banner.", type: "error" });
       } else {
+        setToast({ message: `Status banner diubah ke ${newStatus ? 'Aktif' : 'Sembunyi'}.`, type: "info" });
         router.refresh();
       }
     } catch {
       setData((prev) =>
         prev.map((b) => (b.id === item.id ? { ...b, isActive: item.isActive } : b))
       );
-      alert("Terjadi kesalahan koneksi.");
+      setToast({ message: "Terjadi kesalahan koneksi.", type: "error" });
     }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!editing && !selectedFile) {
-      alert("Gambar banner wajib diunggah.");
+      setToast({ message: "Gambar banner wajib diunggah.", type: "error" });
       return;
     }
 
@@ -213,6 +220,7 @@ export default function BannerClient({ initialData }: BannerClientProps) {
       }
 
       closeModal();
+      setToast({ message: editing ? "Banner berhasil diperbarui." : "Banner baru berhasil diunggah.", type: "success" });
       router.refresh();
       // Re-fetch client data
       const fetchRes = await fetch("/api/banner?all=true");
@@ -221,34 +229,35 @@ export default function BannerClient({ initialData }: BannerClientProps) {
         if (json.banners) setData(json.banners);
       }
     } catch (error: any) {
-      alert(error.message || "Terjadi kesalahan sistem.");
+      setToast({ message: error.message || "Terjadi kesalahan sistem.", type: "error" });
     } finally {
       setIsSubmitting(false);
       setUploadingImage(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Hapus banner hero ini? File di Supabase storage akan dihapus secara permanen.")) return;
-
-    // Simpan data sebelumnya untuk rollback jika gagal
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmItem) return;
+    setIsDeleting(true);
     const previousData = data;
-    setData((prev) => prev.filter((item) => item.id !== id));
+    setData((prev) => prev.filter((item) => item.id !== deleteConfirmItem.id));
 
     try {
-      const res = await fetch(`/api/banner/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/banner/${deleteConfirmItem.id}`, { method: "DELETE" });
       if (!res.ok) {
-        // Rollback: kembalikan data seperti semula
         setData(previousData);
         const err = await res.json().catch(() => ({}));
-        alert(err.error || "Gagal menghapus banner.");
+        setToast({ message: err.error || "Gagal menghapus banner.", type: "error" });
         return;
       }
+      setToast({ message: "Banner berhasil dihapus.", type: "success" });
       router.refresh();
     } catch {
-      // Rollback: kembalikan data seperti semula
       setData(previousData);
-      alert("Gagal menghapus banner — terjadi kesalahan koneksi.");
+      setToast({ message: "Gagal menghapus banner — terjadi kesalahan koneksi.", type: "error" });
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmItem(null);
     }
   };
 
@@ -350,7 +359,7 @@ export default function BannerClient({ initialData }: BannerClientProps) {
                         <FontAwesomeIcon icon={faEdit} className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => setDeleteConfirmItem(item)}
                         title="Hapus Banner"
                         className="w-8 h-8 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer"
                       >
@@ -515,6 +524,19 @@ export default function BannerClient({ initialData }: BannerClientProps) {
         </div>
       )}
 
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteConfirmItem)}
+        onClose={() => setDeleteConfirmItem(null)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Banner Hero?"
+        message={`Apakah Anda yakin ingin menghapus "${deleteConfirmItem?.title || 'banner ini'}"? File di Supabase storage akan dihapus secara permanen.`}
+        confirmText="Hapus Banner"
+        loading={isDeleting}
+      />
+
+      {/* Toast Notification */}
+      <AdminToast toast={toast} onClose={() => setToast(null)} />
     </>
   );
 }

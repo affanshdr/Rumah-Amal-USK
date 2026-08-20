@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import { submitZakat } from "@/actions/zakat";
 import Image from "next/image";
 import { zakatDictionary, ZakatLanguage } from "@/lib/i18n/zakat";
+import { formatThousand, parseRawNumber } from "@/lib/formatNumber";
 
 export default function ZakatClient() {
   const searchParams = useSearchParams();
@@ -49,7 +50,7 @@ export default function ZakatClient() {
     const jZakat = searchParams.get("jenis_zakat");
     const jlZakat = searchParams.get("jumlah_zakat");
     if (jZakat) setJenisZakat(jZakat);
-    if (jlZakat) setJumlahZakat(jlZakat);
+    if (jlZakat) setJumlahZakat(formatThousand(jlZakat));
   }, [searchParams]);
 
   const handleTipeSwitch = (tipe: "dosen" | "masyarakat") => {
@@ -201,14 +202,14 @@ export default function ZakatClient() {
                   Rp.
                 </span>
                 <input
-                  type="number"
-                  name="jumlah_zakat"
+                  type="text"
                   value={jumlahZakat}
-                  onChange={(e) => setJumlahZakat(e.target.value)}
+                  onChange={(e) => setJumlahZakat(formatThousand(e.target.value))}
                   required
                   placeholder={t.jumlahZakatPlaceholder}
-                  className="flex-1 block w-full px-3.5 py-2.5 text-sm focus:outline-none bg-white"
+                  className="flex-1 block w-full px-3.5 py-2.5 text-sm focus:outline-none bg-white font-medium"
                 />
+                <input type="hidden" name="jumlah_zakat" value={parseRawNumber(jumlahZakat)} />
               </div>
             </div>
 

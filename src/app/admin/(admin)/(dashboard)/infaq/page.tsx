@@ -20,6 +20,8 @@ import CsvImportModal from '@/components/admin/CsvImportModal';
 import AdminPagination from '@/components/admin/AdminPagination';
 import PesanNoteModal from '@/components/admin/PesanNoteModal';
 import DataInfaqModal from '@/components/admin/DataInfaqModal';
+import { formatThousand, parseRawNumber } from '@/lib/formatNumber';
+import AdminToast, { ToastState } from '@/components/admin/AdminToast';
 
 type DosenInfo = {
   nip: string;
@@ -107,6 +109,7 @@ export default function AdminInfaqPage() {
     pesan: string;
   } | null>(null);
   const [selectedInfaqItem, setSelectedInfaqItem] = useState<InfaqItem | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const latestReqRef = useRef(0);
@@ -223,9 +226,10 @@ export default function AdminInfaqPage() {
         pesan: editPesan,
       });
       setEditingItem(null);
+      setToast({ message: 'Perubahan data infaq berhasil disimpan.', type: 'success' });
       fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, activeTabRef.current);
     } catch (err: any) {
-      alert(err.message || 'Gagal menyimpan perubahan');
+      setToast({ message: err.message || 'Gagal menyimpan perubahan', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -540,11 +544,11 @@ export default function AdminInfaqPage() {
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">Jumlah Infaq (Rp)</label>
                 <input
-                  type="number"
+                  type="text"
                   required
-                  value={editJumlah}
-                  onChange={(e) => setEditJumlah(Number(e.target.value))}
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  value={formatThousand(editJumlah)}
+                  onChange={(e) => setEditJumlah(Number(parseRawNumber(e.target.value)))}
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E] font-medium"
                 />
               </div>
 
@@ -623,6 +627,9 @@ export default function AdminInfaqPage() {
         onClose={() => setSelectedInfaqItem(null)}
         item={selectedInfaqItem}
       />
+
+      {/* Toast Notification */}
+      <AdminToast toast={toast} onClose={() => setToast(null)} />
     </div>
   );
 }
