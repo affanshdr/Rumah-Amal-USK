@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import MitraSection from "@/components/MitraSection";
 import MediaSocialSection from "@/components/MediaSocialSection";
+import NewsLinkCard from "@/components/NewsLinkCard";
 
 import { homeDictionary, HomeLanguage } from "@/lib/i18n/home";
 
@@ -66,6 +67,15 @@ interface NewsletterItem {
   judulEn?: string | null;
   imageUrl: string;
   tanggal: string;
+}
+
+interface NewsLinkItem {
+  id: string;
+  url: string;
+  title: string;
+  image: string | null;
+  description: string | null;
+  source: string | null;
 }
 
 // Scroll Reveal Wrapper Component
@@ -139,6 +149,8 @@ export default function Home() {
   const [newsletters, setNewsletters] = useState<NewsletterItem[]>([]);
   const [loadingNewsletters, setLoadingNewsletters] = useState(true);
 
+  const [newsLinks, setNewsLinks] = useState<NewsLinkItem[]>([]);
+
   useEffect(() => {
     const readLang = () => {
       const saved = (localStorage.getItem('app_lang') || localStorage.getItem('program_lang')) as HomeLanguage;
@@ -156,12 +168,13 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [kampanyeRes, newsRes, annRes, newsletterRes, bannerRes] = await Promise.all([
+        const [kampanyeRes, newsRes, annRes, newsletterRes, bannerRes, newsLinkRes] = await Promise.all([
           fetch('/api/kampanye'),
           fetch('/api/news?limit=5'),
           fetch('/api/announcements?limit=4'),
           fetch('/api/newsletter?limit=3'),
           fetch('/api/banner'),
+          fetch('/api/news-link?limit=6'),
         ]);
 
         if (kampanyeRes.ok) {
@@ -187,6 +200,11 @@ export default function Home() {
         if (bannerRes.ok) {
           const data = await bannerRes.json();
           setBanners(data.banners || []);
+        }
+
+        if (newsLinkRes.ok) {
+          const data = await newsLinkRes.json();
+          setNewsLinks(data.newsLinks || []);
         }
       } catch (err) {
         console.error('Error fetching home data:', err);
@@ -936,7 +954,35 @@ export default function Home() {
         <MediaSocialSection />
       </RevealOnScroll>
 
-      {/* ===== SECTION 7: MITRA ===== */}
+      {/* ===== SECTION 7: BERITA TERKAIT ===== */}
+      {newsLinks.length > 0 && (
+        <RevealOnScroll>
+          <section className="max-w-[1340px] mx-auto px-5 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
+            {/* Section Heading */}
+            <div className="flex flex-col items-center mb-8 sm:mb-12">
+              <h2 className="text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center">
+                Berita Terkait
+              </h2>
+              <div className="mt-2 sm:mt-2.5 w-12 sm:w-14 h-[3px] sm:h-[3.5px] bg-[#ffc800] rounded-full" />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
+              {newsLinks.map((item) => (
+                <NewsLinkCard
+                  key={item.id}
+                  url={item.url}
+                  title={item.title}
+                  image={item.image}
+                  description={item.description}
+                  source={item.source}
+                />
+              ))}
+            </div>
+          </section>
+        </RevealOnScroll>
+      )}
+
+      {/* ===== SECTION 8: MITRA ===== */}
       <RevealOnScroll>
         <MitraSection />
       </RevealOnScroll>
