@@ -19,6 +19,7 @@ import {
   faFileText,
   faScaleBalanced,
   faSitemap,
+  faLink,
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { logoutAdmin } from '@/actions/admin-auth';
@@ -54,6 +55,7 @@ const menuGroups = [
       { href: '/admin/program', label: 'Program', icon: faClipboardList },
       { href: '/admin/berita', label: 'Berita', icon: faNewspaper },
       { href: '/admin/pengumuman', label: 'Pengumuman', icon: faBullhorn },
+      { href: '/admin/berita-eksternal', label: 'Berita Eksternal', icon: faLink },
     ],
   },
   {

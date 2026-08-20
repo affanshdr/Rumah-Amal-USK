@@ -14,6 +14,7 @@ export function getPrismaInstance(): PrismaClient {
     (!(globalForPrisma.prisma as any).program ||
       !(globalForPrisma.prisma as any).news ||
       !(globalForPrisma.prisma as any).banner ||
+      !(globalForPrisma.prisma as any).newsLink ||
       !(globalForPrisma.prisma as any)._likesCountRefreshed)
   ) {
     globalForPrisma.prisma = undefined;
@@ -42,7 +43,15 @@ export function getPrismaInstance(): PrismaClient {
 
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop) {
-    const client = getPrismaInstance();
+    let client = getPrismaInstance();
+    if (
+      typeof prop === 'string' &&
+      !(prop in client) &&
+      !['then', 'catch', 'finally', 'toJSON', 'toString'].includes(prop)
+    ) {
+      globalForPrisma.prisma = undefined;
+      client = getPrismaInstance();
+    }
     const value = (client as any)[prop];
     if (typeof value === 'function') {
       return value.bind(client);
