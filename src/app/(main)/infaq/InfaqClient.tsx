@@ -114,6 +114,14 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
   const t = infaqDictionary[lang] || infaqDictionary.id;
   const isRtl = lang === "ar";
   const selectedKampanyeObj = programs.find((p) => p.id === selectedKampanyeId);
+  const isPalestina = (
+    jenisInfaq.toLowerCase().includes("palestina") ||
+    Boolean(selectedKampanyeObj?.judul?.toLowerCase().includes("palestina"))
+  );
+  const qrisImageSrc = isPalestina ? "/Qris/qris-bsi-palestina.jpeg" : "/Qris/qris-bsi-ra.png";
+  const qrisAltText = isPalestina
+    ? "QRIS Infaq Peduli Palestina Rumah Amal USK"
+    : "QRIS BSI Rumah Amal Masjid Jamik USK";
 
   return (
     <main className="flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full font-sans">
@@ -389,15 +397,17 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
             <div className="text-center py-5 px-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
               <div className="w-48 h-48 mx-auto bg-white p-3 border border-gray-100 rounded-xl shadow-xs flex items-center justify-center">
                 <Image
-                  src="/Qris/qris-bsi-ra.png"
-                  alt="QRIS BSI Rumah Amal Masjid Jamik USK"
+                  src={qrisImageSrc}
+                  alt={qrisAltText}
                   width={97.2}
                   height={112.2}
                   priority
                   className="h-48 sm:h-52 w-auto object-contain transition-all"
                 />
               </div>
-              <p className="text-[11px] text-gray-500 mt-3">{t.qrisNote}</p>
+              <p className="text-[11px] text-gray-500 mt-3 leading-relaxed">
+                {isPalestina ? t.qrisNotePalestina : t.qrisNote}
+              </p>
             </div>
 
             {/* Upload Bukti Pembayaran */}

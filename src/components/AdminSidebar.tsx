@@ -20,6 +20,7 @@ import {
   faScaleBalanced,
   faSitemap,
 } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { logoutAdmin } from '@/actions/admin-auth';
 import { useTransition } from 'react';
 
@@ -43,6 +44,7 @@ const menuGroups = [
       { href: '/admin/dosen', label: 'Data Dosen', icon: faUserTie },
       { href: '/admin/rekap-zakat', label: 'Rekap Zakat', icon: faFileText },
       { href: '/admin/nisab', label: 'Pengaturan Nisab', icon: faScaleBalanced },
+      { href: '/admin/whatsapp', label: 'WhatsApp Gateway', icon: faWhatsapp },
     ],
   },
   {

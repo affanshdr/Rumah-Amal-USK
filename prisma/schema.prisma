@@ -314,4 +314,21 @@ model StrukturOrganisasi {
   @@map("struktur_organisasi")
 }
 
+model OtpVerification {
+  id          String   @id @default(cuid())
+  nip         String
+  channel     String   @default("whatsapp")
+  otpHash     String   @map("otp_hash")
+  phoneTarget String?  @map("phone_target")
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(3) @map("max_attempts")
+  expiresAt   DateTime @map("expires_at")
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([nip, expiresAt])
+  @@map("otp_verifications")
+}
+
+
 

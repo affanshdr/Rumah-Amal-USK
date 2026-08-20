@@ -1,25 +1,60 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { createAndSendOtp, verifyOtp, RequestOtpResult } from '@/lib/otp/otp-service';
 
-export async function cariRiwayat(nip: string, idDonatur?: string) {
+/**
+ * Request WhatsApp OTP for a given NIP.
+ * Looks up Dosen in DB and sends 6-digit OTP to the registered phone number via WhatsApp.
+ */
+export async function requestRiwayatOtp(
+  nip: string
+): Promise<RequestOtpResult> {
   const cleanNip = nip.trim();
-  const cleanIdDonatur = idDonatur?.trim() || '';
+
+  if (!cleanNip) {
+    throw new Error('NIP / NIDN wajib diisi.');
+  }
 
   const dosen = await prisma.dosen.findUnique({
     where: { nip: cleanNip },
   });
 
-  if (dosen) {
-    if (dosen.idDonatur) {
-      if (!cleanIdDonatur || cleanIdDonatur.toLowerCase() !== dosen.idDonatur.toLowerCase()) {
-        throw new Error('Verifikasi ID Donatur gagal. NIP dan ID Donatur tidak sesuai.');
-      }
-    } else if (cleanIdDonatur) {
-      throw new Error('Verifikasi ID Donatur gagal. NIP dan ID Donatur tidak sesuai.');
-    }
+  if (!dosen) {
+    throw new Error(
+      'NIP / NIDN tidak terdaftar pada data dosen/pegawai USK. Silakan periksa kembali atau hubungi Rumah Amal USK.'
+    );
   }
 
+  if (!dosen.noHp || !dosen.noHp.trim()) {
+    throw new Error(
+      'Nomor WhatsApp belum terdaftar untuk NIP ini di database. Silakan hubungi admin Rumah Amal USK untuk mendaftarkan nomor WhatsApp Anda.'
+    );
+  }
+
+  return await createAndSendOtp(cleanNip, dosen.noHp, 'whatsapp');
+}
+
+/**
+ * Verify OTP and fetch full Riwayat (Zakat, Infaq, Rekap Zakat) for the NIP.
+ */
+export async function verifyRiwayatOtpAndFetch(nip: string, otp: string) {
+  const cleanNip = nip.trim();
+  const cleanOtp = otp.trim();
+
+  if (!cleanNip) {
+    throw new Error('NIP / NIDN wajib diisi.');
+  }
+
+  // 1. Verify OTP
+  await verifyOtp(cleanNip, cleanOtp);
+
+  // 2. Fetch Dosen data
+  const dosen = await prisma.dosen.findUnique({
+    where: { nip: cleanNip },
+  });
+
+  // 3. Fetch Zakat history
   const riwayatZakat = await prisma.zakat.findMany({
     where: { nip: cleanNip },
     orderBy: { createdAt: 'desc' },
@@ -33,6 +68,7 @@ export async function cariRiwayat(nip: string, idDonatur?: string) {
     },
   });
 
+  // 4. Fetch Infaq history
   const riwayatInfaq = await prisma.infaq.findMany({
     where: { nip: cleanNip },
     orderBy: { createdAt: 'desc' },
@@ -48,6 +84,7 @@ export async function cariRiwayat(nip: string, idDonatur?: string) {
     },
   });
 
+  // 5. Fetch Rekap Zakat Tahunan (PDF files)
   const rekapZakatList = await prisma.rekapZakat.findMany({
     where: { dosenNIP: cleanNip },
     orderBy: { tahunRekap: 'desc' },
@@ -59,7 +96,7 @@ export async function cariRiwayat(nip: string, idDonatur?: string) {
     },
   });
 
-  // Ambil nama dari Zakat/Infaq jika tidak ada di Dosen
+  // Fallback nama jika di Dosen null
   const zakatWithNama = await prisma.zakat.findFirst({
     where: { nip: cleanNip },
     select: { nama: true },
