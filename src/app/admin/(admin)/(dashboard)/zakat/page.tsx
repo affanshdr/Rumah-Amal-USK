@@ -80,6 +80,8 @@ export default function AdminZakatPage() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'lunas' | 'ditolak'>('all');
   const [filterJenis, setFilterJenis] = useState('all');
   const [availableJenis, setAvailableJenis] = useState<string[]>([]);
+  const [filterUnitKerja, setFilterUnitKerja] = useState('all');
+  const [availableUnitKerja, setAvailableUnitKerja] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Edit Modal State
@@ -107,9 +109,16 @@ export default function AdminZakatPage() {
   const searchRef = useRef(search);
   const filterStatusRef = useRef(filterStatus);
   const filterJenisRef = useRef(filterJenis);
+  const filterUnitKerjaRef = useRef(filterUnitKerja);
   const currentPageRef = useRef(currentPage);
 
-  async function fetchData(page: number, searchVal: string, statusVal: string, jenisVal = filterJenisRef.current) {
+  async function fetchData(
+    page: number,
+    searchVal: string,
+    statusVal: string,
+    jenisVal = filterJenisRef.current,
+    unitKerjaVal = filterUnitKerjaRef.current
+  ) {
     const reqId = ++latestReqRef.current;
     setLoading(true);
     try {
@@ -119,6 +128,7 @@ export default function AdminZakatPage() {
         search: searchVal,
         status: statusVal,
         jenisZakat: jenisVal,
+        unitKerja: unitKerjaVal,
       });
       const res = await fetch(`/api/admin/zakat?${params}`);
       const json = await res.json();
@@ -130,6 +140,9 @@ export default function AdminZakatPage() {
       if (json.availableJenis) {
         setAvailableJenis(json.availableJenis);
       }
+      if (json.availableUnitKerja) {
+        setAvailableUnitKerja(json.availableUnitKerja);
+      }
     } finally {
       if (reqId === latestReqRef.current) setLoading(false);
     }
@@ -137,7 +150,7 @@ export default function AdminZakatPage() {
 
   // Initial load
   useEffect(() => {
-    fetchData(1, '', 'all', 'all');
+    fetchData(1, '', 'all', 'all', 'all');
   }, []);
 
   function handleSearchChange(val: string) {
@@ -147,7 +160,7 @@ export default function AdminZakatPage() {
     currentPageRef.current = 1;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchData(1, val, filterStatusRef.current, filterJenisRef.current);
+      fetchData(1, val, filterStatusRef.current, filterJenisRef.current, filterUnitKerjaRef.current);
     }, DEBOUNCE_MS);
   }
 
@@ -157,7 +170,7 @@ export default function AdminZakatPage() {
     setCurrentPage(1);
     currentPageRef.current = 1;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    fetchData(1, searchRef.current, status, filterJenisRef.current);
+    fetchData(1, searchRef.current, status, filterJenisRef.current, filterUnitKerjaRef.current);
   }
 
   function handleJenisChange(jenis: string) {
@@ -166,19 +179,28 @@ export default function AdminZakatPage() {
     setCurrentPage(1);
     currentPageRef.current = 1;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    fetchData(1, searchRef.current, filterStatusRef.current, jenis);
+    fetchData(1, searchRef.current, filterStatusRef.current, jenis, filterUnitKerjaRef.current);
+  }
+
+  function handleUnitKerjaChange(unitKerja: string) {
+    setFilterUnitKerja(unitKerja);
+    filterUnitKerjaRef.current = unitKerja;
+    setCurrentPage(1);
+    currentPageRef.current = 1;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    fetchData(1, searchRef.current, filterStatusRef.current, filterJenisRef.current, unitKerja);
   }
 
   function handlePageChange(page: number) {
     setCurrentPage(page);
     currentPageRef.current = page;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    fetchData(page, searchRef.current, filterStatusRef.current, filterJenisRef.current);
+    fetchData(page, searchRef.current, filterStatusRef.current, filterJenisRef.current, filterUnitKerjaRef.current);
   }
 
   async function handleAction(id: string, action: 'approve' | 'reject') {
     await fetch(`/api/admin/zakat/${id}/${action}`, { method: 'PATCH' });
-    fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, filterJenisRef.current);
+    fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, filterJenisRef.current, filterUnitKerjaRef.current);
   }
 
   function openEditModal(item: ZakatItem) {
@@ -206,7 +228,7 @@ export default function AdminZakatPage() {
       });
       setEditingItem(null);
       setToast({ message: 'Perubahan data zakat berhasil disimpan.', type: 'success' });
-      fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, filterJenisRef.current);
+      fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, filterJenisRef.current, filterUnitKerjaRef.current);
     } catch (err: any) {
       setToast({ message: err.message || 'Gagal menyimpan perubahan', type: 'error' });
     } finally {
@@ -276,7 +298,7 @@ export default function AdminZakatPage() {
         </div>
 
         {/* Filter Jenis Zakat */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <select
             value={filterJenis}
             onChange={(e) => handleJenisChange(e.target.value)}
@@ -289,8 +311,23 @@ export default function AdminZakatPage() {
               </option>
             ))}
           </select>
+
+          {/* Filter Unit Kerja */}
+          <select
+            value={filterUnitKerja}
+            onChange={(e) => handleUnitKerjaChange(e.target.value)}
+            className="w-full sm:w-auto px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs bg-white text-gray-700 font-medium focus:outline-none focus:border-[#063A1E] shadow-2xs cursor-pointer max-w-xs truncate"
+          >
+            <option value="all">Semua Unit Kerja</option>
+            {availableUnitKerja.map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
+
 
 
       {/* Table */}

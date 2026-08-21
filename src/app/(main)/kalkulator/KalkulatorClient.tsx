@@ -25,6 +25,7 @@ const fieldConfig: Record<string, FieldItem[]> = {
   maal: [
     { name: "total_harta", label: "Total Harta Tabungan / Piutang (Rp)" },
     { name: "total_hutang", label: "Total Hutang Jatuh Tempo (Rp)" },
+    { name: "total_kebutuhan", label: "Total Kebutuhan Pokok/Pengeluaran Primer (Rp)" },
   ],
   emas: [
     { name: "berat_emas_gram", label: "Berat Emas yang Dimiliki (gram)" },
@@ -32,11 +33,14 @@ const fieldConfig: Record<string, FieldItem[]> = {
   profesi: [
     { name: "penghasilan_bulan", label: "Penghasilan Rutin per Bulan (Rp)" },
     { name: "bonus_tunjangan", label: "Bonus / Tunjangan Lainnya (Rp)" },
+    { name: "total_hutang", label: "Total Hutang dalam waktu dekat (Rp)" },
+    { name: "total_kebutuhan", label: "Total Kebutuhan Pokok/Pengeluaran Primer (Rp)" },
   ],
   perniagaan: [
     { name: "modal_usaha", label: "Modal Usaha Putar (Rp)" },
     { name: "keuntungan", label: "Keuntungan Bersih (Rp)" },
     { name: "hutang_jangka_pendek", label: "Hutang Usaha Jangka Pendek (Rp)" },
+    { name: "total_kebutuhan", label: "Total Kebutuhan Pokok/Pengeluaran Primer (Rp)" },
   ],
 };
 
@@ -120,9 +124,8 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
 
   return (
     <main
-      className={`flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full ${
-        isAr ? "text-right" : ""
-      }`}
+      className={`flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full ${isAr ? "text-right" : ""
+        }`}
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Sidebar Navigasi */}
@@ -136,9 +139,8 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
 
           {/* Informasi Acuan Nisab */}
           <div
-            className={`bg-amber-50/70 border-l-4 border-[#FFBB0C] p-4 rounded-r-xl text-xs sm:text-sm text-gray-800 space-y-1.5 ${
-              isAr ? "border-l-0 border-r-4 rounded-r-none rounded-l-xl" : ""
-            }`}
+            className={`bg-amber-50/70 border-l-4 border-[#FFBB0C] p-4 rounded-r-xl text-xs sm:text-sm text-gray-800 space-y-1.5 ${isAr ? "border-l-0 border-r-4 rounded-r-none rounded-l-xl" : ""
+              }`}
           >
             <p className="font-extrabold text-[#000]">{t.nisabTitle}</p>
             <ul className="list-disc list-inside space-y-1.5 text-gray-700 font-medium leading-relaxed">

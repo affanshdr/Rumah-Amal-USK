@@ -12,9 +12,9 @@ export function hitungZakat(
 ): KalkulatorResult {
   const { jenis_zakat } = payload;
 
-  const hargaEmasPerGram = config?.hargaEmasPerGram ?? 1_200_000;
+  const hargaEmasPerGram = config?.hargaEmasPerGram ?? 2_600_000;
   const nisabEmasGram = config?.nisabEmasGram ?? 94;
-  const nisabProfesiBulan = config?.nisabProfesiBulan ?? 10_500_000;
+  const nisabProfesiBulan = config?.nisabProfesiBulan ?? 13_000_000;
 
   // Nisab Maal, Emas, Perniagaan, Perusahaan didasarkan pada Nisab Emas
   const nisabMaalRupiah = nisabEmasGram * hargaEmasPerGram;
@@ -23,7 +23,8 @@ export function hitungZakat(
     case 'maal': {
       const totalHarta = Number(payload.total_harta || 0);
       const totalHutang = Number(payload.total_hutang || 0);
-      const hartaBersih = totalHarta - totalHutang;
+      const kebutuhan = Number(payload.total_kebutuhan || 0);
+      const hartaBersih = totalHarta - totalHutang - kebutuhan;
       const mencapaiNisab = hartaBersih >= nisabMaalRupiah;
       return {
         mencapai_nisab: mencapaiNisab,
@@ -46,7 +47,9 @@ export function hitungZakat(
     case 'profesi': {
       const penghasilan = Number(payload.penghasilan_bulan || 0);
       const bonus = Number(payload.bonus_tunjangan || 0);
-      const totalPenghasilan = penghasilan + bonus;
+      const hutang = Number(payload.total_hutang || 0);
+      const kebutuhan = Number(payload.total_kebutuhan || 0);
+      const totalPenghasilan = (penghasilan + bonus) - hutang - kebutuhan;
       const mencapaiNisab = totalPenghasilan >= nisabProfesiBulan;
       return {
         mencapai_nisab: mencapaiNisab,

@@ -90,6 +90,8 @@ export default function AdminInfaqPage() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'lunas' | 'ditolak'>('all');
   const [filterJenis, setFilterJenis] = useState('all');
   const [availableJenis, setAvailableJenis] = useState<{ value: string; label: string }[]>([]);
+  const [filterUnitKerja, setFilterUnitKerja] = useState('all');
+  const [availableUnitKerja, setAvailableUnitKerja] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -118,6 +120,7 @@ export default function AdminInfaqPage() {
   const searchRef = useRef(search);
   const filterStatusRef = useRef(filterStatus);
   const filterJenisRef = useRef(filterJenis);
+  const filterUnitKerjaRef = useRef(filterUnitKerja);
   const activeTabRef = useRef(activeTab);
   const currentPageRef = useRef(currentPage);
 
@@ -129,7 +132,14 @@ export default function AdminInfaqPage() {
       .catch(console.error);
   }, []);
 
-  async function fetchData(page: number, searchVal: string, statusVal: string, tabVal: string, jenisVal = filterJenisRef.current) {
+  async function fetchData(
+    page: number,
+    searchVal: string,
+    statusVal: string,
+    tabVal: string,
+    jenisVal = filterJenisRef.current,
+    unitKerjaVal = filterUnitKerjaRef.current
+  ) {
     const reqId = ++latestReqRef.current;
     setLoading(true);
     try {
@@ -140,6 +150,7 @@ export default function AdminInfaqPage() {
         status: statusVal,
         tab: tabVal,
         jenisInfaq: jenisVal,
+        unitKerja: unitKerjaVal,
       });
       const res = await fetch(`/api/admin/infaq?${params}`);
       const json = await res.json();
@@ -152,6 +163,9 @@ export default function AdminInfaqPage() {
       if (json.availableJenis) {
         setAvailableJenis(json.availableJenis);
       }
+      if (json.availableUnitKerja) {
+        setAvailableUnitKerja(json.availableUnitKerja);
+      }
     } finally {
       if (reqId === latestReqRef.current) setLoading(false);
     }
@@ -159,7 +173,7 @@ export default function AdminInfaqPage() {
 
   // Initial load
   useEffect(() => {
-    fetchData(1, '', 'all', 'bebas', 'all');
+    fetchData(1, '', 'all', 'bebas', 'all', 'all');
   }, []);
 
   function handleSearchChange(val: string) {
@@ -169,7 +183,7 @@ export default function AdminInfaqPage() {
     currentPageRef.current = 1;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchData(1, val, filterStatusRef.current, activeTabRef.current, filterJenisRef.current);
+      fetchData(1, val, filterStatusRef.current, activeTabRef.current, filterJenisRef.current, filterUnitKerjaRef.current);
     }, DEBOUNCE_MS);
   }
 
@@ -179,7 +193,7 @@ export default function AdminInfaqPage() {
     setCurrentPage(1);
     currentPageRef.current = 1;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    fetchData(1, searchRef.current, status, activeTabRef.current, filterJenisRef.current);
+    fetchData(1, searchRef.current, status, activeTabRef.current, filterJenisRef.current, filterUnitKerjaRef.current);
   }
 
   function handleJenisChange(jenis: string) {
@@ -188,7 +202,16 @@ export default function AdminInfaqPage() {
     setCurrentPage(1);
     currentPageRef.current = 1;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    fetchData(1, searchRef.current, filterStatusRef.current, activeTabRef.current, jenis);
+    fetchData(1, searchRef.current, filterStatusRef.current, activeTabRef.current, jenis, filterUnitKerjaRef.current);
+  }
+
+  function handleUnitKerjaChange(unitKerja: string) {
+    setFilterUnitKerja(unitKerja);
+    filterUnitKerjaRef.current = unitKerja;
+    setCurrentPage(1);
+    currentPageRef.current = 1;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    fetchData(1, searchRef.current, filterStatusRef.current, activeTabRef.current, filterJenisRef.current, unitKerja);
   }
 
   function handleTabChange(tab: 'bebas' | 'terikat') {
@@ -203,19 +226,19 @@ export default function AdminInfaqPage() {
     setCurrentPage(1);
     currentPageRef.current = 1;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    fetchData(1, '', 'all', tab, 'all');
+    fetchData(1, '', 'all', tab, 'all', filterUnitKerjaRef.current);
   }
 
   function handlePageChange(page: number) {
     setCurrentPage(page);
     currentPageRef.current = page;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    fetchData(page, searchRef.current, filterStatusRef.current, activeTabRef.current, filterJenisRef.current);
+    fetchData(page, searchRef.current, filterStatusRef.current, activeTabRef.current, filterJenisRef.current, filterUnitKerjaRef.current);
   }
 
   async function handleAction(id: string, action: 'approve' | 'reject') {
     await fetch(`/api/admin/infaq/${id}/${action}`, { method: 'PATCH' });
-    fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, activeTabRef.current, filterJenisRef.current);
+    fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, activeTabRef.current, filterJenisRef.current, filterUnitKerjaRef.current);
   }
 
   function openEditModal(item: InfaqItem) {
@@ -245,7 +268,7 @@ export default function AdminInfaqPage() {
       });
       setEditingItem(null);
       setToast({ message: 'Perubahan data infaq berhasil disimpan.', type: 'success' });
-      fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, activeTabRef.current, filterJenisRef.current);
+      fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, activeTabRef.current, filterJenisRef.current, filterUnitKerjaRef.current);
     } catch (err: any) {
       setToast({ message: err.message || 'Gagal menyimpan perubahan', type: 'error' });
     } finally {
@@ -353,8 +376,9 @@ export default function AdminInfaqPage() {
           />
         </div>
 
-        {/* Filter Jenis Infaq / Kampanye */}
-        <div className="flex items-center gap-2">
+        {/* Filter Controls */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Filter Jenis Infaq / Kampanye */}
           <select
             value={filterJenis}
             onChange={(e) => handleJenisChange(e.target.value)}
@@ -366,6 +390,20 @@ export default function AdminInfaqPage() {
             {availableJenis.map((item) => (
               <option key={item.value} value={item.value}>
                 {item.label}
+              </option>
+            ))}
+          </select>
+
+          {/* Filter Unit Kerja */}
+          <select
+            value={filterUnitKerja}
+            onChange={(e) => handleUnitKerjaChange(e.target.value)}
+            className="w-full sm:w-auto px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs bg-white text-gray-700 font-medium focus:outline-none focus:border-[#063A1E] shadow-2xs cursor-pointer max-w-xs truncate"
+          >
+            <option value="all">Semua Unit Kerja</option>
+            {availableUnitKerja.map((u) => (
+              <option key={u} value={u}>
+                {u}
               </option>
             ))}
           </select>
