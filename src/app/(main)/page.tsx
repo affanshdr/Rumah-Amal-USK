@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import MitraSection from "@/components/MitraSection";
 import MediaSocialSection from "@/components/MediaSocialSection";
-import NewsLinkCard from "@/components/NewsLinkCard";
+import NewsLinkSection from "@/components/NewsLinkSection";
 
 import { homeDictionary, HomeLanguage } from "@/lib/i18n/home";
 
@@ -955,32 +955,9 @@ export default function Home() {
       </RevealOnScroll>
 
       {/* ===== SECTION 7: BERITA TERKAIT ===== */}
-      {newsLinks.length > 0 && (
-        <RevealOnScroll>
-          <section className="max-w-[1340px] mx-auto px-5 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20">
-            {/* Section Heading */}
-            <div className="flex flex-col items-center mb-8 sm:mb-12">
-              <h2 className="text-[22px] sm:text-[26px] md:text-[30px] lg:text-[32px] font-extrabold text-[#112b27] tracking-[0.1em] sm:tracking-[0.14em] uppercase text-center">
-                Berita Terkait
-              </h2>
-              <div className="mt-2 sm:mt-2.5 w-12 sm:w-14 h-[3px] sm:h-[3.5px] bg-[#ffc800] rounded-full" />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
-              {newsLinks.map((item) => (
-                <NewsLinkCard
-                  key={item.id}
-                  url={item.url}
-                  title={item.title}
-                  image={item.image}
-                  description={item.description}
-                  source={item.source}
-                />
-              ))}
-            </div>
-          </section>
-        </RevealOnScroll>
-      )}
+      <RevealOnScroll>
+        <NewsLinkSection newsLinks={newsLinks} lang={lang} />
+      </RevealOnScroll>
 
       {/* ===== SECTION 8: MITRA ===== */}
       <RevealOnScroll>

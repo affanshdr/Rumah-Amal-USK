@@ -18,6 +18,8 @@ import CsvImportModal from '@/components/admin/CsvImportModal';
 import AdminPagination from '@/components/admin/AdminPagination';
 import PesanNoteModal from '@/components/admin/PesanNoteModal';
 import DataZakatModal from '@/components/admin/DataZakatModal';
+import { formatThousand, parseRawNumber } from '@/lib/formatNumber';
+import AdminToast, { ToastState } from '@/components/admin/AdminToast';
 
 type DosenInfo = {
   nip: string;
@@ -95,6 +97,7 @@ export default function AdminZakatPage() {
     pesan: string;
   } | null>(null);
   const [selectedZakatItem, setSelectedZakatItem] = useState<ZakatItem | null>(null);
+  const [toast, setToast] = useState<ToastState | null>(null);
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const latestReqRef = useRef(0);
@@ -186,9 +189,10 @@ export default function AdminZakatPage() {
         pesan: editPesan,
       });
       setEditingItem(null);
+      setToast({ message: 'Perubahan data zakat berhasil disimpan.', type: 'success' });
       fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current);
     } catch (err: any) {
-      alert(err.message || 'Gagal menyimpan perubahan');
+      setToast({ message: err.message || 'Gagal menyimpan perubahan', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -446,11 +450,11 @@ export default function AdminZakatPage() {
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">Jumlah Zakat (Rp)</label>
                 <input
-                  type="number"
+                  type="text"
                   required
-                  value={editJumlah}
-                  onChange={(e) => setEditJumlah(Number(e.target.value))}
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  value={formatThousand(editJumlah)}
+                  onChange={(e) => setEditJumlah(Number(parseRawNumber(e.target.value)))}
+                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E] font-medium"
                 />
               </div>
 
@@ -529,6 +533,9 @@ export default function AdminZakatPage() {
         onClose={() => setSelectedZakatItem(null)}
         item={selectedZakatItem}
       />
+
+      {/* Toast Notification */}
+      <AdminToast toast={toast} onClose={() => setToast(null)} />
     </div>
   );
 }

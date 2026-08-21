@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import Image from 'next/image';
+import ConfirmModal from '@/components/admin/ConfirmModal';
 
 interface NewsLinkItem {
   id: string;
@@ -73,6 +74,7 @@ export default function BeritaEksternalClient({
   const [editDesc, setEditDesc] = useState('');
   const [savingNew, setSavingNew] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<NewsLinkItem | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
@@ -175,8 +177,9 @@ export default function BeritaEksternalClient({
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Hapus berita ini secara permanen?')) return;
+  async function handleConfirmDelete() {
+    if (!deleteConfirmItem) return;
+    const id = deleteConfirmItem.id;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/admin/news-link/${id}`, { method: 'DELETE' });
@@ -191,6 +194,7 @@ export default function BeritaEksternalClient({
       showToast('Terjadi kesalahan.', 'error');
     } finally {
       setDeletingId(null);
+      setDeleteConfirmItem(null);
     }
   }
 
@@ -434,7 +438,7 @@ export default function BeritaEksternalClient({
 
                   {/* Hapus */}
                   <button
-                    onClick={() => handleDelete(item.id)}
+                    onClick={() => setDeleteConfirmItem(item)}
                     disabled={deletingId === item.id}
                     title="Hapus"
                     className="w-8 h-8 rounded-xl flex items-center justify-center border border-red-100 bg-red-50 text-red-400 hover:bg-red-100 transition-all cursor-pointer disabled:opacity-50"
@@ -456,6 +460,16 @@ export default function BeritaEksternalClient({
           </div>
         )}
       </div>
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteConfirmItem)}
+        onClose={() => setDeleteConfirmItem(null)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Berita Eksternal?"
+        message={`Apakah Anda yakin ingin menghapus "${deleteConfirmItem?.title || 'berita ini'}"? Data yang dihapus tidak dapat dikembalikan.`}
+        confirmText="Hapus Berita"
+        loading={Boolean(deletingId)}
+      />
     </>
   );
 }

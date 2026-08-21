@@ -6,6 +6,8 @@ import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faSync, faSpinner, faSave } from "@fortawesome/free-solid-svg-icons";
 import { addNewsletter, deleteNewsletter } from "@/actions/newsletter";
+import ConfirmModal from "@/components/admin/ConfirmModal";
+import AdminToast, { ToastState } from "@/components/admin/AdminToast";
 
 type NewsletterRow = {
   id: string;
@@ -56,6 +58,10 @@ export default function NewsletterClient({
   const [search, setSearch] = useState(initialSearch);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<NewsletterRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filtered = data;
@@ -80,16 +86,27 @@ export default function NewsletterClient({
       fd.append("file", file);
       fd.append("bucket", "Newsletter");
       const res = await fetch("/api/upload", { method: "POST", body: fd });
-      if (!res.ok) { const err = await res.json(); alert(`Upload gagal: ${err.error}`); return; }
+      if (!res.ok) {
+        const err = await res.json();
+        setToast({ message: `Upload gagal: ${err.error}`, type: "error" });
+        return;
+      }
       const result = await res.json();
       setImagePreview(result.url);
-    } catch (err) { alert(`Kesalahan: ${(err as Error).message}`); }
-    finally { setUploading(false); }
+      setToast({ message: "Gambar newsletter berhasil diupload.", type: "success" });
+    } catch (err) {
+      setToast({ message: `Kesalahan: ${(err as Error).message}`, type: "error" });
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!imagePreview) { alert("Gambar E-Buletin / Newsletter wajib diunggah."); return; }
+    if (!imagePreview) {
+      setToast({ message: "Gambar E-Buletin / Newsletter wajib diunggah.", type: "error" });
+      return;
+    }
     setUploading(true);
     try {
       const fd = new FormData();
@@ -99,23 +116,36 @@ export default function NewsletterClient({
 
       const result = await addNewsletter(fd);
       if (!result.success) {
-        alert(result.error || "Gagal menyimpan Newsletter");
+        setToast({ message: result.error || "Gagal menyimpan Newsletter", type: "error" });
         return;
       }
 
       setIsAddModalOpen(false);
       setJudulInput("");
       setImagePreview("");
+      setToast({ message: "Newsletter baru berhasil disimpan.", type: "success" });
       router.refresh();
-    } catch (err: any) { alert(err.message || "Gagal menyimpan"); }
-    finally { setUploading(false); }
+    } catch (err: any) {
+      setToast({ message: err.message || "Gagal menyimpan", type: "error" });
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const handleDelete = async (id: string, url: string) => {
-    if (!confirm("Hapus E-Buletin / Newsletter ini? Data tidak dapat dikembalikan.")) return;
-    setData((prev) => prev.filter((item) => item.id !== id));
-    await deleteNewsletter(id, url);
-    router.refresh();
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmItem) return;
+    setIsDeleting(true);
+    try {
+      setData((prev) => prev.filter((item) => item.id !== deleteConfirmItem.id));
+      await deleteNewsletter(deleteConfirmItem.id, deleteConfirmItem.imageUrl);
+      setToast({ message: "Newsletter berhasil dihapus.", type: "success" });
+      router.refresh();
+    } catch (err: any) {
+      setToast({ message: err.message || "Gagal menghapus newsletter.", type: "error" });
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmItem(null);
+    }
   };
 
   return (
@@ -176,7 +206,7 @@ export default function NewsletterClient({
                       <button onClick={() => setPreviewingItem(item)} title="Preview" className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center transition-colors cursor-pointer">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                       </button>
-                      <button onClick={() => handleDelete(item.id, item.imageUrl)} title="Hapus" className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer">
+                      <button onClick={() => setDeleteConfirmItem(item)} title="Hapus" className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       </button>
                     </div>
@@ -345,6 +375,19 @@ export default function NewsletterClient({
           </div>
         </div>
       )}
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteConfirmItem)}
+        onClose={() => setDeleteConfirmItem(null)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus E-Buletin / Newsletter?"
+        message={`Apakah Anda yakin ingin menghapus "${deleteConfirmItem?.judul || 'newsletter ini'}"? Data yang dihapus tidak dapat dikembalikan.`}
+        confirmText="Hapus Newsletter"
+        loading={isDeleting}
+      />
+
+      {/* Toast Notification */}
+      <AdminToast toast={toast} onClose={() => setToast(null)} />
     </>
   );
 }

@@ -12,6 +12,9 @@ import {
   deleteKampanye,
   toggleKampanyeStatus,
 } from "@/actions/kampanye";
+import { formatThousand, parseRawNumber } from "@/lib/formatNumber";
+import ConfirmModal from "@/components/admin/ConfirmModal";
+import AdminToast, { ToastState } from "@/components/admin/AdminToast";
 
 const TipTapEditor = dynamic(() => import("@/components/TipTapEditor"), {
   ssr: false,
@@ -182,6 +185,10 @@ export default function KampanyeClient({
 
   const filtered = data;
 
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<KampanyeRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
+
   const handleSearchChange = (val: string) => {
     setSearch(val);
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -243,11 +250,20 @@ export default function KampanyeClient({
       fd.append("file", file);
       fd.append("bucket", "Kampanye");
       const res = await fetch("/api/upload", { method: "POST", body: fd });
-      if (!res.ok) { const err = await res.json(); alert(`Upload gagal: ${err.error}`); return; }
+      if (!res.ok) {
+        const err = await res.json();
+        setToast({ message: `Upload gagal: ${err.error}`, type: "error" });
+        return;
+      }
       const result = await res.json();
       setCoverPreview(result.url);
-    } catch (err) { alert(`Kesalahan: ${(err as Error).message}`); }
-    finally { setUploadingCover(false); if (coverInputRef.current) coverInputRef.current.value = ""; }
+      setToast({ message: "Banner berhasil diupload.", type: "success" });
+    } catch (err) {
+      setToast({ message: `Kesalahan: ${(err as Error).message}`, type: "error" });
+    } finally {
+      setUploadingCover(false);
+      if (coverInputRef.current) coverInputRef.current.value = "";
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -262,25 +278,46 @@ export default function KampanyeClient({
       fd.set("deskripsi", deskripsiHtml);
       fd.set("deskripsiEn", deskripsiEnHtml);
       fd.set("deskripsiAr", deskripsiArHtml);
-      if (editing) { fd.append("id", editing.id); await updateKampanye(fd); }
-      else { await addKampanye(fd); }
+      fd.set("targetDana", String(liveTarget));
+      fd.set("terkumpul", String(liveTerkumpul));
+      if (editing) {
+        fd.append("id", editing.id);
+        await updateKampanye(fd);
+        setToast({ message: "Kampanye berhasil diperbarui.", type: "success" });
+      } else {
+        await addKampanye(fd);
+        setToast({ message: "Kampanye baru berhasil ditambahkan.", type: "success" });
+      }
       closeModal();
       router.refresh();
-    } catch (error: any) { alert(error.message || "Terjadi kesalahan sistem."); }
-    finally { setIsSubmitting(false); }
+    } catch (error: any) {
+      setToast({ message: error.message || "Terjadi kesalahan sistem.", type: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleToggle = async (id: string, current: boolean) => {
     setData((prev) => prev.map((item) => item.id === id ? { ...item, isActive: !current } : item));
     await toggleKampanyeStatus(id, current);
+    setToast({ message: `Status kampanye diubah ke ${!current ? 'Aktif' : 'Nonaktif'}.`, type: "info" });
     router.refresh();
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Hapus kampanye donasi ini? Data tidak dapat dikembalikan.")) return;
-    setData((prev) => prev.filter((item) => item.id !== id));
-    await deleteKampanye(id);
-    router.refresh();
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmItem) return;
+    setIsDeleting(true);
+    try {
+      setData((prev) => prev.filter((item) => item.id !== deleteConfirmItem.id));
+      await deleteKampanye(deleteConfirmItem.id);
+      setToast({ message: "Kampanye donasi berhasil dihapus.", type: "success" });
+      router.refresh();
+    } catch (err: any) {
+      setToast({ message: err.message || "Gagal menghapus kampanye.", type: "error" });
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmItem(null);
+    }
   };
 
   return (
@@ -374,7 +411,7 @@ export default function KampanyeClient({
                         <button onClick={() => openEdit(item)} title="Edit" className="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 flex items-center justify-center transition-colors cursor-pointer">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                         </button>
-                        <button onClick={() => handleDelete(item.id)} title="Hapus" className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer">
+                        <button onClick={() => setDeleteConfirmItem(item)} title="Hapus" className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
                       </div>
@@ -533,21 +570,21 @@ export default function KampanyeClient({
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5">Target Dana (Rp)</label>
                       <input
-                        type="number" name="targetDana"
-                        value={liveTarget || ""}
-                        onChange={(e) => setLiveTarget(Number(e.target.value))}
-                        placeholder="Contoh: 50000000"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
+                        type="text" name="targetDana"
+                        value={formatThousand(liveTarget)}
+                        onChange={(e) => setLiveTarget(Number(parseRawNumber(e.target.value)))}
+                        placeholder="Contoh: 50.000.000"
+                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white font-medium"
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5">Dana Terkumpul (Rp)</label>
                       <input
-                        type="number" name="terkumpul"
-                        value={liveTerkumpul || ""}
-                        onChange={(e) => setLiveTerkumpul(Number(e.target.value))}
-                        placeholder="Contoh: 15000000"
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
+                        type="text" name="terkumpul"
+                        value={formatThousand(liveTerkumpul)}
+                        onChange={(e) => setLiveTerkumpul(Number(parseRawNumber(e.target.value)))}
+                        placeholder="Contoh: 15.000.000"
+                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white font-medium"
                       />
                     </div>
                     <div>
@@ -580,7 +617,7 @@ export default function KampanyeClient({
                           type="button"
                           onClick={async () => {
                             if (!liveJudul.trim()) {
-                              alert("Silakan isi Judul Kampanye (Indonesia) terlebih dahulu!");
+                              setToast({ message: "Silakan isi Judul Kampanye (Indonesia) terlebih dahulu!", type: "error" });
                               return;
                             }
                             setIsSubmitting(true);
@@ -599,12 +636,12 @@ export default function KampanyeClient({
                                 if (data.titleAr) setLiveJudulAr(data.titleAr);
                                 if (data.contentEn) setDeskripsiEnHtml(data.contentEn);
                                 if (data.contentAr) setDeskripsiArHtml(data.contentAr);
-                                alert("✨ Berhasil menerjemahkan judul & deskripsi ke Bahasa Inggris (EN) & Arab (AR)!");
+                                setToast({ message: "✨ Berhasil menerjemahkan ke EN & AR!", type: "success" });
                               } else {
-                                alert("Gagal melakukan terjemahan otomatis.");
+                                setToast({ message: "Gagal melakukan terjemahan otomatis.", type: "error" });
                               }
                             } catch (err: any) {
-                              alert(err.message || "Gagal menerjemahkan.");
+                              setToast({ message: err.message || "Gagal menerjemahkan.", type: "error" });
                             } finally {
                               setIsSubmitting(false);
                             }
@@ -823,6 +860,20 @@ export default function KampanyeClient({
           </div>
         </div>
       )}
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteConfirmItem)}
+        onClose={() => setDeleteConfirmItem(null)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Kampanye Donasi?"
+        message={`Apakah Anda yakin ingin menghapus "${deleteConfirmItem?.judul || 'kampanye ini'}"? Data yang dihapus tidak dapat dikembalikan.`}
+        confirmText="Hapus Kampanye"
+        loading={isDeleting}
+      />
+
+      {/* Toast Notification */}
+      <AdminToast toast={toast} onClose={() => setToast(null)} />
     </>
   );
 }

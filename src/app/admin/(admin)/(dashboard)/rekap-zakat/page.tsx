@@ -11,6 +11,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import CsvImportModal from '@/components/admin/CsvImportModal';
 import AdminPagination from '@/components/admin/AdminPagination';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import AdminToast, { ToastState } from '@/components/admin/AdminToast';
 
 type RekapItem = {
   id: string;
@@ -32,6 +34,9 @@ export default function AdminRekapZakatPage() {
   const [search, setSearch] = useState('');
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<RekapItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const latestReqRef = useRef(0);
@@ -80,14 +85,22 @@ export default function AdminRekapZakatPage() {
     loadData(page, searchRef.current);
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm('Hapus data rekap zakat ini?')) return;
+  async function handleConfirmDelete() {
+    if (!deleteConfirmItem) return;
+    setIsDeleting(true);
     try {
-      const res = await fetch(`/api/admin/rekap-zakat/${id}`, { method: 'DELETE' });
-      if (res.ok) loadData(currentPage, searchRef.current);
-      else alert('Gagal menghapus data');
+      const res = await fetch(`/api/admin/rekap-zakat/${deleteConfirmItem.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setToast({ message: 'Data rekap zakat berhasil dihapus.', type: 'success' });
+        loadData(currentPage, searchRef.current);
+      } else {
+        setToast({ message: 'Gagal menghapus data rekap zakat.', type: 'error' });
+      }
     } catch {
-      alert('Terjadi kesalahan');
+      setToast({ message: 'Terjadi kesalahan sistem.', type: 'error' });
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmItem(null);
     }
   }
 
@@ -182,7 +195,7 @@ export default function AdminRekapZakatPage() {
                     <td className="py-3.5 px-4 text-gray-600">{item.createdAt}</td>
                     <td className="py-3.5 px-4 text-center">
                       <button
-                        onClick={() => handleDelete(item.id)}
+                        onClick={() => setDeleteConfirmItem(item)}
                         className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                         title="Hapus Rekap Zakat"
                       >
@@ -220,6 +233,19 @@ export default function AdminRekapZakatPage() {
           ['197803152005011002', '2024', 'https://drive.google.com/file/d/example2'],
         ]}
       />
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteConfirmItem)}
+        onClose={() => setDeleteConfirmItem(null)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Rekap Zakat?"
+        message={`Apakah Anda yakin ingin menghapus data rekap zakat tahun ${deleteConfirmItem?.tahunRekap || ''} NIP ${deleteConfirmItem?.dosenNIP || ''}? Data yang dihapus tidak dapat dikembalikan.`}
+        confirmText="Hapus Rekap"
+        loading={isDeleting}
+      />
+
+      {/* Toast Notification */}
+      <AdminToast toast={toast} onClose={() => setToast(null)} />
     </div>
   );
 }

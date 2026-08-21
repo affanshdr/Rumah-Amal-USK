@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import { hitungZakat, formatRupiah } from "@/lib/kalkulator";
+import { formatThousand, parseRawNumber } from "@/lib/formatNumber";
 import { JenisZakat, JenisPerusahaan, KalkulatorResult } from "@/types";
 import { kalkulatorDictionary, KalkulatorLanguage } from "@/lib/i18n/kalkulator";
 
@@ -75,7 +76,12 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
   const isAr = lang === "ar";
 
   const handleInputChange = (fieldName: string, value: string) => {
-    setFieldValues((prev) => ({ ...prev, [fieldName]: value }));
+    if (fieldName.includes("gram")) {
+      setFieldValues((prev) => ({ ...prev, [fieldName]: value }));
+    } else {
+      const formatted = formatThousand(value);
+      setFieldValues((prev) => ({ ...prev, [fieldName]: formatted }));
+    }
   };
 
   const handleHitung = () => {
@@ -89,10 +95,17 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
       return;
     }
 
+    const cleanedValues: Record<string, any> = {};
+    Object.keys(fieldValues).forEach((key) => {
+      cleanedValues[key] = key.includes("gram")
+        ? fieldValues[key]
+        : parseRawNumber(fieldValues[key]);
+    });
+
     const payload: Record<string, any> = {
       jenis_zakat: jenisZakat as JenisZakat,
       jenis_perusahaan: jenisPerusahaan as JenisPerusahaan,
-      ...fieldValues,
+      ...cleanedValues,
     };
 
     const res = hitungZakat(payload as any, nisabConfig);
@@ -214,11 +227,11 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
                     {t[`field_${field.name}`] || field.label}
                   </label>
                   <input
-                    type="number"
+                    type={field.name.includes("gram") ? "number" : "text"}
                     value={fieldValues[field.name] || ""}
                     onChange={(e) => handleInputChange(field.name, e.target.value)}
                     placeholder={t.inputPlaceholder}
-                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white"
+                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white font-medium"
                   />
                 </div>
               ))}

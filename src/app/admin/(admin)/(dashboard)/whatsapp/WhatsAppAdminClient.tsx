@@ -14,6 +14,8 @@ import {
   faQrcode,
   faExclamationTriangle,
 } from '@fortawesome/free-solid-svg-icons';
+import ConfirmModal from '@/components/admin/ConfirmModal';
+import AdminToast, { ToastState } from '@/components/admin/AdminToast';
 
 type GatewayStatus = {
   status: 'connected' | 'connecting' | 'disconnected' | 'offline';
@@ -32,6 +34,8 @@ export default function WhatsAppAdminClient() {
   const [testSuccessMsg, setTestSuccessMsg] = useState('');
   const [testErrorMsg, setTestErrorMsg] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+  const [toast, setToast] = useState<ToastState | null>(null);
 
   async function fetchStatus() {
     try {
@@ -53,22 +57,23 @@ export default function WhatsAppAdminClient() {
     return () => clearInterval(interval);
   }, []);
 
-  async function handleLogout() {
-    if (!confirm('Apakah Anda yakin ingin memutuskan sesi WhatsApp ini?')) return;
+  async function handleConfirmLogout() {
     setLoggingOut(true);
     try {
       const res = await fetch('/api/admin/whatsapp/logout', { method: 'POST' });
       const json = await res.json();
       if (json.success) {
         setData({ status: 'connecting', qrImage: null });
+        setToast({ message: 'Sesi WhatsApp berhasil diputuskan.', type: 'success' });
         fetchStatus();
       } else {
-        alert(json.error || 'Gagal logout');
+        setToast({ message: json.error || 'Gagal logout', type: 'error' });
       }
     } catch (err: any) {
-      alert('Error: ' + err.message);
+      setToast({ message: 'Error: ' + err.message, type: 'error' });
     } finally {
       setLoggingOut(false);
+      setIsLogoutConfirmOpen(false);
     }
   }
 
@@ -234,7 +239,7 @@ export default function WhatsAppAdminClient() {
               <button
                 type="button"
                 disabled={loggingOut}
-                onClick={handleLogout}
+                onClick={() => setIsLogoutConfirmOpen(true)}
                 className="px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold transition-all border border-red-200 flex items-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 <FontAwesomeIcon icon={loggingOut ? faCircleNotch : faRightFromBracket} className={loggingOut ? 'animate-spin' : ''} />
@@ -325,6 +330,19 @@ export default function WhatsAppAdminClient() {
           </div>
         )}
       </div>
+      {/* Confirm Logout Modal */}
+      <ConfirmModal
+        isOpen={isLogoutConfirmOpen}
+        onClose={() => setIsLogoutConfirmOpen(false)}
+        onConfirm={handleConfirmLogout}
+        title="Putuskan Sesi WhatsApp?"
+        message="Apakah Anda yakin ingin memutuskan sesi WhatsApp ini? Anda perlu melakukan scan QR Code ulang untuk menghubungkan kembali."
+        confirmText="Ya, Putuskan Sesi"
+        loading={loggingOut}
+      />
+
+      {/* Toast Notification */}
+      <AdminToast toast={toast} onClose={() => setToast(null)} />
     </div>
   );
 }
