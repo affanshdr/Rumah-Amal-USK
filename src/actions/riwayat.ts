@@ -119,7 +119,6 @@ export async function verifyRiwayatOtpAndFetch(nip: string, otp: string) {
 
   return {
     nip: cleanNip,
-    idDonatur: dosen?.idDonatur || null,
     nama,
     unitKerja: dosen?.unitKerja || null,
     totalZakatLunas,

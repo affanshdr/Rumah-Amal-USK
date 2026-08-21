@@ -4,8 +4,6 @@ import { prisma } from '@/lib/prisma';
 interface DosenRow {
   nip: string;
   nama: string;
-  id_donatur?: string;
-  idDonatur?: string;
   npwp?: string;
   alamat?: string;
   unit_kerja?: string;
@@ -44,7 +42,6 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
-        const newIdDonatur = (row.id_donatur || row.idDonatur)?.toString().trim();
         const newNpwp = row.npwp?.toString().trim();
         const newAlamat = row.alamat?.toString().trim();
         const newUnitKerja = (row.unit_kerja || row.unitKerja)?.toString().trim();
@@ -54,8 +51,7 @@ export async function POST(req: NextRequest) {
           const existing = await prisma.dosen.findUnique({ where: { nip } });
 
           if (existing) {
-            // Logic Task 4: jika kolom CSV baru kosong, tetapi data lama di DB ada, jangan timpa dengan kosong
-            const idDonaturToSave = newIdDonatur && newIdDonatur !== '' ? newIdDonatur : existing.idDonatur;
+            // Jika kolom CSV baru kosong, tetapi data lama di DB ada, jangan timpa dengan kosong
             const npwpToSave = newNpwp && newNpwp !== '' ? newNpwp : existing.npwp;
             const alamatToSave = newAlamat && newAlamat !== '' ? newAlamat : existing.alamat;
             const unitKerjaToSave = newUnitKerja && newUnitKerja !== '' ? newUnitKerja : existing.unitKerja;
@@ -65,7 +61,6 @@ export async function POST(req: NextRequest) {
               where: { nip },
               data: {
                 nama,
-                idDonatur: idDonaturToSave,
                 npwp: npwpToSave,
                 alamat: alamatToSave,
                 unitKerja: unitKerjaToSave,
@@ -78,7 +73,6 @@ export async function POST(req: NextRequest) {
               data: {
                 nip,
                 nama,
-                idDonatur: newIdDonatur || null,
                 npwp: newNpwp || null,
                 alamat: newAlamat || null,
                 unitKerja: newUnitKerja || null,

@@ -10,7 +10,6 @@ import AdminPagination from '@/components/admin/AdminPagination';
 type DosenItem = {
   nip: string;
   nama: string;
-  idDonatur: string | null;
   npwp: string | null;
   alamat: string | null;
   unitKerja: string | null;
@@ -37,7 +36,6 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
   // Form states
   const [nip, setNip] = useState('');
   const [nama, setNama] = useState('');
-  const [idDonatur, setIdDonatur] = useState('');
   const [npwp, setNpwp] = useState('');
   const [alamat, setAlamat] = useState('');
   const [unitKerja, setUnitKerja] = useState('');
@@ -94,7 +92,6 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
     setEditingDosen(null);
     setNip('');
     setNama('');
-    setIdDonatur('');
     setNpwp('');
     setAlamat('');
     setUnitKerja('');
@@ -107,7 +104,6 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
     setEditingDosen(item);
     setNip(item.nip);
     setNama(item.nama);
-    setIdDonatur(item.idDonatur || '');
     setNpwp(item.npwp || '');
     setAlamat(item.alamat || '');
     setUnitKerja(item.unitKerja || '');
@@ -124,7 +120,6 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
     const formData = new FormData();
     formData.append('nip', nip);
     formData.append('nama', nama);
-    formData.append('id_donatur', idDonatur);
     formData.append('npwp', npwp);
     formData.append('alamat', alamat);
     formData.append('unit_kerja', unitKerja);
@@ -166,7 +161,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
             Data Dosen & Pegawai
           </h1>
           <p className="text-xs text-gray-500 mt-1">
-            Kelola data Master Dosen USK (NIP, ID Donatur, NPWP, No. HP, Alamat, Unit Kerja) untuk relasi Zakat dan Infaq.
+            Kelola data Master Dosen USK (NIP, NPWP, No. HP, Alamat, Unit Kerja) untuk relasi Zakat dan Infaq.
           </p>
         </div>
 
@@ -193,7 +188,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         <FontAwesomeIcon icon={faSearch} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
         <input
           type="text"
-          placeholder="Cari berdasarkan NIP, ID Donatur, Nama, No. HP, atau Unit Kerja..."
+          placeholder="Cari berdasarkan NIP, Nama, No. HP, atau Unit Kerja..."
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
@@ -207,7 +202,6 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase tracking-wider font-bold text-[10px]">
                 <th className="py-2.5 px-2.5 whitespace-nowrap">Muzakki</th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap">ID Donatur</th>
                 <th className="py-2.5 px-2.5 whitespace-nowrap">NPWP/No. HP</th>
                 <th className="py-2.5 px-2.5 whitespace-nowrap">Unit Kerja</th>
                 <th className="py-2.5 px-2.5 whitespace-nowrap">Alamat</th>
@@ -236,15 +230,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
                         <span className="text-[10px] text-gray-500 font-mono">NIP: {item.nip}</span>
                       )}
                     </td>
-                    <td className="py-2.5 px-2.5 font-mono text-gray-700 font-bold whitespace-nowrap">
-                      {item.idDonatur ? (
-                        <span className="bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded text-[10px] font-semibold border border-emerald-200">
-                          {item.idDonatur}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 font-normal">-</span>
-                      )}
-                    </td>
+
                     <td className="py-2.5 px-2.5 text-gray-700 font-mono whitespace-nowrap">
                       <span className=''>{item.npwp || '-'}</span>
                       <br />
@@ -351,18 +337,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    ID Donatur <span className="text-gray-400 font-normal">(Kode Privasi Zakat)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={idDonatur}
-                    onChange={(e) => setIdDonatur(e.target.value)}
-                    placeholder="Contoh: DSN-001 / DON-198501"
-                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
-                  />
-                </div>
+
 
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">No. HP / WhatsApp</label>
@@ -438,10 +413,10 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         title="Import Data Dosen"
         endpoint="/api/admin/import/dosen"
         requiredColumns={['nip', 'nama']}
-        optionalColumns={['id_donatur', 'npwp', 'alamat', 'unit_kerja', 'no_hp']}
+        optionalColumns={['npwp', 'alamat', 'unit_kerja', 'no_hp']}
         templateRows={[
-          ['198501012010121001', 'Dr. Ahmad Subagyo, M.T.', 'DON-1001', '12.345.678.9-012.000', 'Jl. Kampus No.1 Banda Aceh', 'Fakultas Teknik', '081234567890'],
-          ['197803152005011002', 'Prof. Dr. Siti Rahma, M.Sc.', 'DON-1002', '', 'Jl. Darussalam No.5', 'Fakultas MIPA', '085298765432'],
+          ['198501012010121001', 'Dr. Ahmad Subagyo, M.T.', '12.345.678.9-012.000', 'Jl. Kampus No.1 Banda Aceh', 'Fakultas Teknik', '081234567890'],
+          ['197803152005011002', 'Prof. Dr. Siti Rahma, M.Sc.', '', 'Jl. Darussalam No.5', 'Fakultas MIPA', '085298765432'],
         ]}
       />
     </div>

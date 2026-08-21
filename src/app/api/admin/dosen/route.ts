@@ -15,7 +15,6 @@ export async function GET(request: NextRequest) {
           OR: [
             { nama: { contains: search, mode: 'insensitive' } },
             { nip: { contains: search } },
-            { idDonatur: { contains: search, mode: 'insensitive' } },
             { unitKerja: { contains: search, mode: 'insensitive' } },
             { noHp: { contains: search } },
           ],

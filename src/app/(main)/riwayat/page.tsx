@@ -53,7 +53,6 @@ type RiwayatInfaqItem = {
 type RiwayatData = {
   // NIP mode
   nip?: string;
-  idDonatur?: string | null;
   unitKerja?: string | null;
   rekapZakat?: RekapZakatItem[];
   // Email mode
@@ -408,6 +407,9 @@ export default function RiwayatPage() {
                         </p>
                         <p className="text-[11px] text-gray-500 mt-0.5">
                           NIP: <span className="font-bold text-gray-700">{nipInput}</span>
+                        </p>
+                        <p className="text-[11px] text-gray-500 mt-0.5 font-semibold">
+                          Jika nomor tidak sesuai, silahkan hubungi rumah amal untuk melakukan perubahan data.
                         </p>
                       </div>
                     </div>

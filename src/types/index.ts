@@ -133,7 +133,6 @@ export interface RiwayatInfaqItem {
 
 export interface RiwayatResult {
   nip: string;
-  idDonatur?: string | null;
   nama?: string;
   riwayatZakat: RiwayatZakatItem[];
   riwayatInfaq: RiwayatInfaqItem[];
