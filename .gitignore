@@ -9,6 +9,8 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+/services/wa-gateway/session_auth/
+/services/wa-gateway/node_modules/
 
 # testing
 /coverage
