@@ -33,14 +33,13 @@ const fieldConfig: Record<string, FieldItem[]> = {
   profesi: [
     { name: "penghasilan_bulan", label: "Penghasilan Rutin per Bulan (Rp)" },
     { name: "bonus_tunjangan", label: "Bonus / Tunjangan Lainnya (Rp)" },
-    { name: "total_hutang", label: "Total Hutang dalam waktu dekat (Rp)" },
+    { name: "total_hutang", label: "Total Hutang Jatuh Tempo (Rp)" },
     { name: "total_kebutuhan", label: "Total Kebutuhan Pokok/Pengeluaran Primer (Rp)" },
   ],
   perniagaan: [
     { name: "modal_usaha", label: "Modal Usaha Putar (Rp)" },
     { name: "keuntungan", label: "Keuntungan Bersih (Rp)" },
-    { name: "hutang_jangka_pendek", label: "Hutang Usaha Jangka Pendek (Rp)" },
-    { name: "total_kebutuhan", label: "Total Kebutuhan Pokok/Pengeluaran Primer (Rp)" },
+    { name: "hutang_jangka_pendek", label: "Hutang Usaha Jangka Pendek (Rp)" }
   ],
 };
 
