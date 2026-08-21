@@ -28,6 +28,8 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
   const [totalPages, setTotalPages] = useState(Math.ceil((initialData?.length || 0) / ITEMS_PER_PAGE) || 1);
   const [isFetching, setIsFetching] = useState(false);
   const [search, setSearch] = useState('');
+  const [filterUnitKerja, setFilterUnitKerja] = useState('all');
+  const [availableUnitKerja, setAvailableUnitKerja] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [editingDosen, setEditingDosen] = useState<DosenItem | null>(null);
@@ -49,8 +51,9 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const latestReqRef = useRef(0);
   const searchRef = useRef(search);
+  const filterUnitKerjaRef = useRef(filterUnitKerja);
 
-  async function fetchData(page = currentPage, searchVal = searchRef.current) {
+  async function fetchData(page = currentPage, searchVal = searchRef.current, unitKerjaVal = filterUnitKerjaRef.current) {
     const reqId = ++latestReqRef.current;
     setIsFetching(true);
     try {
@@ -58,6 +61,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         page: String(page),
         limit: String(ITEMS_PER_PAGE),
         search: searchVal,
+        unitKerja: unitKerjaVal,
       });
       const res = await fetch(`/api/admin/dosen?${params}`);
       if (res.ok) {
@@ -66,6 +70,9 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         setData(json.data || []);
         setTotalItems(json.total ?? 0);
         setTotalPages(json.totalPages ?? 1);
+        if (json.availableUnitKerja) {
+          setAvailableUnitKerja(json.availableUnitKerja);
+        }
       }
     } catch (err) {
       console.error('Error fetching dosen:', err);
@@ -75,7 +82,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
   }
 
   useEffect(() => {
-    fetchData(1, '');
+    fetchData(1, '', 'all');
   }, []);
 
   function handleSearchChange(val: string) {
@@ -84,13 +91,21 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
     setCurrentPage(1);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchData(1, val);
+      fetchData(1, val, filterUnitKerjaRef.current);
     }, DEBOUNCE_MS);
+  }
+
+  function handleUnitKerjaChange(val: string) {
+    setFilterUnitKerja(val);
+    filterUnitKerjaRef.current = val;
+    setCurrentPage(1);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    fetchData(1, searchRef.current, val);
   }
 
   function handlePageChange(page: number) {
     setCurrentPage(page);
-    fetchData(page, searchRef.current);
+    fetchData(page, searchRef.current, filterUnitKerjaRef.current);
   }
 
   function openAddModal() {
@@ -138,7 +153,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
       }
       setIsModalOpen(false);
       setToast({ message: editingDosen ? "Data dosen berhasil diperbarui." : "Dosen baru berhasil ditambahkan.", type: "success" });
-      fetchData(currentPage, searchRef.current);
+      fetchData(currentPage, searchRef.current, filterUnitKerjaRef.current);
     } catch (err: any) {
       setErrorMsg(err.message || 'Gagal menyimpan data dosen');
     } finally {
@@ -152,7 +167,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
     try {
       await deleteDosen(deleteConfirmNip);
       setToast({ message: "Data dosen berhasil dihapus.", type: "success" });
-      fetchData(currentPage, searchRef.current);
+      fetchData(currentPage, searchRef.current, filterUnitKerjaRef.current);
     } catch (err: any) {
       setToast({ message: err.message || "Gagal menghapus data dosen", type: "error" });
     } finally {
@@ -168,7 +183,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         <div>
           <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
             <FontAwesomeIcon icon={faUserTie} className="text-[#063A1E] w-6 h-6" />
-            Data Dosen & Pegawai
+            Data Dosen &amp; Pegawai
           </h1>
           <p className="text-xs text-gray-500 mt-1">
             Kelola data Master Dosen USK (NIP, NPWP, No. HP, Alamat, Unit Kerja) untuk relasi Zakat dan Infaq.
@@ -193,17 +208,35 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative max-w-md">
-        <FontAwesomeIcon icon={faSearch} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <input
-          type="text"
-          placeholder="Cari berdasarkan NIP, Nama, No. HP, atau Unit Kerja..."
-          value={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
-        />
+      {/* Search Bar & Filter Unit Kerja */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <FontAwesomeIcon icon={faSearch} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Cari berdasarkan NIP, Nama, No. HP, atau Unit Kerja..."
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <select
+            value={filterUnitKerja}
+            onChange={(e) => handleUnitKerjaChange(e.target.value)}
+            className="w-full sm:w-auto px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs bg-white text-gray-700 font-medium focus:outline-none focus:border-[#063A1E] shadow-2xs cursor-pointer max-w-xs truncate"
+          >
+            <option value="all">Semua Unit Kerja</option>
+            {availableUnitKerja.map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
+
 
       {/* Table */}
       <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">

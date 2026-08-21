@@ -78,6 +78,8 @@ export default function AdminZakatPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'lunas' | 'ditolak'>('all');
+  const [filterJenis, setFilterJenis] = useState('all');
+  const [availableJenis, setAvailableJenis] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Edit Modal State
@@ -104,9 +106,10 @@ export default function AdminZakatPage() {
   // Keep latest values in refs to avoid stale closures in async functions
   const searchRef = useRef(search);
   const filterStatusRef = useRef(filterStatus);
+  const filterJenisRef = useRef(filterJenis);
   const currentPageRef = useRef(currentPage);
 
-  async function fetchData(page: number, searchVal: string, statusVal: string) {
+  async function fetchData(page: number, searchVal: string, statusVal: string, jenisVal = filterJenisRef.current) {
     const reqId = ++latestReqRef.current;
     setLoading(true);
     try {
@@ -115,6 +118,7 @@ export default function AdminZakatPage() {
         limit: String(ITEMS_PER_PAGE),
         search: searchVal,
         status: statusVal,
+        jenisZakat: jenisVal,
       });
       const res = await fetch(`/api/admin/zakat?${params}`);
       const json = await res.json();
@@ -123,6 +127,9 @@ export default function AdminZakatPage() {
       setTotalItems(json.total ?? 0);
       setTotalPages(json.totalPages ?? 1);
       setCounts(json.counts || { all: 0, pending: 0, lunas: 0, ditolak: 0 });
+      if (json.availableJenis) {
+        setAvailableJenis(json.availableJenis);
+      }
     } finally {
       if (reqId === latestReqRef.current) setLoading(false);
     }
@@ -130,7 +137,7 @@ export default function AdminZakatPage() {
 
   // Initial load
   useEffect(() => {
-    fetchData(1, '', 'all');
+    fetchData(1, '', 'all', 'all');
   }, []);
 
   function handleSearchChange(val: string) {
@@ -140,7 +147,7 @@ export default function AdminZakatPage() {
     currentPageRef.current = 1;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchData(1, val, filterStatusRef.current);
+      fetchData(1, val, filterStatusRef.current, filterJenisRef.current);
     }, DEBOUNCE_MS);
   }
 
@@ -150,19 +157,28 @@ export default function AdminZakatPage() {
     setCurrentPage(1);
     currentPageRef.current = 1;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    fetchData(1, searchRef.current, status);
+    fetchData(1, searchRef.current, status, filterJenisRef.current);
+  }
+
+  function handleJenisChange(jenis: string) {
+    setFilterJenis(jenis);
+    filterJenisRef.current = jenis;
+    setCurrentPage(1);
+    currentPageRef.current = 1;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    fetchData(1, searchRef.current, filterStatusRef.current, jenis);
   }
 
   function handlePageChange(page: number) {
     setCurrentPage(page);
     currentPageRef.current = page;
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    fetchData(page, searchRef.current, filterStatusRef.current);
+    fetchData(page, searchRef.current, filterStatusRef.current, filterJenisRef.current);
   }
 
   async function handleAction(id: string, action: 'approve' | 'reject') {
     await fetch(`/api/admin/zakat/${id}/${action}`, { method: 'PATCH' });
-    fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current);
+    fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, filterJenisRef.current);
   }
 
   function openEditModal(item: ZakatItem) {
@@ -190,7 +206,7 @@ export default function AdminZakatPage() {
       });
       setEditingItem(null);
       setToast({ message: 'Perubahan data zakat berhasil disimpan.', type: 'success' });
-      fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current);
+      fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, filterJenisRef.current);
     } catch (err: any) {
       setToast({ message: err.message || 'Gagal menyimpan perubahan', type: 'error' });
     } finally {
@@ -246,17 +262,36 @@ export default function AdminZakatPage() {
         ))}
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <FontAwesomeIcon icon={faSearch} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <input
-          type="text"
-          placeholder="Cari nama, NIP, atau nama dosen..."
-          value={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
-        />
+      {/* Filter & Search Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <FontAwesomeIcon icon={faSearch} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Cari nama, NIP, atau nama dosen..."
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
+          />
+        </div>
+
+        {/* Filter Jenis Zakat */}
+        <div className="flex items-center gap-2">
+          <select
+            value={filterJenis}
+            onChange={(e) => handleJenisChange(e.target.value)}
+            className="w-full sm:w-auto px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs bg-white text-gray-700 font-medium focus:outline-none focus:border-[#063A1E] shadow-2xs cursor-pointer capitalize"
+          >
+            <option value="all">Semua Jenis Zakat</option>
+            {availableJenis.map((j) => (
+              <option key={j} value={j} className="capitalize">
+                Zakat {j}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
+
 
       {/* Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
         const search = searchParams.get('search')?.trim() || '';
         const status = searchParams.get('status') || 'all';
         const tab    = searchParams.get('tab') || 'bebas'; // 'bebas' | 'terikat'
+        const jenis  = (searchParams.get('jenisInfaq') || searchParams.get('jenis') || 'all').trim();
         const skip   = (page - 1) * limit;
 
         // Tab filter
@@ -30,20 +31,40 @@ export async function GET(request: NextRequest) {
             }
             : {};
 
+        // Jenis filter
+        let jenisFilter: Prisma.InfaqWhereInput = {};
+        if (jenis && jenis !== 'all') {
+            if (tab === 'terikat') {
+                jenisFilter = {
+                    OR: [
+                        { kampanyeId: jenis },
+                        { jenisInfaq: { equals: jenis, mode: 'insensitive' } },
+                        { kampanye: { judul: { equals: jenis, mode: 'insensitive' } } },
+                    ],
+                };
+            } else {
+                jenisFilter = {
+                    jenisInfaq: { equals: jenis, mode: 'insensitive' },
+                };
+            }
+        }
+
         // Full where (includes status filter)
         const whereMain: Prisma.InfaqWhereInput = {
-            AND: [tabFilter, searchFilter, status !== 'all' ? { status } : {}],
+            AND: [tabFilter, searchFilter, jenisFilter, status !== 'all' ? { status } : {}],
         };
 
-        // Where without status filter (for per-status counts within current tab + search)
+        // Where without status filter (for per-status counts within current tab + search + jenis)
         const whereForStatusCounts: Prisma.InfaqWhereInput = {
-            AND: [tabFilter, searchFilter],
+            AND: [tabFilter, searchFilter, jenisFilter],
         };
 
         const [
             infaqs, total,
             allCount, pendingCount, lunasCount, ditolakCount,
             bebasCount, terikatCount,
+            distinctBebasRaw,
+            kampanyeList,
         ] = await Promise.all([
             prisma.infaq.findMany({
                 where: whereMain,
@@ -57,10 +78,40 @@ export async function GET(request: NextRequest) {
             prisma.infaq.count({ where: { ...whereForStatusCounts, status: 'pending' } }),
             prisma.infaq.count({ where: { ...whereForStatusCounts, status: 'lunas'   } }),
             prisma.infaq.count({ where: { ...whereForStatusCounts, status: 'ditolak' } }),
-            // Tab counts (global, not filtered by search/status)
+            // Tab counts (global)
             prisma.infaq.count({ where: { kampanyeId: null } }),
             prisma.infaq.count({ where: { kampanyeId: { not: null } } }),
+            // Distinct jenis infaq for bebas tab
+            prisma.infaq.findMany({
+                select: { jenisInfaq: true },
+                distinct: ['jenisInfaq'],
+                where: { kampanyeId: null, jenisInfaq: { not: '' } },
+                orderBy: { jenisInfaq: 'asc' },
+            }),
+            // Kampanye list for terikat tab
+            prisma.kampanye.findMany({
+                select: { id: true, judul: true },
+                orderBy: { createdAt: 'desc' },
+            }),
         ]);
+
+        let availableJenis: { value: string; label: string }[] = [];
+        if (tab === 'bebas') {
+            const standardBebas = ['umum', 'pendidikan', 'kemanusiaan', 'pembangunan', 'operasional'];
+            const allBebas = Array.from(new Set([
+                ...standardBebas,
+                ...distinctBebasRaw.map(d => d.jenisInfaq.trim().toLowerCase()).filter(Boolean),
+            ]));
+            availableJenis = allBebas.map(j => ({
+                value: j,
+                label: `Infaq ${j.charAt(0).toUpperCase() + j.slice(1)}`,
+            }));
+        } else {
+            availableJenis = kampanyeList.map(k => ({
+                value: k.id,
+                label: k.judul,
+            }));
+        }
 
         const formattedData = infaqs.map(i => ({
             id: i.id,
@@ -101,9 +152,11 @@ export async function GET(request: NextRequest) {
                 bebas:   bebasCount,
                 terikat: terikatCount,
             },
+            availableJenis,
         });
     } catch (error) {
         console.error('Error fetching infaq:', error);
         return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
     }
 }
+

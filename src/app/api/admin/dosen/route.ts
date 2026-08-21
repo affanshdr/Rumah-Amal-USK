@@ -8,9 +8,10 @@ export async function GET(request: NextRequest) {
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.max(1, Math.min(100, parseInt(searchParams.get('limit') || '20')));
     const search = searchParams.get('search')?.trim() || '';
+    const unitKerja = (searchParams.get('unitKerja') || 'all').trim();
     const skip = (page - 1) * limit;
 
-    const where: Prisma.DosenWhereInput = search
+    const searchFilter: Prisma.DosenWhereInput = search
       ? {
           OR: [
             { nama: { contains: search, mode: 'insensitive' } },
@@ -21,7 +22,16 @@ export async function GET(request: NextRequest) {
         }
       : {};
 
-    const [dosens, total] = await Promise.all([
+    const unitKerjaFilter: Prisma.DosenWhereInput =
+      unitKerja && unitKerja !== 'all'
+        ? { unitKerja: { equals: unitKerja, mode: 'insensitive' } }
+        : {};
+
+    const where: Prisma.DosenWhereInput = {
+      AND: [searchFilter, unitKerjaFilter],
+    };
+
+    const [dosens, total, distinctUnitKerja] = await Promise.all([
       prisma.dosen.findMany({
         where,
         orderBy: { nama: 'asc' },
@@ -29,17 +39,29 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       prisma.dosen.count({ where }),
+      prisma.dosen.findMany({
+        select: { unitKerja: true },
+        where: { unitKerja: { not: null } },
+        distinct: ['unitKerja'],
+        orderBy: { unitKerja: 'asc' },
+      }),
     ]);
+
+    const availableUnitKerja = distinctUnitKerja
+      .map(d => d.unitKerja?.trim())
+      .filter((u): u is string => Boolean(u && u.length > 0));
 
     return NextResponse.json({
       data: dosens,
       total,
       page,
       totalPages: Math.ceil(total / limit),
+      availableUnitKerja,
     });
   } catch (error) {
     console.error('Error fetching dosens:', error);
     return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
   }
 }
+
 

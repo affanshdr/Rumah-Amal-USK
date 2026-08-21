@@ -32,6 +32,8 @@ export default function AdminRekapZakatPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filterUnitKerja, setFilterUnitKerja] = useState('all');
+  const [availableUnitKerja, setAvailableUnitKerja] = useState<string[]>([]);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [deleteConfirmItem, setDeleteConfirmItem] = useState<RekapItem | null>(null);
@@ -41,8 +43,9 @@ export default function AdminRekapZakatPage() {
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const latestReqRef = useRef(0);
   const searchRef = useRef(search);
+  const filterUnitKerjaRef = useRef(filterUnitKerja);
 
-  async function loadData(page = currentPage, searchVal = searchRef.current) {
+  async function loadData(page = currentPage, searchVal = searchRef.current, unitKerjaVal = filterUnitKerjaRef.current) {
     const reqId = ++latestReqRef.current;
     setLoading(true);
     try {
@@ -50,6 +53,7 @@ export default function AdminRekapZakatPage() {
         page: String(page),
         limit: String(ITEMS_PER_PAGE),
         search: searchVal,
+        unitKerja: unitKerjaVal,
       });
       const res = await fetch(`/api/admin/rekap-zakat?${params}`);
       if (res.ok) {
@@ -58,6 +62,9 @@ export default function AdminRekapZakatPage() {
         setData(json.data || []);
         setTotalItems(json.total ?? 0);
         setTotalPages(json.totalPages ?? 1);
+        if (json.availableUnitKerja) {
+          setAvailableUnitKerja(json.availableUnitKerja);
+        }
       }
     } catch (err) {
       console.error('Error loading rekap zakat:', err);
@@ -67,7 +74,7 @@ export default function AdminRekapZakatPage() {
   }
 
   useEffect(() => {
-    loadData(1, '');
+    loadData(1, '', 'all');
   }, []);
 
   function handleSearchChange(val: string) {
@@ -76,13 +83,21 @@ export default function AdminRekapZakatPage() {
     setCurrentPage(1);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      loadData(1, val);
+      loadData(1, val, filterUnitKerjaRef.current);
     }, DEBOUNCE_MS);
+  }
+
+  function handleUnitKerjaChange(val: string) {
+    setFilterUnitKerja(val);
+    filterUnitKerjaRef.current = val;
+    setCurrentPage(1);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    loadData(1, searchRef.current, val);
   }
 
   function handlePageChange(page: number) {
     setCurrentPage(page);
-    loadData(page, searchRef.current);
+    loadData(page, searchRef.current, filterUnitKerjaRef.current);
   }
 
   async function handleConfirmDelete() {
@@ -92,7 +107,7 @@ export default function AdminRekapZakatPage() {
       const res = await fetch(`/api/admin/rekap-zakat/${deleteConfirmItem.id}`, { method: 'DELETE' });
       if (res.ok) {
         setToast({ message: 'Data rekap zakat berhasil dihapus.', type: 'success' });
-        loadData(currentPage, searchRef.current);
+        loadData(currentPage, searchRef.current, filterUnitKerjaRef.current);
       } else {
         setToast({ message: 'Gagal menghapus data rekap zakat.', type: 'error' });
       }
@@ -127,17 +142,35 @@ export default function AdminRekapZakatPage() {
         </button>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <FontAwesomeIcon icon={faSearch} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <input
-          type="text"
-          placeholder="Cari NIP, nama dosen, atau tahun..."
-          value={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
-        />
+      {/* Filter & Search Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <FontAwesomeIcon icon={faSearch} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Cari NIP, nama dosen, atau tahun..."
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <select
+            value={filterUnitKerja}
+            onChange={(e) => handleUnitKerjaChange(e.target.value)}
+            className="w-full sm:w-auto px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs bg-white text-gray-700 font-medium focus:outline-none focus:border-[#063A1E] shadow-2xs cursor-pointer max-w-xs truncate"
+          >
+            <option value="all">Semua Unit Kerja</option>
+            {availableUnitKerja.map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
+
 
       {/* Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
