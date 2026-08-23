@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { updateZakatAdmin } from '@/actions/zakat';
+import { updateZakatAdmin, deleteZakat } from '@/actions/zakat';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCoins,
@@ -10,14 +10,17 @@ import {
   faTimesCircle,
   faExternalLinkAlt,
   faEdit,
+  faTrash,
   faFileArrowUp,
   faCommentDots,
   faTableList,
+  faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import CsvImportModal from '@/components/admin/CsvImportModal';
 import AdminPagination from '@/components/admin/AdminPagination';
 import PesanNoteModal from '@/components/admin/PesanNoteModal';
 import DataZakatModal from '@/components/admin/DataZakatModal';
+import ConfirmModal from '@/components/admin/ConfirmModal';
 import { formatThousand, parseRawNumber } from '@/lib/formatNumber';
 import AdminToast, { ToastState } from '@/components/admin/AdminToast';
 
@@ -101,6 +104,8 @@ export default function AdminZakatPage() {
     pesan: string;
   } | null>(null);
   const [selectedZakatItem, setSelectedZakatItem] = useState<ZakatItem | null>(null);
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<ZakatItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -201,6 +206,21 @@ export default function AdminZakatPage() {
   async function handleAction(id: string, action: 'approve' | 'reject') {
     await fetch(`/api/admin/zakat/${id}/${action}`, { method: 'PATCH' });
     fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, filterJenisRef.current, filterUnitKerjaRef.current);
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteConfirmItem) return;
+    setIsDeleting(true);
+    try {
+      await deleteZakat(deleteConfirmItem.id);
+      setToast({ message: 'Data zakat berhasil dihapus.', type: 'success' });
+      fetchData(currentPageRef.current, searchRef.current, filterStatusRef.current, filterJenisRef.current, filterUnitKerjaRef.current);
+    } catch (err: any) {
+      setToast({ message: err.message || 'Gagal menghapus data zakat', type: 'error' });
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmItem(null);
+    }
   }
 
   function openEditModal(item: ZakatItem) {
@@ -455,6 +475,13 @@ export default function AdminZakatPage() {
                             </button>
                           </>
                         )}
+                        <button
+                          onClick={() => setDeleteConfirmItem(item)}
+                          className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Hapus Data Zakat"
+                        >
+                          <FontAwesomeIcon icon={faTrash} className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -476,95 +503,116 @@ export default function AdminZakatPage() {
 
       {/* Edit Modal */}
       {editingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-md w-full overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
-              <h3 className="font-bold text-sm text-gray-900">Edit Data Pembayaran Zakat</h3>
-              <button onClick={() => setEditingItem(null)} className="text-gray-400 hover:text-gray-600 font-bold">
-                ✕
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#063A1E]/10 text-[#063A1E] flex items-center justify-center shrink-0">
+                  <FontAwesomeIcon icon={faCoins} className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-gray-900 leading-tight">Edit Data Pembayaran Zakat</h3>
+                  <p className="text-[11px] text-gray-500">Perbarui rincian data pembayaran dan status zakat</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingItem(null)}
+                className="w-7 h-7 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200/60 flex items-center justify-center transition-colors cursor-pointer"
+                title="Tutup"
+              >
+                <FontAwesomeIcon icon={faXmark} className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEdit} className="p-6 space-y-3.5">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Nama Pembayar</label>
-                <input
-                  type="text"
-                  required
-                  value={editNama}
-                  onChange={(e) => setEditNama(e.target.value)}
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
-                />
+            <form onSubmit={handleSaveEdit} className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Nama Pembayar <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editNama}
+                    onChange={(e) => setEditNama(e.target.value)}
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">NIP (Dosen / Pegawai)</label>
+                  <input
+                    type="text"
+                    value={editNip}
+                    onChange={(e) => setEditNip(e.target.value)}
+                    placeholder="Kosongkan jika umum"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Jenis Zakat <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editJenis}
+                    onChange={(e) => setEditJenis(e.target.value)}
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Jumlah Zakat (Rp) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formatThousand(editJumlah)}
+                    onChange={(e) => setEditJumlah(Number(parseRawNumber(e.target.value)))}
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E] font-semibold"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Status Verifikasi</label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E] bg-white font-semibold"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="lunas">Lunas</option>
+                    <option value="ditolak">Ditolak</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Pesan / Catatan</label>
+                  <textarea
+                    rows={2}
+                    value={editPesan}
+                    onChange={(e) => setEditPesan(e.target.value)}
+                    placeholder="Catatan atau pesan donatur..."
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">NIP (Dosen / Pegawai)</label>
-                <input
-                  type="text"
-                  value={editNip}
-                  onChange={(e) => setEditNip(e.target.value)}
-                  placeholder="Kosongkan jika masyarakat umum"
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Jenis Zakat</label>
-                <input
-                  type="text"
-                  required
-                  value={editJenis}
-                  onChange={(e) => setEditJenis(e.target.value)}
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Jumlah Zakat (Rp)</label>
-                <input
-                  type="text"
-                  required
-                  value={formatThousand(editJumlah)}
-                  onChange={(e) => setEditJumlah(Number(parseRawNumber(e.target.value)))}
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E] font-medium"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Status Verifikasi</label>
-                <select
-                  value={editStatus}
-                  onChange={(e) => setEditStatus(e.target.value)}
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E] bg-white font-semibold"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="lunas">Lunas</option>
-                  <option value="ditolak">Ditolak</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Pesan / Catatan</label>
-                <textarea
-                  rows={2}
-                  value={editPesan}
-                  onChange={(e) => setEditPesan(e.target.value)}
-                  className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2.5 pt-2">
+              <div className="flex justify-end gap-2.5 pt-4 mt-2 border-t border-gray-100 shrink-0">
                 <button
                   type="button"
                   onClick={() => setEditingItem(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 bg-[#063A1E] hover:bg-[#042814] text-white rounded-xl text-xs font-bold shadow-xs transition-colors disabled:opacity-50"
+                  className="px-5 py-2 bg-[#063A1E] hover:bg-[#042814] text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {saving ? 'Simpan...' : 'Simpan Perubahan'}
                 </button>
@@ -604,6 +652,17 @@ export default function AdminZakatPage() {
         isOpen={!!selectedZakatItem}
         onClose={() => setSelectedZakatItem(null)}
         item={selectedZakatItem}
+      />
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteConfirmItem)}
+        onClose={() => setDeleteConfirmItem(null)}
+        onConfirm={handleConfirmDelete}
+        title="Hapus Data Zakat?"
+        message={`Apakah Anda yakin ingin menghapus data zakat atas nama "${deleteConfirmItem?.nama || ''}"? Data yang dihapus tidak dapat dikembalikan.`}
+        confirmText="Hapus Data"
+        loading={isDeleting}
       />
 
       {/* Toast Notification */}

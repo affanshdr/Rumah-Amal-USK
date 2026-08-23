@@ -7,6 +7,8 @@ import {
   faSearch,
   faExternalLinkAlt,
   faTrash,
+  faEdit,
+  faXmark,
   faFileArrowUp,
 } from '@fortawesome/free-solid-svg-icons';
 import CsvImportModal from '@/components/admin/CsvImportModal';
@@ -23,7 +25,7 @@ type RekapItem = {
   createdAt: string;
 };
 
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = 10;
 const DEBOUNCE_MS = 400;
 
 export default function AdminRekapZakatPage() {
@@ -36,6 +38,11 @@ export default function AdminRekapZakatPage() {
   const [availableUnitKerja, setAvailableUnitKerja] = useState<string[]>([]);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [editingItem, setEditingItem] = useState<RekapItem | null>(null);
+  const [editNip, setEditNip] = useState('');
+  const [editTahun, setEditTahun] = useState('');
+  const [editFileUrl, setEditFileUrl] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
   const [deleteConfirmItem, setDeleteConfirmItem] = useState<RekapItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -98,6 +105,42 @@ export default function AdminRekapZakatPage() {
   function handlePageChange(page: number) {
     setCurrentPage(page);
     loadData(page, searchRef.current, filterUnitKerjaRef.current);
+  }
+
+  function openEditModal(item: RekapItem) {
+    setEditingItem(item);
+    setEditNip(item.dosenNIP);
+    setEditTahun(item.tahunRekap);
+    setEditFileUrl(item.fileUrl);
+  }
+
+  async function handleSaveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingItem) return;
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`/api/admin/rekap-zakat/${editingItem.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dosenNIP: editNip,
+          tahunRekap: editTahun,
+          fileUrl: editFileUrl,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setToast({ message: 'Data rekap zakat berhasil diperbarui.', type: 'success' });
+        setEditingItem(null);
+        loadData(currentPage, searchRef.current, filterUnitKerjaRef.current);
+      } else {
+        setToast({ message: data.error || 'Gagal memperbarui data rekap zakat.', type: 'error' });
+      }
+    } catch {
+      setToast({ message: 'Terjadi kesalahan sistem.', type: 'error' });
+    } finally {
+      setSavingEdit(false);
+    }
   }
 
   async function handleConfirmDelete() {
@@ -178,11 +221,10 @@ export default function AdminRekapZakatPage() {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase tracking-wider font-bold">
-                <th className="py-3.5 px-4">NIP</th>
-                <th className="py-3.5 px-4">Nama Dosen</th>
+                <th className="py-3.5 px-4">Muzakki</th>
                 <th className="py-3.5 px-4">Unit Kerja</th>
                 <th className="py-3.5 px-4">Tahun Rekap</th>
-                <th className="py-3.5 px-4">File</th>
+                <th className="py-3.5 px-4">File Rekap</th>
                 <th className="py-3.5 px-4">Tanggal Input</th>
                 <th className="py-3.5 px-4 text-center">Aksi</th>
               </tr>
@@ -190,25 +232,31 @@ export default function AdminRekapZakatPage() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-10 text-gray-400">
+                  <td colSpan={6} className="text-center py-10 text-gray-400">
                     <div className="w-5 h-5 border-2 border-[#063A1E] border-t-transparent rounded-full animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-10 text-gray-400">
+                  <td colSpan={6} className="text-center py-10 text-gray-400">
                     Tidak ada data rekap zakat ditemukan.
                   </td>
                 </tr>
               ) : (
                 data.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-bold text-gray-800">{item.dosenNIP}</td>
-                    <td className="py-3.5 px-4 font-semibold text-gray-900">
-                      {item.dosen?.nama || <span className="text-gray-400 italic">—</span>}
+                    {/* Muzakki — Nama + NIP */}
+                    <td className="py-3.5 px-4">
+                      <p className="font-bold text-gray-900 text-xs">
+                        {item.dosen?.nama || <span className="text-gray-400 font-normal italic">—</span>}
+                      </p>
+                      <span className="text-[10px] text-gray-500 font-mono inline-block mt-0.5">
+                        NIP: {item.dosenNIP}
+                      </span>
                     </td>
-                    <td className="py-3.5 px-4 text-gray-600 max-w-[150px] truncate">
-                      {item.dosen?.unitKerja || '—'}
+                    {/* Unit Kerja Lengkap */}
+                    <td className="py-3.5 px-4 text-gray-700 whitespace-normal">
+                      {item.dosen?.unitKerja || <span className="text-gray-400">—</span>}
                     </td>
                     <td className="py-3.5 px-4">
                       <span className="inline-block bg-[#063A1E]/10 text-[#063A1E] font-bold px-2.5 py-1 rounded-lg text-[10px]">
@@ -227,13 +275,22 @@ export default function AdminRekapZakatPage() {
                     </td>
                     <td className="py-3.5 px-4 text-gray-600">{item.createdAt}</td>
                     <td className="py-3.5 px-4 text-center">
-                      <button
-                        onClick={() => setDeleteConfirmItem(item)}
-                        className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                        title="Hapus Rekap Zakat"
-                      >
-                        <FontAwesomeIcon icon={faTrash} className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          onClick={() => openEditModal(item)}
+                          className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
+                          title="Edit Rekap Zakat"
+                        >
+                          <FontAwesomeIcon icon={faEdit} className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirmItem(item)}
+                          className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Hapus Rekap Zakat"
+                        >
+                          <FontAwesomeIcon icon={faTrash} className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -251,6 +308,95 @@ export default function AdminRekapZakatPage() {
           itemLabel="rekap zakat"
         />
       </div>
+
+      {/* Edit Modal */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#063A1E]/10 text-[#063A1E] flex items-center justify-center shrink-0">
+                  <FontAwesomeIcon icon={faFileText} className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-gray-900 leading-tight">Edit Rekap Zakat Dosen</h3>
+                  <p className="text-[11px] text-gray-500">Perbarui NIP, tahun rekap, atau link dokumen PDF/Drive</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingItem(null)}
+                className="w-7 h-7 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-200/60 flex items-center justify-center transition-colors cursor-pointer"
+                title="Tutup"
+              >
+                <FontAwesomeIcon icon={faXmark} className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    NIP Dosen / Pegawai <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editNip}
+                    onChange={(e) => setEditNip(e.target.value)}
+                    placeholder="Contoh: 198501012010121001"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Tahun Rekap <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editTahun}
+                    onChange={(e) => setEditTahun(e.target.value)}
+                    placeholder="Contoh: 2024"
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    URL File Rekap (PDF / Drive) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    value={editFileUrl}
+                    onChange={(e) => setEditFileUrl(e.target.value)}
+                    placeholder="https://drive.google.com/..."
+                    className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2.5 pt-4 mt-2 border-t border-gray-100 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setEditingItem(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="px-5 py-2 bg-[#063A1E] hover:bg-[#042814] text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {savingEdit ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* CSV Import Modal */}
       <CsvImportModal

@@ -4,8 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUpload, faSpinner, faSave } from "@fortawesome/free-solid-svg-icons";
-import { addGalleryImage, deleteGalleryImage, uploadGalleryImages } from "@/actions/gallery";
+import { faUpload, faSpinner, faSave, faSync } from "@fortawesome/free-solid-svg-icons";
+import { addGalleryImage, updateGalleryImage, deleteGalleryImage, uploadGalleryImages } from "@/actions/gallery";
 import ConfirmModal from "@/components/admin/ConfirmModal";
 import AdminToast, { ToastState } from "@/components/admin/AdminToast";
 
@@ -47,6 +47,8 @@ export default function GaleriClient({
   }, [initialData]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<GalleryRow | null>(null);
   const [previewingItem, setPreviewingItem] = useState<GalleryRow | null>(null);
 
   const [uploading, setUploading] = useState(false);
@@ -59,6 +61,8 @@ export default function GaleriClient({
   const [toast, setToast] = useState<ToastState | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
+
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -80,6 +84,65 @@ export default function GaleriClient({
       setToast({ message: "Foto galeri berhasil diupload.", type: "success" });
     } catch (err) {
       setToast({ message: `Kesalahan: ${(err as Error).message}`, type: "error" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleEditFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("bucket", "Galeri");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (!res.ok) {
+        const err = await res.json();
+        setToast({ message: `Upload gagal: ${err.error}`, type: "error" });
+        return;
+      }
+      const result = await res.json();
+      setUploadedPreview(result.url);
+      setImageUrlInput(result.url);
+      setToast({ message: "Foto berhasil diunggah. Klik Simpan Perubahan untuk menerapkan.", type: "success" });
+    } catch (err) {
+      setToast({ message: `Kesalahan: ${(err as Error).message}`, type: "error" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+
+  const openEditModal = (item: GalleryRow) => {
+    setEditingItem(item);
+    setImageUrlInput(item.imageUrl);
+    setUploadedPreview(item.imageUrl);
+    setTitleInput(item.title || "");
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingItem) return;
+    if (!imageUrlInput.trim()) {
+      setToast({ message: "Pilih file gambar atau masukkan URL gambar.", type: "error" });
+      return;
+    }
+    setUploading(true);
+    try {
+      await updateGalleryImage(editingItem.id, imageUrlInput.trim());
+      setIsEditModalOpen(false);
+      setEditingItem(null);
+      setImageUrlInput("");
+      setTitleInput("");
+      setUploadedPreview("");
+      setToast({ message: "Foto galeri berhasil diperbarui.", type: "success" });
+      router.refresh();
+    } catch (err: any) {
+      setToast({ message: err.message || "Gagal memperbarui foto", type: "error" });
     } finally {
       setUploading(false);
     }
@@ -167,6 +230,13 @@ export default function GaleriClient({
                         title="Preview"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                      </button>
+                      <button
+                        onClick={() => openEditModal(item)}
+                        className="w-9 h-9 rounded-full bg-[#005621] text-white flex items-center justify-center shadow-lg hover:bg-[#004219] transition-colors cursor-pointer"
+                        title="Edit Foto"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                       </button>
                       <button
                         onClick={() => setDeleteConfirmItem(item)}
@@ -260,10 +330,10 @@ export default function GaleriClient({
         )}
       </div>
 
-      {/* MODAL UPLOAD FOTO */}
+      {/* MODAL ADD */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h3 className="font-bold text-gray-800 text-base">Tambah Foto Galeri</h3>
               <button onClick={() => setIsAddModalOpen(false)} className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-lg cursor-pointer">×</button>
@@ -271,44 +341,41 @@ export default function GaleriClient({
 
             <form onSubmit={handleSave} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">File Foto / Gambar <span className="text-red-500">*</span></label>
-                {(uploadedPreview || imageUrlInput) && (
-                  <div className="mb-3 rounded-xl overflow-hidden border border-gray-200 max-h-[200px] flex justify-center bg-gray-50">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={uploadedPreview || imageUrlInput} alt="Preview" className="max-h-[200px] object-contain p-2" />
-                  </div>
-                )}
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">Unggah Foto <span className="text-red-500">*</span></label>
                 <div className="flex items-center gap-3">
                   <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
-                  <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
-                    className="px-4 py-2 bg-[#005621] text-white hover:bg-[#004219] rounded-xl text-xs font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
-                    {uploading ? (
-                      <><FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Mengupload…</>
-                    ) : (
-                      <><FontAwesomeIcon icon={faUpload} /> Upload File Foto</>
-                    )}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 transition-colors shadow-2xs cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {uploading ? <><FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Mengunggah…</> : <><FontAwesomeIcon icon={faUpload} /> Pilih File dari Komputer</>}
                   </button>
                   <span className="text-xs text-gray-400">atau</span>
-                  <input
-                    type="url"
-                    placeholder="Tempel URL Gambar"
-                    value={imageUrlInput}
-                    onChange={(e) => { setImageUrlInput(e.target.value); setUploadedPreview(e.target.value); }}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#005621]"
-                  />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5">Judul / Keterangan Foto <span className="text-gray-400 font-normal">(opsional)</span></label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">URL Gambar</label>
                 <input
-                  type="text"
-                  placeholder="Contoh: Penyaluran Beasiswa USK 2026"
-                  value={titleInput}
-                  onChange={(e) => setTitleInput(e.target.value)}
+                  type="url"
+                  placeholder="https://example.com/foto.jpg"
+                  value={imageUrlInput}
+                  onChange={(e) => { setImageUrlInput(e.target.value); setUploadedPreview(e.target.value); }}
                   className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621]"
                 />
               </div>
+
+              {uploadedPreview && (
+                <div>
+                  <p className="text-xs font-bold text-gray-600 mb-1.5">Preview Foto</p>
+                  <div className="w-full aspect-[4/3] rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={uploadedPreview} alt="Preview" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+              )}
 
               <div className="pt-3 flex items-center justify-end gap-2 border-t border-gray-100">
                 <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer">
@@ -316,6 +383,66 @@ export default function GaleriClient({
                 </button>
                 <button type="submit" disabled={uploading || !imageUrlInput.trim()} className="px-6 py-2 text-xs font-bold text-white bg-[#005621] hover:bg-[#004219] rounded-xl transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
                   {uploading ? "Simpan…" : <><FontAwesomeIcon icon={faSave} /> Simpan Foto</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL EDIT */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h3 className="font-bold text-gray-800 text-base">Edit Foto Galeri</h3>
+              <button onClick={() => { setIsEditModalOpen(false); setEditingItem(null); }} className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-lg cursor-pointer">×</button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">Ganti File Foto <span className="text-red-500">*</span></label>
+                <div className="flex items-center gap-3">
+                  <input ref={editFileInputRef} type="file" accept="image/*" className="hidden" onChange={handleEditFileUpload} />
+                  <button
+                    type="button"
+                    onClick={() => editFileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 transition-colors shadow-2xs cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {uploading ? <><FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Mengunggah…</> : <><FontAwesomeIcon icon={faSync} /> Pilih File Baru</>}
+                  </button>
+                  <span className="text-xs text-gray-400">atau ubah URL</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">URL Gambar</label>
+                <input
+                  type="url"
+                  placeholder="https://example.com/foto.jpg"
+                  value={imageUrlInput}
+                  onChange={(e) => { setImageUrlInput(e.target.value); setUploadedPreview(e.target.value); }}
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621]"
+                />
+              </div>
+
+              {uploadedPreview && (
+                <div>
+                  <p className="text-xs font-bold text-gray-600 mb-1.5">Preview Foto</p>
+                  <div className="w-full aspect-[4/3] rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={uploadedPreview} alt="Preview" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-3 flex items-center justify-end gap-2 border-t border-gray-100">
+                <button type="button" onClick={() => { setIsEditModalOpen(false); setEditingItem(null); }} className="px-4 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer">
+                  Batal
+                </button>
+                <button type="submit" disabled={uploading || !imageUrlInput.trim()} className="px-6 py-2 text-xs font-bold text-white bg-[#005621] hover:bg-[#004219] rounded-xl transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                  {uploading ? "Menyimpan…" : <><FontAwesomeIcon icon={faSave} /> Simpan Perubahan</>}
                 </button>
               </div>
             </form>

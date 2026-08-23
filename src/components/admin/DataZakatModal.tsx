@@ -64,13 +64,13 @@ export default function DataZakatModal({ isOpen, onClose, item }: DataZakatModal
   const unitKerja = item.dosen?.unitKerja;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
       <div
-        className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-md w-full overflow-hidden flex flex-col"
+        className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-xl w-full overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/80 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#063A1E]/10 text-[#063A1E] flex items-center justify-center shrink-0">
               <FontAwesomeIcon icon={faCoins} className="w-4 h-4" />
@@ -90,21 +90,21 @@ export default function DataZakatModal({ isOpen, onClose, item }: DataZakatModal
         </div>
 
         {/* Content */}
-        <div className="p-5 space-y-4 overflow-y-auto max-h-[70vh]">
+        <div className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1">
           {/* Highlight: Jenis Zakat + Jumlah */}
-          <div className="bg-[#063A1E] text-white rounded-xl p-4 flex items-center justify-between gap-3">
+          <div className="bg-[#063A1E] text-white rounded-xl p-4 flex items-center justify-between gap-3 shadow-xs">
             <div>
               <p className="text-[10px] font-semibold text-emerald-200 uppercase tracking-wider mb-0.5">Jenis Zakat</p>
-              <p className="font-bold text-sm capitalize">{item.jenisZakat}</p>
+              <p className="font-bold text-base capitalize">Zakat {item.jenisZakat}</p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] font-semibold text-emerald-200 uppercase tracking-wider mb-0.5">Jumlah</p>
+              <p className="text-[10px] font-semibold text-emerald-200 uppercase tracking-wider mb-0.5">Jumlah Zakat</p>
               <p className="font-black text-lg text-emerald-300">{formatRupiah(item.jumlahZakat)}</p>
             </div>
           </div>
 
-          {/* Detail Rows */}
-          <div className="space-y-3.5">
+          {/* Detail Rows (2 Columns Grid) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-gray-50/60 p-4 rounded-xl border border-gray-100">
             <DetailRow
               icon={<FontAwesomeIcon icon={faUser} className="w-3.5 h-3.5" />}
               label="Nama Muzakki"
@@ -115,7 +115,7 @@ export default function DataZakatModal({ isOpen, onClose, item }: DataZakatModal
               icon={<FontAwesomeIcon icon={faIdCard} className="w-3.5 h-3.5" />}
               label="Tipe Pembayar"
               value={
-                <span className="capitalize bg-gray-100 px-2 py-0.5 rounded text-gray-700">
+                <span className="capitalize bg-white border border-gray-200 px-2 py-0.5 rounded text-gray-700 font-semibold text-[11px]">
                   {item.tipePembayar}
                 </span>
               }
@@ -125,7 +125,7 @@ export default function DataZakatModal({ isOpen, onClose, item }: DataZakatModal
               <DetailRow
                 icon={<FontAwesomeIcon icon={faIdCard} className="w-3.5 h-3.5" />}
                 label="NIP"
-                value={<span className="font-mono">{item.nip}</span>}
+                value={<span className="font-mono font-bold">{item.nip}</span>}
               />
             )}
 
@@ -155,18 +155,18 @@ export default function DataZakatModal({ isOpen, onClose, item }: DataZakatModal
 
             <DetailRow
               icon={<FontAwesomeIcon icon={faCalendar} className="w-3.5 h-3.5" />}
-              label="Tanggal"
+              label="Tanggal Transaksi"
               value={<span className="font-mono">{item.tanggal}</span>}
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-gray-100 bg-gray-50/50 flex justify-end">
+        <div className="px-6 py-3.5 border-t border-gray-100 bg-gray-50/50 flex justify-end shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-[#063A1E] hover:bg-[#042814] text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+            className="px-5 py-2 bg-[#063A1E] hover:bg-[#042814] text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
           >
             Tutup
           </button>

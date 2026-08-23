@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faSync, faSpinner, faSave } from "@fortawesome/free-solid-svg-icons";
-import { addNewsletter, deleteNewsletter } from "@/actions/newsletter";
+import { addNewsletter, updateNewsletter, deleteNewsletter } from "@/actions/newsletter";
 import ConfirmModal from "@/components/admin/ConfirmModal";
 import AdminToast, { ToastState } from "@/components/admin/AdminToast";
 
@@ -49,6 +49,8 @@ export default function NewsletterClient({
   }, [initialData]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<NewsletterRow | null>(null);
   const [previewingItem, setPreviewingItem] = useState<NewsletterRow | null>(null);
 
   const [judulInput, setJudulInput] = useState("");
@@ -63,6 +65,8 @@ export default function NewsletterClient({
   const [toast, setToast] = useState<ToastState | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
+
 
   const filtered = data;
 
@@ -127,6 +131,47 @@ export default function NewsletterClient({
       router.refresh();
     } catch (err: any) {
       setToast({ message: err.message || "Gagal menyimpan", type: "error" });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const openEditModal = (item: NewsletterRow) => {
+    setEditingItem(item);
+    setJudulInput(item.judul);
+    setTanggalInput(new Date(item.tanggal).toISOString().slice(0, 10));
+    setImagePreview(item.imageUrl);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingItem) return;
+    if (!imagePreview) {
+      setToast({ message: "Gambar E-Buletin / Newsletter wajib diunggah.", type: "error" });
+      return;
+    }
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("judul", judulInput.trim());
+      fd.append("tanggal", tanggalInput);
+      fd.append("imageUrl", imagePreview);
+
+      const result = await updateNewsletter(editingItem.id, fd);
+      if (!result.success) {
+        setToast({ message: result.error || "Gagal memperbarui Newsletter", type: "error" });
+        return;
+      }
+
+      setIsEditModalOpen(false);
+      setEditingItem(null);
+      setJudulInput("");
+      setImagePreview("");
+      setToast({ message: "Newsletter berhasil diperbarui.", type: "success" });
+      router.refresh();
+    } catch (err: any) {
+      setToast({ message: err.message || "Gagal memperbarui", type: "error" });
     } finally {
       setUploading(false);
     }
@@ -205,6 +250,9 @@ export default function NewsletterClient({
                     <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-gray-50">
                       <button onClick={() => setPreviewingItem(item)} title="Preview" className="w-8 h-8 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 flex items-center justify-center transition-colors cursor-pointer">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                      </button>
+                      <button onClick={() => openEditModal(item)} title="Edit" className="w-8 h-8 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-[#005621] flex items-center justify-center transition-colors cursor-pointer">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                       </button>
                       <button onClick={() => setDeleteConfirmItem(item)} title="Hapus" className="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 flex items-center justify-center transition-colors cursor-pointer">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -351,6 +399,75 @@ export default function NewsletterClient({
                 </button>
                 <button type="submit" disabled={uploading || !imagePreview} className="px-6 py-2 text-xs font-bold text-white bg-[#005621] hover:bg-[#004219] rounded-xl transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
                   {uploading ? "Simpan…" : <><FontAwesomeIcon icon={faSave} /> Simpan Newsletter</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL EDIT */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h3 className="font-bold text-gray-800 text-base">Edit Newsletter</h3>
+              <button onClick={() => { setIsEditModalOpen(false); setEditingItem(null); }} className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-lg cursor-pointer">×</button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">Judul Newsletter <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: E-Buletin Edisi Ramadhan 1447 H"
+                  value={judulInput}
+                  onChange={(e) => setJudulInput(e.target.value)}
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">Tanggal Edisi / Terbit <span className="text-red-500">*</span></label>
+                <input
+                  type="date"
+                  required
+                  value={tanggalInput}
+                  onChange={(e) => setTanggalInput(e.target.value)}
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">Gambar / Cover Buletin <span className="text-red-500">*</span></label>
+                {imagePreview && (
+                  <div className="mb-3 rounded-xl overflow-hidden border border-gray-200 p-2 max-h-[160px] flex justify-center bg-gray-50">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={imagePreview} alt="Preview" className="max-h-[140px] object-contain" />
+                  </div>
+                )}
+                <div className="flex items-center gap-3">
+                  <input ref={editFileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  <button type="button" onClick={() => editFileInputRef.current?.click()} disabled={uploading}
+                    className="px-4 py-2 bg-white hover:bg-gray-100 border border-gray-300 rounded-xl text-xs font-bold text-gray-700 transition-colors shadow-2xs cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                    {uploading ? (
+                      <><FontAwesomeIcon icon={faSpinner} className="animate-spin" /> Uploading…</>
+                    ) : imagePreview ? (
+                      <><FontAwesomeIcon icon={faSync} /> Ganti Gambar</>
+                    ) : (
+                      <><FontAwesomeIcon icon={faUpload} /> Upload Gambar</>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-3 flex items-center justify-end gap-2 border-t border-gray-100">
+                <button type="button" onClick={() => { setIsEditModalOpen(false); setEditingItem(null); }} className="px-4 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer">
+                  Batal
+                </button>
+                <button type="submit" disabled={uploading || !imagePreview} className="px-6 py-2 text-xs font-bold text-white bg-[#005621] hover:bg-[#004219] rounded-xl transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                  {uploading ? "Menyimpan…" : <><FontAwesomeIcon icon={faSave} /> Simpan Perubahan</>}
                 </button>
               </div>
             </form>

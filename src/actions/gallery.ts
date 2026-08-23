@@ -50,6 +50,21 @@ export async function addGalleryImage(imageUrl: string) {
     return created;
 }
 
+export async function updateGalleryImage(id: string, imageUrl: string) {
+    if (!imageUrl) throw new Error('URL Gambar tidak boleh kosong.');
+
+    const updated = await prisma.gallery.update({
+        where: { id },
+        data: { imageUrl },
+    });
+
+    revalidatePath('/admin/galeri');
+    revalidatePath('/galeri');
+    revalidatePath('/');
+    return updated;
+}
+
+
 export async function uploadGalleryImages(formData: FormData): Promise<UploadResult> {
     const files = formData.getAll('files') as File[];
     const uploaded: { imageUrl: string }[] = [];

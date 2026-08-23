@@ -209,3 +209,31 @@ export async function updateInfaqAdmin(id: string, data: {
   revalidatePath('/admin/infaq');
   revalidatePath('/admin/kampanye');
 }
+
+export async function deleteInfaq(id: string) {
+  const infaq = await prisma.infaq.findUnique({
+    where: { id },
+  });
+
+  if (!infaq) {
+    throw new Error('Data infaq tidak ditemukan');
+  }
+
+  if (infaq.status === 'lunas' && infaq.kampanyeId) {
+    await prisma.kampanye.update({
+      where: { id: infaq.kampanyeId },
+      data: {
+        terkumpul: {
+          decrement: infaq.jumlahInfaq,
+        },
+      },
+    });
+  }
+
+  await prisma.infaq.delete({
+    where: { id },
+  });
+
+  revalidatePath('/admin/infaq');
+  revalidatePath('/admin/kampanye');
+}

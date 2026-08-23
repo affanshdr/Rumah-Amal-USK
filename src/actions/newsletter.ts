@@ -132,6 +132,46 @@ export async function uploadNewsletter(formData: FormData): Promise<UploadResult
     }
 }
 
+export async function updateNewsletter(id: string, formData: FormData): Promise<UploadResult> {
+    const judul = (formData.get('judul') as string).trim();
+    const tanggalStr = formData.get('tanggal') as string;
+    const imageUrl = (formData.get('imageUrl') as string | null)?.trim() || null;
+
+    if (!judul || !tanggalStr || !imageUrl) {
+        return { success: false, error: 'Judul, Tanggal, dan Gambar Newsletter wajib diisi.' };
+    }
+
+    let judulEn: string | null = null;
+    let judulAr: string | null = null;
+    try {
+        const translated = await autoTranslateAll({ title: judul });
+        judulEn = translated.titleEn || null;
+        judulAr = translated.titleAr || null;
+    } catch (e) {
+        console.error('Auto translate newsletter action error:', e);
+    }
+
+    try {
+        await prisma.newsletter.update({
+            where: { id },
+            data: {
+                judul,
+                ...(judulEn && { judulEn }),
+                ...(judulAr && { judulAr }),
+                tanggal: new Date(tanggalStr),
+                imageUrl,
+            },
+        });
+
+        revalidatePath('/admin/newsletter');
+        revalidatePath('/newsletter');
+        revalidatePath('/');
+        return { success: true };
+    } catch (e) {
+        return { success: false, error: `Gagal memperbarui: ${(e as Error).message}` };
+    }
+}
+
 export async function deleteNewsletter(id: string, imageUrl: string) {
     try {
         const url = new URL(imageUrl);
@@ -150,3 +190,4 @@ export async function deleteNewsletter(id: string, imageUrl: string) {
     revalidatePath('/newsletter');
     revalidatePath('/');
 }
+

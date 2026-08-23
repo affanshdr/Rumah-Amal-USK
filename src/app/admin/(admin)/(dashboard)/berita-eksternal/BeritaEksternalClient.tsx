@@ -78,10 +78,67 @@ export default function BeritaEksternalClient({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
+  const [editingModalItem, setEditingModalItem] = useState<NewsLinkItem | null>(null);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalDesc, setModalDesc] = useState('');
+  const [modalImage, setModalImage] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+
   const showToast = useCallback((message: string, type: 'success' | 'error') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   }, []);
+
+  function openEditModal(item: NewsLinkItem) {
+    setEditingModalItem(item);
+    setModalTitle(item.title);
+    setModalDesc(item.description || '');
+    setModalImage(item.image || '');
+  }
+
+  async function handleSaveModalEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingModalItem) return;
+    if (!modalTitle.trim()) {
+      showToast('Judul berita tidak boleh kosong.', 'error');
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`/api/admin/news-link/${editingModalItem.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: modalTitle.trim(),
+          description: modalDesc.trim() || null,
+          image: modalImage.trim() || null,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setItems((prev) =>
+          prev.map((i) =>
+            i.id === editingModalItem.id
+              ? {
+                  ...i,
+                  title: modalTitle.trim(),
+                  description: modalDesc.trim() || null,
+                  image: modalImage.trim() || null,
+                }
+              : i
+          )
+        );
+        showToast('Berita berhasil diperbarui.', 'success');
+        setEditingModalItem(null);
+      } else {
+        showToast(data.error || 'Gagal memperbarui berita.', 'error');
+      }
+    } catch {
+      showToast('Terjadi kesalahan sistem.', 'error');
+    } finally {
+      setSavingEdit(false);
+    }
+  }
 
   async function handleFetchPreview() {
     if (!urlInput.trim()) return;
@@ -436,6 +493,17 @@ export default function BeritaEksternalClient({
                     )}
                   </button>
 
+                  {/* Edit */}
+                  <button
+                    onClick={() => openEditModal(item)}
+                    title="Edit Berita"
+                    className="w-8 h-8 rounded-xl flex items-center justify-center border border-blue-100 bg-blue-50 text-blue-600 hover:bg-blue-100 transition-all cursor-pointer"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+
                   {/* Hapus */}
                   <button
                     onClick={() => setDeleteConfirmItem(item)}
@@ -460,6 +528,98 @@ export default function BeritaEksternalClient({
           </div>
         )}
       </div>
+
+      {/* MODAL EDIT BERITA */}
+      {editingModalItem && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+              <h3 className="font-bold text-gray-800 text-base">Edit Berita Eksternal</h3>
+              <button
+                onClick={() => setEditingModalItem(null)}
+                className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center font-bold text-lg cursor-pointer"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveModalEdit} className="p-6 space-y-4 overflow-y-auto flex-1">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                  Judul Berita <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={modalTitle}
+                  onChange={(e) => setModalTitle(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#063A1E]/20 focus:border-[#063A1E]"
+                  placeholder="Judul berita..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                  Deskripsi Singkat
+                </label>
+                <textarea
+                  rows={3}
+                  value={modalDesc}
+                  onChange={(e) => setModalDesc(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#063A1E]/20 focus:border-[#063A1E]"
+                  placeholder="Deskripsi singkat berita..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                  URL Gambar / Thumbnail
+                </label>
+                <input
+                  type="url"
+                  value={modalImage}
+                  onChange={(e) => setModalImage(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#063A1E]/20 focus:border-[#063A1E]"
+                  placeholder="https://example.com/thumbnail.jpg"
+                />
+              </div>
+
+              {modalImage && (
+                <div>
+                  <p className="text-xs font-bold text-gray-600 mb-1.5">Preview Gambar</p>
+                  <div className="w-full h-36 rounded-xl overflow-hidden border border-gray-200 bg-gray-50 flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={modalImage}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                      onError={() => showToast('Gagal memuat URL gambar preview.', 'error')}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-3 flex items-center justify-end gap-2 border-t border-gray-100 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setEditingModalItem(null)}
+                  className="px-4 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit || !modalTitle.trim()}
+                  className="px-6 py-2 text-xs font-bold text-white bg-[#063A1E] hover:bg-[#0b5c30] rounded-xl transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {savingEdit ? 'Menyimpan…' : 'Simpan Perubahan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Confirm Delete Modal */}
       <ConfirmModal
         isOpen={Boolean(deleteConfirmItem)}

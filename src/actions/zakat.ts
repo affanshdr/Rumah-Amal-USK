@@ -134,3 +134,10 @@ export async function updateZakatAdmin(id: string, data: {
 
   revalidatePath('/admin/zakat');
 }
+
+export async function deleteZakat(id: string) {
+  await prisma.zakat.delete({
+    where: { id },
+  });
+  revalidatePath('/admin/zakat');
+}

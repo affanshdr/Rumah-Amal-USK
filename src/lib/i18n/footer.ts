@@ -14,7 +14,7 @@ export const footerDictionary = {
     faqLabel: 'FAQ',
     ctaBtn: 'Ajukan Keluhan',
     mapTitle: 'Lokasi Rumah Amal Masjid Jamik USK',
-    copyright: 'Copyright © 2025 Rumah Amal USK. Hak Cipta Dilindungi.',
+    copyright: 'Copyright © 2026 Rumah Amal USK. Hak Cipta Dilindungi.',
   },
   en: {
     address: '1st Floor Jamik Mosque USK\nT. Nyak Arief, Kopelma Darussalam, Banda Aceh 21311',
@@ -29,7 +29,7 @@ export const footerDictionary = {
     faqLabel: 'FAQ',
     ctaBtn: 'Submit Complaint',
     mapTitle: 'Location of Rumah Amal Jamik Mosque USK',
-    copyright: 'Copyright © 2025 Rumah Amal USK. All Rights Reserved.',
+    copyright: 'Copyright © 2026 Rumah Amal USK. All Rights Reserved.',
   },
   ar: {
     address: 'الطابق الأول، مسجد جامع جامعة سياه كوالا\nت. نياك عارف، كوبيلما دار السلام، باندا أتشيه 21311',
@@ -44,6 +44,6 @@ export const footerDictionary = {
     faqLabel: 'الأسئلة الشائعة',
     ctaBtn: 'تقديم شكوى',
     mapTitle: 'موقع Rumah Amal – Masjid Jamik USK',
-    copyright: 'حقوق الطبع والنشر © 2025 Rumah Amal USK. جميع الحقوق محفوظة.',
+    copyright: 'حقوق الطبع والنشر © 2026 Rumah Amal USK. جميع الحقوق محفوظة.',
   },
 };
