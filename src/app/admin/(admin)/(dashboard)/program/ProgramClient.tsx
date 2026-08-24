@@ -321,21 +321,78 @@ export default function ProgramClient({
     }
   };
 
+  // ── Shared auto-translate logic ─────────────────────────────────────
+  const runAutoTranslate = async () => {
+    if (!liveTitle.trim()) {
+      setToast({ message: "Silakan isi Judul Program (Indonesia) terlebih dahulu!", type: "error" });
+      return false;
+    }
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: liveTitle,
+          excerpt: liveExcerpt,
+          content: contentHtml,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.titleEn) setLiveTitleEn(data.titleEn);
+        if (data.titleAr) setLiveTitleAr(data.titleAr);
+        if (data.excerptEn) setLiveExcerptEn(data.excerptEn);
+        if (data.excerptAr) setLiveExcerptAr(data.excerptAr);
+        if (data.contentEn) setContentEnHtml(data.contentEn);
+        if (data.contentAr) setContentArHtml(data.contentAr);
+        setToast({ message: "✨ Berhasil menerjemahkan ke EN & AR!", type: "success" });
+        return { titleEn: data.titleEn, titleAr: data.titleAr, excerptEn: data.excerptEn, excerptAr: data.excerptAr, contentEn: data.contentEn, contentAr: data.contentAr };
+      } else {
+        setToast({ message: "Gagal melakukan terjemahan otomatis.", type: "error" });
+        return null;
+      }
+    } catch (e: any) {
+      setToast({ message: "Error terjemahan: " + e.message, type: "error" });
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      // ── Auto-translate jika EN/AR belum terisi ──────────────────────
+      let finalTitleEn = liveTitleEn;
+      let finalTitleAr = liveTitleAr;
+      let finalExcerptEn = liveExcerptEn;
+      let finalExcerptAr = liveExcerptAr;
+      let finalContentEn = contentEnHtml;
+      let finalContentAr = contentArHtml;
+
+      const needsTranslate = !liveTitleEn.trim() || !liveTitleAr.trim();
+      if (needsTranslate && liveTitle.trim()) {
+        const translated = await runAutoTranslate();
+        if (translated) {
+          finalTitleEn = translated.titleEn || finalTitleEn;
+          finalTitleAr = translated.titleAr || finalTitleAr;
+          finalExcerptEn = translated.excerptEn || finalExcerptEn;
+          finalExcerptAr = translated.excerptAr || finalExcerptAr;
+          finalContentEn = translated.contentEn || finalContentEn;
+          finalContentAr = translated.contentAr || finalContentAr;
+        }
+      }
+
       const fd = new FormData(e.currentTarget);
       fd.set("coverImageUrl", coverPreview);
       fd.set("title", liveTitle);
-      fd.set("titleEn", liveTitleEn);
-      fd.set("titleAr", liveTitleAr);
+      fd.set("titleEn", finalTitleEn);
+      fd.set("titleAr", finalTitleAr);
       fd.set("excerpt", liveExcerpt);
-      fd.set("excerptEn", liveExcerptEn);
-      fd.set("excerptAr", liveExcerptAr);
+      fd.set("excerptEn", finalExcerptEn);
+      fd.set("excerptAr", finalExcerptAr);
       fd.set("content", contentHtml);
-      fd.set("contentEn", contentEnHtml);
-      fd.set("contentAr", contentArHtml);
+      fd.set("contentEn", finalContentEn);
+      fd.set("contentAr", finalContentAr);
 
       if (editing) {
         fd.append("id", editing.id);
@@ -656,41 +713,9 @@ export default function ProgramClient({
                         </span>
                         <button
                           type="button"
-                          onClick={async () => {
-                            if (!liveTitle.trim()) {
-                              setToast({ message: "Silakan isi Judul Program (Indonesia) terlebih dahulu!", type: "error" });
-                              return;
-                            }
-                            setIsSubmitting(true);
-                            try {
-                              const res = await fetch("/api/translate", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  title: liveTitle,
-                                  excerpt: liveExcerpt,
-                                  content: contentHtml,
-                                }),
-                              });
-                              if (res.ok) {
-                                const data = await res.json();
-                                if (data.titleEn) setLiveTitleEn(data.titleEn);
-                                if (data.titleAr) setLiveTitleAr(data.titleAr);
-                                if (data.excerptEn) setLiveExcerptEn(data.excerptEn);
-                                if (data.excerptAr) setLiveExcerptAr(data.excerptAr);
-                                if (data.contentEn) setContentEnHtml(data.contentEn);
-                                if (data.contentAr) setContentArHtml(data.contentAr);
-                                setToast({ message: "✨ Berhasil menerjemahkan ke EN & AR!", type: "success" });
-                              } else {
-                                setToast({ message: "Gagal melakukan terjemahan otomatis.", type: "error" });
-                              }
-                            } catch (e: any) {
-                              setToast({ message: "Error terjemahan: " + e.message, type: "error" });
-                            } finally {
-                              setIsSubmitting(false);
-                            }
-                          }}
-                          className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                          onClick={async () => { setIsSubmitting(true); await runAutoTranslate(); setIsSubmitting(false); }}
+                          disabled={isSubmitting}
+                          className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs disabled:opacity-60"
                         >
                           <span>✨</span>
                           <span>Auto Translate ke EN & AR</span>

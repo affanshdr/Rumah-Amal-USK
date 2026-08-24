@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
     const slug = searchParams.get('slug');
     const id = searchParams.get('id');
 
+    // ── Single-item lookup ───────────────────────────────────────────────
     if (slug) {
       const newsItem = await prisma.news.findUnique({
         where: { slug },
@@ -42,35 +43,57 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ news: newsItem });
     }
 
-    const limitParam = searchParams.get('limit');
-    const pageParam = searchParams.get('page');
+    // ── Paginated list (with optional full-text search) ──────────────────
+    const search = searchParams.get('search')?.trim() || '';
+    const limit  = Math.max(1, parseInt(searchParams.get('limit') || '9', 10));
+    const page   = Math.max(1, parseInt(searchParams.get('page')  || '1', 10));
+    const skip   = (page - 1) * limit;
 
-    const limit = limitParam ? parseInt(limitParam, 10) : undefined;
-    const page = pageParam ? parseInt(pageParam, 10) : 1;
-    const skip = limit && page ? (page - 1) * limit : undefined;
+    // Search scans ALL records; no search = regular paginated list
+    const where = {
+      published: true,
+      ...(search && {
+        OR: [
+          { title:   { contains: search, mode: 'insensitive' as const } },
+          { titleEn: { contains: search, mode: 'insensitive' as const } },
+          { titleAr: { contains: search, mode: 'insensitive' as const } },
+        ],
+      }),
+    };
 
-    const newsList = await prisma.news.findMany({
-      where: { published: true },
-      orderBy: { publishedAt: 'desc' },
-      ...(limit && { take: limit }),
-      ...(skip !== undefined && { skip }),
-      select: {
-        id: true,
-        title: true,
-        titleAr: true,
-        titleEn: true,
-        slug: true,
-        category: true,
-        coverImageUrl: true,
-        publishedAt: true,
-        createdAt: true,
-        viewsCount: true,
-        likesCount: true,
-        tags: true,
+    const [newsList, total] = await Promise.all([
+      prisma.news.findMany({
+        where,
+        orderBy: { publishedAt: 'desc' },
+        take: limit,
+        skip,
+        select: {
+          id: true,
+          title: true,
+          titleAr: true,
+          titleEn: true,
+          slug: true,
+          category: true,
+          coverImageUrl: true,
+          publishedAt: true,
+          createdAt: true,
+          viewsCount: true,
+          likesCount: true,
+          tags: true,
+        },
+      }),
+      prisma.news.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      news: newsList,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
       },
     });
-
-    return NextResponse.json({ news: newsList });
   } catch (error) {
     console.error('[GET /api/news]', error);
     return NextResponse.json(
@@ -79,6 +102,7 @@ export async function GET(req: NextRequest) {
     );
   }
 }
+
 
 export async function POST(req: NextRequest) {
   try {

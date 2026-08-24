@@ -266,18 +266,65 @@ export default function KampanyeClient({
     }
   };
 
+  // ── Shared auto-translate logic ─────────────────────────────────────
+  const runAutoTranslate = async () => {
+    if (!liveJudul.trim()) {
+      setToast({ message: "Silakan isi Judul Kampanye (Indonesia) terlebih dahulu!", type: "error" });
+      return false;
+    }
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: liveJudul, content: deskripsiHtml }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.titleEn) setLiveJudulEn(data.titleEn);
+        if (data.titleAr) setLiveJudulAr(data.titleAr);
+        if (data.contentEn) setDeskripsiEnHtml(data.contentEn);
+        if (data.contentAr) setDeskripsiArHtml(data.contentAr);
+        setToast({ message: "✨ Berhasil menerjemahkan ke EN & AR!", type: "success" });
+        return { titleEn: data.titleEn, titleAr: data.titleAr, contentEn: data.contentEn, contentAr: data.contentAr };
+      } else {
+        setToast({ message: "Gagal melakukan terjemahan otomatis.", type: "error" });
+        return null;
+      }
+    } catch (err: any) {
+      setToast({ message: err.message || "Gagal menerjemahkan.", type: "error" });
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      // ── Auto-translate jika EN/AR belum terisi ──────────────────────
+      let finalJudulEn = liveJudulEn;
+      let finalJudulAr = liveJudulAr;
+      let finalDeskripsiEn = deskripsiEnHtml;
+      let finalDeskripsiAr = deskripsiArHtml;
+
+      const needsTranslate = !liveJudulEn.trim() || !liveJudulAr.trim();
+      if (needsTranslate && liveJudul.trim()) {
+        const translated = await runAutoTranslate();
+        if (translated) {
+          finalJudulEn = translated.titleEn || finalJudulEn;
+          finalJudulAr = translated.titleAr || finalJudulAr;
+          finalDeskripsiEn = translated.contentEn || finalDeskripsiEn;
+          finalDeskripsiAr = translated.contentAr || finalDeskripsiAr;
+        }
+      }
+
       const fd = new FormData(e.currentTarget);
       fd.set("imageUrl", coverPreview);
       fd.set("judul", liveJudul);
-      fd.set("judulEn", liveJudulEn);
-      fd.set("judulAr", liveJudulAr);
+      fd.set("judulEn", finalJudulEn);
+      fd.set("judulAr", finalJudulAr);
       fd.set("deskripsi", deskripsiHtml);
-      fd.set("deskripsiEn", deskripsiEnHtml);
-      fd.set("deskripsiAr", deskripsiArHtml);
+      fd.set("deskripsiEn", finalDeskripsiEn);
+      fd.set("deskripsiAr", finalDeskripsiAr);
       fd.set("targetDana", String(liveTarget));
       fd.set("terkumpul", String(liveTerkumpul));
       if (editing) {
@@ -615,38 +662,9 @@ export default function KampanyeClient({
                         </span>
                         <button
                           type="button"
-                          onClick={async () => {
-                            if (!liveJudul.trim()) {
-                              setToast({ message: "Silakan isi Judul Kampanye (Indonesia) terlebih dahulu!", type: "error" });
-                              return;
-                            }
-                            setIsSubmitting(true);
-                            try {
-                              const res = await fetch("/api/translate", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  title: liveJudul,
-                                  content: deskripsiHtml,
-                                }),
-                              });
-                              if (res.ok) {
-                                const data = await res.json();
-                                if (data.titleEn) setLiveJudulEn(data.titleEn);
-                                if (data.titleAr) setLiveJudulAr(data.titleAr);
-                                if (data.contentEn) setDeskripsiEnHtml(data.contentEn);
-                                if (data.contentAr) setDeskripsiArHtml(data.contentAr);
-                                setToast({ message: "✨ Berhasil menerjemahkan ke EN & AR!", type: "success" });
-                              } else {
-                                setToast({ message: "Gagal melakukan terjemahan otomatis.", type: "error" });
-                              }
-                            } catch (err: any) {
-                              setToast({ message: err.message || "Gagal menerjemahkan.", type: "error" });
-                            } finally {
-                              setIsSubmitting(false);
-                            }
-                          }}
-                          className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                          onClick={async () => { setIsSubmitting(true); await runAutoTranslate(); setIsSubmitting(false); }}
+                          disabled={isSubmitting}
+                          className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
                         >
                           ✨ Auto Translate ke EN & AR
                         </button>

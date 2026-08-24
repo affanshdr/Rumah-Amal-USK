@@ -23,6 +23,7 @@ export default function PublicAnnouncementListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeQuery, setActiveQuery] = useState('');
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [lang, setLang] = useState<Language>('id');
   const ITEMS_PER_PAGE = 9;
 
@@ -42,14 +43,23 @@ export default function PublicAnnouncementListPage() {
     setLang(newLang);
     localStorage.setItem('announcement_lang', newLang);
   };
+  void changeLanguage; // suppress unused warning
 
-  const fetchAnnouncements = useCallback(async () => {
+  // ── Core fetch: calls server with page + optional search ─────────────
+  const fetchPage = useCallback(async (p: number, query: string) => {
     setLoading(true);
     try {
-      const res = await fetch('/api/announcements');
+      const params = new URLSearchParams({
+        page: String(p),
+        limit: String(ITEMS_PER_PAGE),
+      });
+      if (query.trim()) params.set('search', query.trim());
+
+      const res = await fetch(`/api/announcements?${params}`);
       if (res.ok) {
         const data = await res.json();
         setItems(data.announcements || []);
+        setTotalPages(data.pagination?.totalPages || 1);
       }
     } catch (err) {
       console.error('Error fetching announcements:', err);
@@ -58,41 +68,27 @@ export default function PublicAnnouncementListPage() {
     }
   }, []);
 
+  // Initial load
   useEffect(() => {
-    fetchAnnouncements();
-  }, [fetchAnnouncements]);
+    fetchPage(1, '');
+  }, [fetchPage]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const q = searchQuery;
+    setActiveQuery(q);
     setPage(1);
-    setActiveQuery(searchQuery);
+    fetchPage(1, q);
   };
-
-  const getTitle = (item: AnnouncementItem) => {
-    if (lang === 'en' && item.titleEn) return item.titleEn;
-    if (lang === 'ar' && item.titleAr) return item.titleAr;
-    return item.title;
-  };
-
-  // Filter items based on search query
-  const filteredItems = items.filter((item) => {
-    if (!activeQuery.trim()) return true;
-    const titleToSearch = getTitle(item).toLowerCase();
-    return titleToSearch.includes(activeQuery.trim().toLowerCase());
-  });
-
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE) || 1;
-  const paginatedItems = filteredItems.slice(
-    (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE
-  );
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
+      fetchPage(newPage, activeQuery);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+
 
   const formatDate = (dateStr: string) => {
     try {
@@ -185,7 +181,7 @@ export default function PublicAnnouncementListPage() {
               </div>
             ))}
           </div>
-        ) : paginatedItems.length === 0 ? (
+        ) : items.length === 0 ? (
           /* Empty State */
           <div className="text-center py-16 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-200 mb-12">
             <p className="text-lg font-semibold mb-2">{labels.notFoundTitle}</p>
@@ -196,8 +192,11 @@ export default function PublicAnnouncementListPage() {
         ) : (
           /* Announcement Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
-            {paginatedItems.map((item) => {
-              const displayTitle = getTitle(item);
+            {items.map((item) => {
+              const displayTitle =
+                lang === 'en' && item.titleEn ? item.titleEn
+                : lang === 'ar' && item.titleAr ? item.titleAr
+                : item.title;
               return (
                 <Link
                   key={item.id}

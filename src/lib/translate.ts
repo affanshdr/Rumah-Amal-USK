@@ -1,3 +1,14 @@
+/**
+ * Converts Western Arabic numerals (0-9) to Eastern Arabic-Indic numerals (٠-٩).
+ * Applied to all Arabic-language output for proper typographic rendering.
+ */
+export function toArabicNumerals(text: string): string {
+  if (!text) return text;
+  return text.replace(/[0-9]/g, (d) =>
+    String.fromCharCode(d.charCodeAt(0) + 0x0630)
+  );
+}
+
 export function fixProperNouns(text: string, targetLang: 'en' | 'ar'): string {
   if (!text) return text;
   let result = text;
@@ -185,7 +196,8 @@ export async function autoTranslate(
         const translated = data.translations?.[0]?.text;
         if (translated) {
           const restored = restoreHtml(translated, protectedMap, targetLang);
-          return fixProperNouns(restored, targetLang);
+          const fixed = fixProperNouns(restored, targetLang);
+          return targetLang === 'ar' ? toArabicNumerals(fixed) : fixed;
         }
       } else {
         console.warn(`[DeepL API Warning ${res.status}] Falling back to Google Translate...`);
@@ -212,7 +224,8 @@ export async function autoTranslate(
     }
 
     const restored = restoreHtml(translated, protectedMap, targetLang);
-    return fixProperNouns(restored, targetLang);
+    const fixed = fixProperNouns(restored, targetLang);
+    return targetLang === 'ar' ? toArabicNumerals(fixed) : fixed;
   } catch (error) {
     console.error('Google Translation error:', error);
     return text;
