@@ -24,6 +24,7 @@ export const kalkulatorDictionary: Record<KalkulatorLanguage, Record<string, str
     // Field Labels
     field_total_harta: "Total Harta Tabungan / Piutang (Rp)",
     field_total_hutang: "Total Hutang Jatuh Tempo (Rp)",
+    field_total_kebutuhan: "Total Kebutuhan Pokok/Pengeluaran Primer (Rp)",
     field_berat_emas_gram: "Berat Emas yang Dimiliki (gram)",
     field_penghasilan_bulan: "Penghasilan Rutin per Bulan (Rp)",
     field_bonus_tunjangan: "Bonus / Tunjangan Lainnya (Rp)",
@@ -69,6 +70,7 @@ export const kalkulatorDictionary: Record<KalkulatorLanguage, Record<string, str
     // Field Labels
     field_total_harta: "Total Savings / Receivables (Rp)",
     field_total_hutang: "Total Due Debts (Rp)",
+    field_total_kebutuhan: "Total Basic Needs / Primary Expenses (Rp)",
     field_berat_emas_gram: "Weight of Gold Owned (grams)",
     field_penghasilan_bulan: "Regular Monthly Income (Rp)",
     field_bonus_tunjangan: "Bonus / Other Allowances (Rp)",
@@ -114,6 +116,7 @@ export const kalkulatorDictionary: Record<KalkulatorLanguage, Record<string, str
     // Field Labels
     field_total_harta: "إجمالي المدخرات / الديون المستحقة (روبية)",
     field_total_hutang: "إجمالي الديون المستحقة (روبية)",
+    field_total_kebutuhan: "إجمالي الاحتياجات الأساسية / النفقات الأولية (روبية)",
     field_berat_emas_gram: "وزن الذهب المملوك (جرام)",
     field_penghasilan_bulan: "الدخل الشهري المنتظم (روبية)",
     field_bonus_tunjangan: "المكافآت والبدلات الأخرى (روبية)",

@@ -54,8 +54,8 @@ const menuGroups = [
       { href: '/admin/kampanye', label: 'Kampanye', icon: faChartLine },
       { href: '/admin/program', label: 'Program', icon: faClipboardList },
       { href: '/admin/berita', label: 'Berita', icon: faNewspaper },
-      { href: '/admin/pengumuman', label: 'Pengumuman', icon: faBullhorn },
       { href: '/admin/berita-eksternal', label: 'Berita Eksternal', icon: faLink },
+      { href: '/admin/pengumuman', label: 'Pengumuman', icon: faBullhorn },
     ],
   },
   {
@@ -178,7 +178,7 @@ export default function AdminSidebar({ adminName }: { adminName: string }) {
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {group.items.map((item) => {
-                  const isActive = pathname.startsWith(item.href);
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                   return (
                     <Link
                       key={item.href}
