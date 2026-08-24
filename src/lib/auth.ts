@@ -4,7 +4,6 @@ import bcrypt from 'bcryptjs';
 
 // Kredensial admin dibaca dari environment variable, bukan dari database.
 // ADMIN_EMAIL dan ADMIN_PASSWORD_HASH harus diset di .env
-// Untuk membuat hash: bcrypt.hashSync('password_anda', 10)
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
