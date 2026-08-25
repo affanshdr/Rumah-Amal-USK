@@ -41,13 +41,13 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
       const batch = rows.slice(i, i + BATCH_SIZE);
 
-      // Batch lookup dosen
+      // Batch lookup muzakki
       const nips = [...new Set(batch.map((r) => r.nip?.toString().trim()).filter(Boolean))];
-      const dosens = await prisma.dosen.findMany({
+      const muzakkis = await prisma.muzakki.findMany({
         where: { nip: { in: nips } },
         select: { nip: true, nama: true, alamat: true },
       });
-      const dosenMap = new Map(dosens.map((d) => [d.nip, d]));
+      const muzakkiMap = new Map(muzakkis.map((d) => [d.nip, d]));
 
       const validRows: Prisma.InfaqCreateManyInput[] = [];
       const kampanyeIncrements = new Map<string, number>();
@@ -74,9 +74,9 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
-        const dosen = dosenMap.get(nip);
-        if (!dosen) {
-          errors.push({ row: rowIndex, nip, message: 'NIP tidak ditemukan di Master Data Dosen' });
+        const muzakki = muzakkiMap.get(nip);
+        if (!muzakki) {
+          errors.push({ row: rowIndex, nip, message: 'NIP tidak ditemukan di Master Data Muzakki' });
           continue;
         }
 
@@ -109,14 +109,14 @@ export async function POST(req: NextRequest) {
         }
 
         validRows.push({
-          tipePembayar: 'dosen',
+          tipePembayar: 'muzakki',
           jenisInfaq: jenisInfaq || 'Infak Umum',
           kampanyeId: kampanyeId || null,
           jumlahInfaq,
-          nama: dosen.nama,
+          nama: muzakki.nama,
           nip,
           noHp: row.no_hp?.toString().trim() || null,
-          alamat: dosen.alamat || null,
+          alamat: muzakki.alamat || null,
           isHambaAllah: false,
           bersediaDihubungi: false,
           pesan: row.pesan?.toString().trim() || null,

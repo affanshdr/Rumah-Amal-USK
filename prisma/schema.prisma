@@ -20,7 +20,7 @@ model User {
   @@map("users")
 }
 
-model Dosen {
+model Muzakki {
   nip       String   @id
   nama      String
   npwp      String?
@@ -34,16 +34,16 @@ model Dosen {
   infaqs      Infaq[]
   rekapZakats RekapZakat[]
 
-  @@map("dosens")
+  @@map("muzakkis")
 }
 
 model RekapZakat {
-  id         String   @id @default(cuid())
-  dosenNIP   String   @map("dosen_nip")
-  dosen      Dosen    @relation(fields: [dosenNIP], references: [nip], onDelete: Cascade)
-  fileUrl    String   @map("file_url")
-  tahunRekap String   @map("tahun_rekap")
-  createdAt  DateTime @default(now()) @map("created_at")
+  id          String   @id @default(cuid())
+  muzakkiNIP  String   @map("muzakki_nip")
+  muzakki     Muzakki  @relation(fields: [muzakkiNIP], references: [nip], onDelete: Cascade)
+  fileUrl     String   @map("file_url")
+  tahunRekap  String   @map("tahun_rekap")
+  createdAt   DateTime @default(now()) @map("created_at")
 
   @@map("rekap_zakats")
 }
@@ -57,7 +57,7 @@ model Zakat {
   jumlahZakat       Float    @map("jumlah_zakat")
   nama              String
   nip               String?
-  dosen             Dosen?   @relation(fields: [nip], references: [nip], onDelete: SetNull)
+  muzakki           Muzakki? @relation(fields: [nip], references: [nip], onDelete: SetNull)
   email             String?
   alamat            String?
   noHp              String?  @map("no_hp")
@@ -82,7 +82,7 @@ model Infaq {
   jumlahInfaq       Float     @map("jumlah_infaq")
   nama              String
   nip               String?
-  dosen             Dosen?    @relation(fields: [nip], references: [nip], onDelete: SetNull)
+  muzakki           Muzakki?  @relation(fields: [nip], references: [nip], onDelete: SetNull)
   email             String?
   alamat            String?
   noHp              String?   @map("no_hp")

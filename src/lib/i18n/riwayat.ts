@@ -3,8 +3,8 @@ export type RiwayatLanguage = 'id' | 'en' | 'ar';
 export const riwayatDictionary: Record<RiwayatLanguage, Record<string, string>> = {
   id: {
     pageTitle: "Cek Riwayat Zakat & Infaq",
-    pageSubtitle: "Gunakan NIP / NIDN dengan verifikasi OTP WhatsApp untuk dosen & pegawai USK, atau Email untuk masyarakat umum.",
-    modeNip: "NIP & OTP WhatsApp (Dosen & Pegawai USK)",
+    pageSubtitle: "Gunakan NIP / NIDN dengan verifikasi OTP WhatsApp untuk muzakki USK, atau Email untuk masyarakat umum.",
+    modeNip: "NIP & OTP WhatsApp (Muzakki USK)",
     modeEmail: "Email (Masyarakat Umum)",
     labelNip: "NIP / NIDN",
     placeholderNip: "Masukkan NIP / NIDN Anda (Contoh: 198501...)",
@@ -63,8 +63,8 @@ export const riwayatDictionary: Record<RiwayatLanguage, Record<string, string>> 
   },
   en: {
     pageTitle: "Check Zakat & Infaq History",
-    pageSubtitle: "Use NIP / NIDN with WhatsApp OTP verification for USK faculty & staff, or Email for the general public.",
-    modeNip: "NIP & WhatsApp OTP (Faculty & Staff)",
+    pageSubtitle: "Use NIP / NIDN with WhatsApp OTP verification for USK muzakki, or Email for the general public.",
+    modeNip: "NIP & WhatsApp OTP (USK Muzakki)",
     modeEmail: "Email (General Public)",
     labelNip: "NIP / NIDN",
     placeholderNip: "Enter your NIP / NIDN (e.g. 198501...)",

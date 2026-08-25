@@ -27,22 +27,22 @@ export async function submitInfaq(formData: FormData) {
   const pesan = (formData.get('pesan') as string | null)?.trim() || null;
   const setujuTerms = formData.get('setuju_terms') === '1';
 
-  if (tipePembayar === 'dosen') {
+  if (tipePembayar === 'muzakki') {
     if (!nip) {
-      throw new Error('NIP / NIDN wajib diisi untuk Dosen / Pegawai USK');
+      throw new Error('NIP / NIDN wajib diisi untuk Muzakki USK');
     }
-    // Ambik data Dosen dari tabel dosens berdasarkan NIP
-    const dosenObj = await prisma.dosen.findUnique({
+    // Ambil data Muzakki dari database berdasarkan NIP
+    const muzakkiObj = await prisma.muzakki.findUnique({
       where: { nip },
     });
 
-    if (!dosenObj) {
-      throw new Error('NIP tidak terdaftar pada Master Data Dosen. Silakan hubungi Rumah Amal USK untuk mendaftarkan data NIP Anda.');
+    if (!muzakkiObj) {
+      throw new Error('NIP tidak terdaftar pada Master Data Muzakki. Silakan hubungi Rumah Amal USK untuk mendaftarkan data NIP Anda.');
     }
 
-    nama = dosenObj.nama;
-    if (!alamat) alamat = dosenObj.alamat;
-    if (!noHp) noHp = dosenObj.noHp;
+    nama = muzakkiObj.nama;
+    if (!alamat) alamat = muzakkiObj.alamat;
+    if (!noHp) noHp = muzakkiObj.noHp;
   } else {
     if (isHambaAllah) {
       nama = 'Hamba Allah';
@@ -83,7 +83,7 @@ export async function submitInfaq(formData: FormData) {
       email: email || null,
       alamat: alamat || null,
       noHp: noHp || null,
-      isHambaAllah: tipePembayar === 'dosen' ? false : isHambaAllah,
+      isHambaAllah: tipePembayar === 'muzakki' ? false : isHambaAllah,
       bersediaDihubungi,
       pesan: pesan || null,
       buktiPembayaran,

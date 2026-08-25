@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { createDosen, updateDosen, deleteDosen } from '@/actions/dosen';
+import { createMuzakki, updateMuzakki, deleteMuzakki } from '@/actions/muzakki';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faSearch, faEdit, faTrash, faUserTie, faFileArrowUp, faPhone } from '@fortawesome/free-solid-svg-icons';
 import CsvImportModal from '@/components/admin/CsvImportModal';
@@ -9,7 +9,7 @@ import AdminPagination from '@/components/admin/AdminPagination';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 import AdminToast, { ToastState } from '@/components/admin/AdminToast';
 
-type DosenItem = {
+type MuzakkiItem = {
   nip: string;
   nama: string;
   npwp: string | null;
@@ -22,8 +22,8 @@ type DosenItem = {
 const ITEMS_PER_PAGE = 10;
 const DEBOUNCE_MS = 400;
 
-export default function DosenClient({ initialData }: { initialData?: DosenItem[] }) {
-  const [data, setData] = useState<DosenItem[]>(initialData || []);
+export default function MuzakkiClient({ initialData }: { initialData?: MuzakkiItem[] }) {
+  const [data, setData] = useState<MuzakkiItem[]>(initialData || []);
   const [totalItems, setTotalItems] = useState(initialData?.length || 0);
   const [totalPages, setTotalPages] = useState(Math.ceil((initialData?.length || 0) / ITEMS_PER_PAGE) || 1);
   const [isFetching, setIsFetching] = useState(false);
@@ -32,7 +32,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
   const [availableUnitKerja, setAvailableUnitKerja] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
-  const [editingDosen, setEditingDosen] = useState<DosenItem | null>(null);
+  const [editingMuzakki, setEditingMuzakki] = useState<MuzakkiItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -63,7 +63,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         search: searchVal,
         unitKerja: unitKerjaVal,
       });
-      const res = await fetch(`/api/admin/dosen?${params}`);
+      const res = await fetch(`/api/admin/muzakki?${params}`);
       if (res.ok) {
         const json = await res.json();
         if (reqId !== latestReqRef.current) return;
@@ -75,7 +75,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         }
       }
     } catch (err) {
-      console.error('Error fetching dosen:', err);
+      console.error('Error fetching muzakki:', err);
     } finally {
       if (reqId === latestReqRef.current) setIsFetching(false);
     }
@@ -109,7 +109,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
   }
 
   function openAddModal() {
-    setEditingDosen(null);
+    setEditingMuzakki(null);
     setNip('');
     setNama('');
     setNpwp('');
@@ -120,8 +120,8 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
     setIsModalOpen(true);
   }
 
-  function openEditModal(item: DosenItem) {
-    setEditingDosen(item);
+  function openEditModal(item: MuzakkiItem) {
+    setEditingMuzakki(item);
     setNip(item.nip);
     setNama(item.nama);
     setNpwp(item.npwp || '');
@@ -146,16 +146,16 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
     formData.append('no_hp', noHp);
 
     try {
-      if (editingDosen) {
-        await updateDosen(editingDosen.nip, formData);
+      if (editingMuzakki) {
+        await updateMuzakki(editingMuzakki.nip, formData);
       } else {
-        await createDosen(formData);
+        await createMuzakki(formData);
       }
       setIsModalOpen(false);
-      setToast({ message: editingDosen ? "Data dosen berhasil diperbarui." : "Dosen baru berhasil ditambahkan.", type: "success" });
+      setToast({ message: editingMuzakki ? "Data muzakki berhasil diperbarui." : "Muzakki baru berhasil ditambahkan.", type: "success" });
       fetchData(currentPage, searchRef.current, filterUnitKerjaRef.current);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Gagal menyimpan data dosen');
+      setErrorMsg(err.message || 'Gagal menyimpan data muzakki');
     } finally {
       setLoading(false);
     }
@@ -165,11 +165,11 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
     if (!deleteConfirmNip) return;
     setIsDeleting(true);
     try {
-      await deleteDosen(deleteConfirmNip);
-      setToast({ message: "Data dosen berhasil dihapus.", type: "success" });
+      await deleteMuzakki(deleteConfirmNip);
+      setToast({ message: "Data muzakki berhasil dihapus.", type: "success" });
       fetchData(currentPage, searchRef.current, filterUnitKerjaRef.current);
     } catch (err: any) {
-      setToast({ message: err.message || "Gagal menghapus data dosen", type: "error" });
+      setToast({ message: err.message || "Gagal menghapus data muzakki", type: "error" });
     } finally {
       setIsDeleting(false);
       setDeleteConfirmNip(null);
@@ -183,10 +183,10 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         <div>
           <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
             <FontAwesomeIcon icon={faUserTie} className="text-[#063A1E] w-6 h-6" />
-            Data Dosen &amp; Pegawai
+            Data Muzakki USK
           </h1>
           <p className="text-xs text-gray-500 mt-1">
-            Kelola data Master Dosen USK (NIP, NPWP, No. HP, Alamat, Unit Kerja) untuk relasi Zakat dan Infaq.
+            Kelola data Master Muzakki USK (NIP, NPWP, No. HP, Alamat, Unit Kerja) untuk relasi Zakat dan Infaq.
           </p>
         </div>
 
@@ -203,7 +203,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
             className="inline-flex items-center justify-center gap-2 bg-[#063A1E] hover:bg-[#042814] text-white px-4 py-2.5 rounded-xl font-bold text-xs shadow-xs transition-all cursor-pointer shrink-0"
           >
             <FontAwesomeIcon icon={faPlus} className="w-3.5 h-3.5" />
-            Tambah Dosen
+            Tambah Muzakki
           </button>
         </div>
       </div>
@@ -237,7 +237,6 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         </div>
       </div>
 
-
       {/* Table */}
       <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
@@ -254,14 +253,14 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
             <tbody className="divide-y divide-gray-100 text-[11px]">
               {isFetching ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-10 text-gray-400">
+                  <td colSpan={5} className="text-center py-10 text-gray-400">
                     <div className="w-5 h-5 border-2 border-[#063A1E] border-t-transparent rounded-full animate-spin mx-auto" />
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-10 text-gray-400">
-                    Belum ada data dosen ditemukan.
+                  <td colSpan={5} className="text-center py-10 text-gray-400">
+                    Belum ada data muzakki ditemukan.
                   </td>
                 </tr>
               ) : (
@@ -297,14 +296,14 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
                         <button
                           onClick={() => openEditModal(item)}
                           className="p-1 rounded text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
-                          title="Edit Dosen"
+                          title="Edit Muzakki"
                         >
                           <FontAwesomeIcon icon={faEdit} className="w-3 h-3" />
                         </button>
                         <button
                           onClick={() => setDeleteConfirmNip(item.nip)}
                           className="p-1 rounded text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                          title="Hapus Dosen"
+                          title="Hapus Muzakki"
                         >
                           <FontAwesomeIcon icon={faTrash} className="w-3 h-3" />
                         </button>
@@ -323,7 +322,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
           totalItems={totalItems}
           itemsPerPage={ITEMS_PER_PAGE}
           onPageChange={handlePageChange}
-          itemLabel="dosen"
+          itemLabel="muzakki"
         />
       </div>
 
@@ -333,7 +332,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
             <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between bg-gray-50/80">
               <h3 className="font-bold text-sm text-gray-900">
-                {editingDosen ? 'Edit Data Dosen' : 'Tambah Data Dosen Baru'}
+                {editingMuzakki ? 'Edit Data Muzakki' : 'Tambah Data Muzakki Baru'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -358,7 +357,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
                   <input
                     type="text"
                     required
-                    disabled={!!editingDosen}
+                    disabled={!!editingMuzakki}
                     value={nip}
                     onChange={(e) => setNip(e.target.value)}
                     placeholder="Contoh: 198501012010121001"
@@ -379,8 +378,6 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
                     className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
                   />
                 </div>
-
-
 
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">No. HP / WhatsApp</label>
@@ -421,7 +418,7 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
                     rows={2}
                     value={alamat}
                     onChange={(e) => setAlamat(e.target.value)}
-                    placeholder="Alamat domisili dosen"
+                    placeholder="Alamat domisili muzakki"
                     className="w-full px-3.5 py-2 border border-gray-300 rounded-xl text-xs focus:outline-none focus:border-[#063A1E]"
                   />
                 </div>
@@ -453,8 +450,8 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
         onSuccess={() => fetchData(1, searchRef.current)}
-        title="Import Data Dosen"
-        endpoint="/api/admin/import/dosen"
+        title="Import Data Muzakki"
+        endpoint="/api/admin/import/muzakki"
         requiredColumns={['nip', 'nama']}
         optionalColumns={['npwp', 'alamat', 'unit_kerja', 'no_hp']}
         templateRows={[
@@ -467,9 +464,9 @@ export default function DosenClient({ initialData }: { initialData?: DosenItem[]
         isOpen={Boolean(deleteConfirmNip)}
         onClose={() => setDeleteConfirmNip(null)}
         onConfirm={handleConfirmDelete}
-        title="Hapus Data Dosen?"
-        message={`Apakah Anda yakin ingin menghapus data dosen dengan NIP ${deleteConfirmNip}? Data yang dihapus tidak dapat dikembalikan.`}
-        confirmText="Hapus Dosen"
+        title="Hapus Data Muzakki?"
+        message={`Apakah Anda yakin ingin menghapus data muzakki dengan NIP ${deleteConfirmNip}? Data yang dihapus tidak dapat dikembalikan.`}
+        confirmText="Hapus Muzakki"
         loading={isDeleting}
       />
 

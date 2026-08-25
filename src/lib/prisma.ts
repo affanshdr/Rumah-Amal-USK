@@ -15,6 +15,7 @@ export function getPrismaInstance(): PrismaClient {
       !(globalForPrisma.prisma as any).news ||
       !(globalForPrisma.prisma as any).banner ||
       !(globalForPrisma.prisma as any).newsLink ||
+      !(globalForPrisma.prisma as any).muzakki ||
       !(globalForPrisma.prisma as any)._likesCountRefreshed)
   ) {
     globalForPrisma.prisma = undefined;

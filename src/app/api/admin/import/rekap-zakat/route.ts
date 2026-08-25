@@ -25,13 +25,13 @@ export async function POST(req: NextRequest) {
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
       const batch = rows.slice(i, i + BATCH_SIZE);
 
-      // Batch lookup dosen untuk validasi FK
+      // Batch lookup muzakki untuk validasi FK
       const nips = [...new Set(batch.map((r) => r.nip?.toString().trim()).filter(Boolean))];
-      const dosens = await prisma.dosen.findMany({
+      const muzakkis = await prisma.muzakki.findMany({
         where: { nip: { in: nips } },
         select: { nip: true },
       });
-      const dosenSet = new Set(dosens.map((d) => d.nip));
+      const muzakkiSet = new Set(muzakkis.map((d) => d.nip));
 
       const validRows: Prisma.RekapZakatCreateManyInput[] = [];
 
@@ -56,13 +56,13 @@ export async function POST(req: NextRequest) {
           continue;
         }
 
-        if (!dosenSet.has(nip)) {
-          errors.push({ row: rowIndex, nip, message: 'NIP tidak ditemukan di Master Data Dosen' });
+        if (!muzakkiSet.has(nip)) {
+          errors.push({ row: rowIndex, nip, message: 'NIP tidak ditemukan di Master Data Muzakki' });
           continue;
         }
 
         validRows.push({
-          dosenNIP: nip,
+          muzakkiNIP: nip,
           tahunRekap,
           fileUrl,
         });

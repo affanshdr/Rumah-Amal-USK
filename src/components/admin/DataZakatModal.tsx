@@ -13,7 +13,7 @@ import {
   faMoneyBillWave,
 } from '@fortawesome/free-solid-svg-icons';
 
-type DosenInfo = {
+type MuzakkiInfo = {
   nip: string;
   nama: string;
   npwp: string | null;
@@ -29,7 +29,7 @@ type DataZakatModalProps = {
     nama: string;
     nip: string | null;
     noHp: string | null;
-    dosen: DosenInfo | null;
+    muzakki: MuzakkiInfo | null;
     tipePembayar: string;
     jenisZakat: string;
     sumberDana: string | null;
@@ -60,8 +60,8 @@ function DetailRow({ icon, label, value }: RowProps) {
 export default function DataZakatModal({ isOpen, onClose, item }: DataZakatModalProps) {
   if (!isOpen || !item) return null;
 
-  const noHp = item.dosen?.noHp || item.noHp;
-  const unitKerja = item.dosen?.unitKerja;
+  const noHp = item.muzakki?.noHp || item.noHp;
+  const unitKerja = item.muzakki?.unitKerja;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">

@@ -3,29 +3,29 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 
-export async function getDosens() {
+export async function getMuzakkis() {
   try {
-    return await prisma.dosen.findMany({
+    return await prisma.muzakki.findMany({
       orderBy: { nama: 'asc' },
     });
   } catch (error) {
-    console.error('Error fetching dosens:', error);
+    console.error('Error fetching muzakkis:', error);
     return [];
   }
 }
 
-export async function getDosenByNip(nip: string) {
+export async function getMuzakkiByNip(nip: string) {
   try {
-    return await prisma.dosen.findUnique({
+    return await prisma.muzakki.findUnique({
       where: { nip },
     });
   } catch (error) {
-    console.error('Error fetching dosen by NIP:', error);
+    console.error('Error fetching muzakki by NIP:', error);
     return null;
   }
 }
 
-export async function createDosen(formData: FormData) {
+export async function createMuzakki(formData: FormData) {
   const nip = (formData.get('nip') as string)?.trim();
   const nama = (formData.get('nama') as string)?.trim();
   const npwp = (formData.get('npwp') as string)?.trim() || null;
@@ -34,15 +34,15 @@ export async function createDosen(formData: FormData) {
   const noHp = (formData.get('no_hp') as string)?.trim() || (formData.get('noHp') as string)?.trim() || null;
 
   if (!nip || !nama) {
-    throw new Error('NIP dan Nama Dosen wajib diisi');
+    throw new Error('NIP dan Nama Muzakki wajib diisi');
   }
 
-  const existing = await prisma.dosen.findUnique({ where: { nip } });
+  const existing = await prisma.muzakki.findUnique({ where: { nip } });
   if (existing) {
-    throw new Error(`Dosen dengan NIP ${nip} sudah ada`);
+    throw new Error(`Muzakki dengan NIP ${nip} sudah ada`);
   }
 
-  await prisma.dosen.create({
+  await prisma.muzakki.create({
     data: {
       nip,
       nama,
@@ -53,11 +53,11 @@ export async function createDosen(formData: FormData) {
     },
   });
 
-  revalidatePath('/admin/dosen');
+  revalidatePath('/admin/muzakki');
   return { success: true };
 }
 
-export async function updateDosen(oldNip: string, formData: FormData) {
+export async function updateMuzakki(oldNip: string, formData: FormData) {
   const nip = (formData.get('nip') as string)?.trim();
   const nama = (formData.get('nama') as string)?.trim();
   const npwp = (formData.get('npwp') as string)?.trim() || null;
@@ -66,10 +66,10 @@ export async function updateDosen(oldNip: string, formData: FormData) {
   const noHp = (formData.get('no_hp') as string)?.trim() || (formData.get('noHp') as string)?.trim() || null;
 
   if (!nip || !nama) {
-    throw new Error('NIP dan Nama Dosen wajib diisi');
+    throw new Error('NIP dan Nama Muzakki wajib diisi');
   }
 
-  await prisma.dosen.update({
+  await prisma.muzakki.update({
     where: { nip: oldNip },
     data: {
       nip,
@@ -81,20 +81,19 @@ export async function updateDosen(oldNip: string, formData: FormData) {
     },
   });
 
-  revalidatePath('/admin/dosen');
+  revalidatePath('/admin/muzakki');
   return { success: true };
 }
 
-export async function deleteDosen(nip: string) {
+export async function deleteMuzakki(nip: string) {
   if (!nip) {
-    throw new Error('NIP dosen wajib diisi');
+    throw new Error('NIP muzakki wajib diisi');
   }
 
-  await prisma.dosen.delete({
+  await prisma.muzakki.delete({
     where: { nip },
   });
 
-  revalidatePath('/admin/dosen');
+  revalidatePath('/admin/muzakki');
   return { success: true };
 }
-

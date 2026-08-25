@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
                 OR: [
                     { nama: { contains: search, mode: 'insensitive' } },
                     { nip: { contains: search } },
-                    { dosen: { nama: { contains: search, mode: 'insensitive' } } },
+                    { muzakki: { nama: { contains: search, mode: 'insensitive' } } },
                 ],
             }
             : {};
@@ -30,10 +30,10 @@ export async function GET(request: NextRequest) {
                 ? { jenisZakat: { equals: jenis, mode: 'insensitive' } }
                 : {};
 
-        // Unit Kerja filter (from dosen relation)
+        // Unit Kerja filter (from muzakki relation)
         const unitKerjaFilter: Prisma.ZakatWhereInput =
             unitKerja && unitKerja !== 'all'
-                ? { dosen: { unitKerja: { equals: unitKerja, mode: 'insensitive' } } }
+                ? { muzakki: { unitKerja: { equals: unitKerja, mode: 'insensitive' } } }
                 : {};
 
         // Full where (includes status filter for main query)
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
         const [zakats, total, allCount, pendingCount, lunasCount, ditolakCount, distinctJenis, distinctUnitKerja] = await Promise.all([
             prisma.zakat.findMany({
                 where: whereMain,
-                include: { dosen: true },
+                include: { muzakki: true },
                 orderBy: { createdAt: 'desc' },
                 skip,
                 take: limit,
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
                 where: { jenisZakat: { not: '' } },
                 orderBy: { jenisZakat: 'asc' },
             }),
-            prisma.dosen.findMany({
+            prisma.muzakki.findMany({
                 select: { unitKerja: true },
                 where: { unitKerja: { not: null } },
                 distinct: ['unitKerja'],
@@ -97,13 +97,13 @@ export async function GET(request: NextRequest) {
             nama: z.nama,
             nip: z.nip,
             noHp: z.noHp,
-            dosen: z.dosen ? {
-                nip: z.dosen.nip,
-                nama: z.dosen.nama,
-                npwp: z.dosen.npwp,
-                alamat: z.dosen.alamat,
-                unitKerja: z.dosen.unitKerja,
-                noHp: z.dosen.noHp,
+            muzakki: z.muzakki ? {
+                nip: z.muzakki.nip,
+                nama: z.muzakki.nama,
+                npwp: z.muzakki.npwp,
+                alamat: z.muzakki.alamat,
+                unitKerja: z.muzakki.unitKerja,
+                noHp: z.muzakki.noHp,
             } : null,
             tipePembayar: z.tipePembayar,
             jenisZakat: z.jenisZakat,

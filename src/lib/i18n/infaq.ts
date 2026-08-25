@@ -2,7 +2,7 @@ export type InfaqLanguage = 'id' | 'en' | 'ar';
 
 export const infaqDictionary: Record<InfaqLanguage, Record<string, string>> = {
   id: {
-    tipeDosen: 'Dosen / Pegawai USK',
+    tipeDosen: 'Muzakki USK',
     tipeMasyarakat: 'Masyarakat Umum',
     formTitle: 'Formulir Pembayaran Infaq',
     kategoriLabel: 'Kategori Program Infaq',
@@ -15,7 +15,7 @@ export const infaqDictionary: Record<InfaqLanguage, Record<string, string>> = {
     jumlahLabel: 'Jumlah Infaq',
     jumlahPlaceholder: 'Jumlah infaq yang ingin disalurkan',
     nipLabel: 'NIP / NIDN',
-    nipPlaceholder: 'Masukkan Nomor Induk Pegawai / Dosen USK',
+    nipPlaceholder: 'Masukkan NIP / NIDN Muzakki USK',
     namaLabel: 'Nama Lengkap',
     namaPlaceholder: 'Nama Lengkap Donatur',
     hambaAllahLabel: 'Sembunyikan nama saya (Hamba Allah)',

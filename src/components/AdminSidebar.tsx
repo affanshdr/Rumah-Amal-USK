@@ -42,7 +42,7 @@ const menuGroups = [
   {
     label: 'Data Master & Pengaturan',
     items: [
-      { href: '/admin/dosen', label: 'Data Dosen', icon: faUserTie },
+      { href: '/admin/muzakki', label: 'Data Muzakki USK', icon: faUserTie },
       { href: '/admin/rekap-zakat', label: 'Rekap Zakat', icon: faFileText },
       { href: '/admin/nisab', label: 'Pengaturan Nisab', icon: faScaleBalanced },
       { href: '/admin/whatsapp', label: 'WhatsApp Gateway', icon: faWhatsapp },

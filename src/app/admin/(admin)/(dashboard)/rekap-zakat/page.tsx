@@ -18,8 +18,8 @@ import AdminToast, { ToastState } from '@/components/admin/AdminToast';
 
 type RekapItem = {
   id: string;
-  dosenNIP: string;
-  dosen: { nama: string; unitKerja: string | null } | null;
+  muzakkiNIP: string;
+  muzakki: { nama: string; unitKerja: string | null } | null;
   tahunRekap: string;
   fileUrl: string;
   createdAt: string;
@@ -109,7 +109,7 @@ export default function AdminRekapZakatPage() {
 
   function openEditModal(item: RekapItem) {
     setEditingItem(item);
-    setEditNip(item.dosenNIP);
+    setEditNip(item.muzakkiNIP);
     setEditTahun(item.tahunRekap);
     setEditFileUrl(item.fileUrl);
   }
@@ -123,7 +123,7 @@ export default function AdminRekapZakatPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          dosenNIP: editNip,
+          muzakkiNIP: editNip,
           tahunRekap: editTahun,
           fileUrl: editFileUrl,
         }),
@@ -173,7 +173,7 @@ export default function AdminRekapZakatPage() {
             Rekap Zakat
           </h1>
           <p className="text-xs text-gray-500 mt-1">
-            Kelola rekap tahunan zakat dosen — link file PDF/Drive per NIP per tahun.
+            Kelola rekap tahunan zakat muzakki — link file PDF/Drive per NIP per tahun.
           </p>
         </div>
         <button
@@ -191,7 +191,7 @@ export default function AdminRekapZakatPage() {
           <FontAwesomeIcon icon={faSearch} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
-            placeholder="Cari NIP, nama dosen, atau tahun..."
+            placeholder="Cari NIP, nama muzakki, atau tahun..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-xs bg-white focus:outline-none focus:border-[#063A1E] shadow-2xs transition-all"
@@ -248,15 +248,15 @@ export default function AdminRekapZakatPage() {
                     {/* Muzakki — Nama + NIP */}
                     <td className="py-3.5 px-4">
                       <p className="font-bold text-gray-900 text-xs">
-                        {item.dosen?.nama || <span className="text-gray-400 font-normal italic">—</span>}
+                        {item.muzakki?.nama || <span className="text-gray-400 font-normal italic">—</span>}
                       </p>
                       <span className="text-[10px] text-gray-500 font-mono inline-block mt-0.5">
-                        NIP: {item.dosenNIP}
+                        NIP: {item.muzakkiNIP}
                       </span>
                     </td>
                     {/* Unit Kerja Lengkap */}
                     <td className="py-3.5 px-4 text-gray-700 whitespace-normal">
-                      {item.dosen?.unitKerja || <span className="text-gray-400">—</span>}
+                      {item.muzakki?.unitKerja || <span className="text-gray-400">—</span>}
                     </td>
                     <td className="py-3.5 px-4">
                       <span className="inline-block bg-[#063A1E]/10 text-[#063A1E] font-bold px-2.5 py-1 rounded-lg text-[10px]">
@@ -319,7 +319,7 @@ export default function AdminRekapZakatPage() {
                   <FontAwesomeIcon icon={faFileText} className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-gray-900 leading-tight">Edit Rekap Zakat Dosen</h3>
+                  <h3 className="font-bold text-sm text-gray-900 leading-tight">Edit Rekap Zakat Muzakki</h3>
                   <p className="text-[11px] text-gray-500">Perbarui NIP, tahun rekap, atau link dokumen PDF/Drive</p>
                 </div>
               </div>
@@ -336,7 +336,7 @@ export default function AdminRekapZakatPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3.5">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">
-                    NIP Dosen / Pegawai <span className="text-red-500">*</span>
+                    NIP Muzakki <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -418,7 +418,7 @@ export default function AdminRekapZakatPage() {
         onClose={() => setDeleteConfirmItem(null)}
         onConfirm={handleConfirmDelete}
         title="Hapus Rekap Zakat?"
-        message={`Apakah Anda yakin ingin menghapus data rekap zakat tahun ${deleteConfirmItem?.tahunRekap || ''} NIP ${deleteConfirmItem?.dosenNIP || ''}? Data yang dihapus tidak dapat dikembalikan.`}
+        message={`Apakah Anda yakin ingin menghapus data rekap zakat tahun ${deleteConfirmItem?.tahunRekap || ''} NIP ${deleteConfirmItem?.muzakkiNIP || ''}? Data yang dihapus tidak dapat dikembalikan.`}
         confirmText="Hapus Rekap"
         loading={isDeleting}
       />

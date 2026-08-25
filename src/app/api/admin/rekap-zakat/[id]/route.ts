@@ -8,16 +8,17 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { dosenNIP, tahunRekap, fileUrl } = body;
+    const { nip, muzakkiNIP, tahunRekap, fileUrl } = body;
+    const cleanNip = (muzakkiNIP || nip)?.toString().trim();
 
-    if (!dosenNIP || !tahunRekap || !fileUrl) {
+    if (!cleanNip || !tahunRekap || !fileUrl) {
       return NextResponse.json({ error: 'NIP, Tahun Rekap, dan URL File wajib diisi' }, { status: 400 });
     }
 
     const updated = await prisma.rekapZakat.update({
       where: { id },
       data: {
-        dosenNIP: dosenNIP.trim(),
+        muzakkiNIP: cleanNip,
         tahunRekap: String(tahunRekap).trim(),
         fileUrl: fileUrl.trim(),
       },

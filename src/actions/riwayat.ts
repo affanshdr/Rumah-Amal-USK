@@ -5,7 +5,7 @@ import { createAndSendOtp, verifyOtp, RequestOtpResult } from '@/lib/otp/otp-ser
 
 /**
  * Request WhatsApp OTP for a given NIP.
- * Looks up Dosen in DB and sends 6-digit OTP to the registered phone number via WhatsApp.
+ * Looks up Muzakki in DB and sends 6-digit OTP to the registered phone number via WhatsApp.
  */
 export async function requestRiwayatOtp(
   nip: string
@@ -16,23 +16,23 @@ export async function requestRiwayatOtp(
     throw new Error('NIP / NIDN wajib diisi.');
   }
 
-  const dosen = await prisma.dosen.findUnique({
+  const muzakki = await prisma.muzakki.findUnique({
     where: { nip: cleanNip },
   });
 
-  if (!dosen) {
+  if (!muzakki) {
     throw new Error(
-      'NIP / NIDN tidak terdaftar pada data dosen/pegawai USK. Silakan periksa kembali atau hubungi Rumah Amal USK.'
+      'NIP / NIDN tidak terdaftar pada data muzakki USK. Silakan periksa kembali atau hubungi Rumah Amal USK.'
     );
   }
 
-  if (!dosen.noHp || !dosen.noHp.trim()) {
+  if (!muzakki.noHp || !muzakki.noHp.trim()) {
     throw new Error(
       'Nomor WhatsApp belum terdaftar untuk NIP ini di database. Silakan hubungi admin Rumah Amal USK untuk mendaftarkan nomor WhatsApp Anda.'
     );
   }
 
-  return await createAndSendOtp(cleanNip, dosen.noHp, 'whatsapp');
+  return await createAndSendOtp(cleanNip, muzakki.noHp, 'whatsapp');
 }
 
 /**
@@ -49,8 +49,8 @@ export async function verifyRiwayatOtpAndFetch(nip: string, otp: string) {
   // 1. Verify OTP
   await verifyOtp(cleanNip, cleanOtp);
 
-  // 2. Fetch Dosen data
-  const dosen = await prisma.dosen.findUnique({
+  // 2. Fetch Muzakki data
+  const muzakki = await prisma.muzakki.findUnique({
     where: { nip: cleanNip },
   });
 
@@ -86,7 +86,7 @@ export async function verifyRiwayatOtpAndFetch(nip: string, otp: string) {
 
   // 5. Fetch Rekap Zakat Tahunan (PDF files)
   const rekapZakatList = await prisma.rekapZakat.findMany({
-    where: { dosenNIP: cleanNip },
+    where: { muzakkiNIP: cleanNip },
     orderBy: { tahunRekap: 'desc' },
     select: {
       id: true,
@@ -96,7 +96,7 @@ export async function verifyRiwayatOtpAndFetch(nip: string, otp: string) {
     },
   });
 
-  // Fallback nama jika di Dosen null
+  // Fallback nama jika di Muzakki null
   const zakatWithNama = await prisma.zakat.findFirst({
     where: { nip: cleanNip },
     select: { nama: true },
@@ -107,7 +107,7 @@ export async function verifyRiwayatOtpAndFetch(nip: string, otp: string) {
     select: { nama: true },
   });
 
-  const nama = dosen?.nama || zakatWithNama?.nama || infaqWithNama?.nama || null;
+  const nama = muzakki?.nama || zakatWithNama?.nama || infaqWithNama?.nama || null;
 
   const totalZakatLunas = riwayatZakat
     .filter((z) => z.status === 'lunas')
@@ -120,7 +120,7 @@ export async function verifyRiwayatOtpAndFetch(nip: string, otp: string) {
   return {
     nip: cleanNip,
     nama,
-    unitKerja: dosen?.unitKerja || null,
+    unitKerja: muzakki?.unitKerja || null,
     totalZakatLunas,
     totalInfaqLunas,
     riwayatZakat: riwayatZakat.map((z) => ({

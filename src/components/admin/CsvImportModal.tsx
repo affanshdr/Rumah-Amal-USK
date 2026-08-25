@@ -21,7 +21,7 @@ export interface CsvImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  /** Judul modal, misal "Import Data Dosen" */
+  /** Judul modal, misal "Import Data Muzakki" */
   title: string;
   /** Endpoint API yang menerima POST { rows: [...] } */
   endpoint: string;

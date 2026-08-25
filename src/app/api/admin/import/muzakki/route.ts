@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-interface DosenRow {
+interface MuzakkiRow {
   nip: string;
   nama: string;
   npwp?: string;
@@ -15,7 +15,7 @@ interface DosenRow {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const rows: DosenRow[] = body.rows;
+    const rows: MuzakkiRow[] = body.rows;
 
     if (!Array.isArray(rows) || rows.length === 0) {
       return NextResponse.json({ error: 'Data tidak valid atau kosong' }, { status: 400 });
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
         const newNoHp = (row.no_hp || row.noHp)?.toString().trim();
 
         try {
-          const existing = await prisma.dosen.findUnique({ where: { nip } });
+          const existing = await prisma.muzakki.findUnique({ where: { nip } });
 
           if (existing) {
             // Jika kolom CSV baru kosong, tetapi data lama di DB ada, jangan timpa dengan kosong
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
             const unitKerjaToSave = newUnitKerja && newUnitKerja !== '' ? newUnitKerja : existing.unitKerja;
             const noHpToSave = newNoHp && newNoHp !== '' ? newNoHp : existing.noHp;
 
-            await prisma.dosen.update({
+            await prisma.muzakki.update({
               where: { nip },
               data: {
                 nama,
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
             });
             updated++;
           } else {
-            await prisma.dosen.create({
+            await prisma.muzakki.create({
               data: {
                 nip,
                 nama,
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ inserted, updated, errors });
   } catch (err: unknown) {
-    console.error('Import dosen error:', err);
+    console.error('Import muzakki error:', err);
     return NextResponse.json({ error: 'Gagal memproses file CSV' }, { status: 500 });
   }
 }

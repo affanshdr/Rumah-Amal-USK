@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
                     { nama: { contains: search, mode: 'insensitive' } },
                     { nip: { contains: search } },
                     { kampanye: { judul: { contains: search, mode: 'insensitive' } } },
-                    { dosen: { nama: { contains: search, mode: 'insensitive' } } },
+                    { muzakki: { nama: { contains: search, mode: 'insensitive' } } },
                 ],
             }
             : {};
@@ -50,10 +50,10 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        // Unit Kerja filter (from dosen relation)
+        // Unit Kerja filter (from muzakki relation)
         const unitKerjaFilter: Prisma.InfaqWhereInput =
             unitKerja && unitKerja !== 'all'
-                ? { dosen: { unitKerja: { equals: unitKerja, mode: 'insensitive' } } }
+                ? { muzakki: { unitKerja: { equals: unitKerja, mode: 'insensitive' } } }
                 : {};
 
         // Full where (includes status filter)
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
         ] = await Promise.all([
             prisma.infaq.findMany({
                 where: whereMain,
-                include: { kampanye: true, dosen: true },
+                include: { kampanye: true, muzakki: true },
                 orderBy: { createdAt: 'desc' },
                 skip,
                 take: limit,
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
                 select: { id: true, judul: true },
                 orderBy: { createdAt: 'desc' },
             }),
-            prisma.dosen.findMany({
+            prisma.muzakki.findMany({
                 select: { unitKerja: true },
                 where: { unitKerja: { not: null } },
                 distinct: ['unitKerja'],
@@ -134,13 +134,13 @@ export async function GET(request: NextRequest) {
             nama: i.nama,
             nip: i.nip,
             noHp: i.noHp,
-            dosen: i.dosen ? {
-                nip: i.dosen.nip,
-                nama: i.dosen.nama,
-                npwp: i.dosen.npwp,
-                alamat: i.dosen.alamat,
-                unitKerja: i.dosen.unitKerja,
-                noHp: i.dosen.noHp,
+            muzakki: i.muzakki ? {
+                nip: i.muzakki.nip,
+                nama: i.muzakki.nama,
+                npwp: i.muzakki.npwp,
+                alamat: i.muzakki.alamat,
+                unitKerja: i.muzakki.unitKerja,
+                noHp: i.muzakki.noHp,
             } : null,
             tipePembayar: i.tipePembayar,
             jenisInfaq: i.kampanye?.judul || i.jenisInfaq,

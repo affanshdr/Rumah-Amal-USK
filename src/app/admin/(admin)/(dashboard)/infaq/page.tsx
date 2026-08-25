@@ -26,7 +26,7 @@ import ConfirmModal from '@/components/admin/ConfirmModal';
 import { formatThousand, parseRawNumber } from '@/lib/formatNumber';
 import AdminToast, { ToastState } from '@/components/admin/AdminToast';
 
-type DosenInfo = {
+type MuzakkiInfo = {
   nip: string;
   nama: string;
   npwp: string | null;
@@ -45,7 +45,7 @@ type InfaqItem = {
   nama: string;
   nip: string | null;
   noHp: string | null;
-  dosen: DosenInfo | null;
+  muzakki: MuzakkiInfo | null;
   tipePembayar: string;
   jenisInfaq: string;
   kampanyeId: string | null;
@@ -309,7 +309,7 @@ export default function AdminInfaqPage() {
             Data Infaq
           </h1>
           <p className="text-xs text-gray-500 mt-1">
-            Kelola & verifikasi data infaq bebas maupun infaq terikat (kampanye) dari Dosen & Masyarakat.
+            Kelola &amp; verifikasi data infaq bebas maupun infaq terikat (kampanye) dari Muzakki &amp; Masyarakat.
           </p>
         </div>
         <button
@@ -621,7 +621,7 @@ export default function AdminInfaqPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">NIP (Dosen / Pegawai)</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">NIP (Muzakki USK)</label>
                   <input
                     type="text"
                     value={editNip}
@@ -725,7 +725,7 @@ export default function AdminInfaqPage() {
         isOpen={isCsvModalOpen}
         onClose={() => setIsCsvModalOpen(false)}
         onSuccess={() => fetchData(1, searchRef.current, filterStatusRef.current, activeTabRef.current)}
-        title="Import Infaq Dosen"
+        title="Import Infaq Muzakki"
         endpoint="/api/admin/import/infaq"
         requiredColumns={['nip', 'jumlah_infaq', 'jenis_infaq']}
         optionalColumns={['nama_kampanye', 'no_hp', 'pesan', 'tanggal']}

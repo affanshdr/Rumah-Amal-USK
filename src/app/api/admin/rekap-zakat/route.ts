@@ -14,16 +14,16 @@ export async function GET(request: NextRequest) {
     const searchFilter: Prisma.RekapZakatWhereInput = search
       ? {
           OR: [
-            { dosenNIP: { contains: search } },
+            { muzakkiNIP: { contains: search } },
             { tahunRekap: { contains: search } },
-            { dosen: { nama: { contains: search, mode: 'insensitive' } } },
+            { muzakki: { nama: { contains: search, mode: 'insensitive' } } },
           ],
         }
       : {};
 
     const unitKerjaFilter: Prisma.RekapZakatWhereInput =
       unitKerja && unitKerja !== 'all'
-        ? { dosen: { unitKerja: { equals: unitKerja, mode: 'insensitive' } } }
+        ? { muzakki: { unitKerja: { equals: unitKerja, mode: 'insensitive' } } }
         : {};
 
     const where: Prisma.RekapZakatWhereInput = {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       prisma.rekapZakat.findMany({
         where,
         include: {
-          dosen: {
+          muzakki: {
             select: { nama: true, unitKerja: true },
           },
         },
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
         take: limit,
       }),
       prisma.rekapZakat.count({ where }),
-      prisma.dosen.findMany({
+      prisma.muzakki.findMany({
         select: { unitKerja: true },
         where: { unitKerja: { not: null } },
         distinct: ['unitKerja'],
@@ -57,8 +57,8 @@ export async function GET(request: NextRequest) {
 
     const formatted = rekaps.map((r) => ({
       id: r.id,
-      dosenNIP: r.dosenNIP,
-      dosen: r.dosen,
+      muzakkiNIP: r.muzakkiNIP,
+      muzakki: r.muzakki,
       tahunRekap: r.tahunRekap,
       fileUrl: r.fileUrl,
       createdAt: new Date(r.createdAt).toLocaleDateString('id-ID'),

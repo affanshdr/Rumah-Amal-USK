@@ -11,7 +11,7 @@ import { formatThousand, parseRawNumber } from "@/lib/formatNumber";
 export default function ZakatClient() {
   const searchParams = useSearchParams();
   const [lang, setLang] = useState<ZakatLanguage>("id");
-  const [tipePembayar, setTipePembayar] = useState<"masyarakat" | "dosen">("masyarakat");
+  const [tipePembayar, setTipePembayar] = useState<"masyarakat" | "muzakki">("masyarakat");
   const [jenisZakat, setJenisZakat] = useState<string>("");
   const [sumberDana, setSumberDana] = useState<string>("");
   const [jenisPerusahaan, setJenisPerusahaan] = useState<string>("");
@@ -53,10 +53,10 @@ export default function ZakatClient() {
     if (jlZakat) setJumlahZakat(formatThousand(jlZakat));
   }, [searchParams]);
 
-  const handleTipeSwitch = (tipe: "dosen" | "masyarakat") => {
+  const handleTipeSwitch = (tipe: "muzakki" | "masyarakat") => {
     setTipePembayar(tipe);
     setErrorMsg("");
-    if (tipe === "dosen") {
+    if (tipe === "muzakki") {
       setIsHambaAllah(false);
     }
   };
@@ -91,8 +91,8 @@ export default function ZakatClient() {
         <div className="inline-flex rounded-xl p-1 bg-gray-200/80 shadow-inner">
           <button
             type="button"
-            onClick={() => handleTipeSwitch("dosen")}
-            className={`text-xs sm:text-sm font-extrabold px-8 py-2.5 rounded-lg transition-all cursor-pointer ${tipePembayar === "dosen"
+            onClick={() => handleTipeSwitch("muzakki")}
+            className={`text-xs sm:text-sm font-extrabold px-8 py-2.5 rounded-lg transition-all cursor-pointer ${tipePembayar === "muzakki"
               ? "bg-[#FFBB0C] text-[#000] shadow-sm"
               : "text-gray-600 hover:text-[#000]"
               }`}
@@ -134,7 +134,7 @@ export default function ZakatClient() {
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h3 className="text-lg font-black text-[#000]">{t.formTitle}</h3>
               <span className="text-xs font-bold px-3 py-1 rounded-full bg-green-100 text-[#000] uppercase">
-                {tipePembayar === "dosen" ? t.tipeDosen : t.tipeMasyarakat}
+                {tipePembayar === "muzakki" ? t.tipeDosen : t.tipeMasyarakat}
               </span>
             </div>
 
@@ -213,8 +213,8 @@ export default function ZakatClient() {
               </div>
             </div>
 
-            {/* Dosen: cukup NIP — masyarakat: nama/email/alamat */}
-            {tipePembayar === "dosen" ? (
+            {/* Muzakki: cukup NIP — masyarakat: nama/email/alamat */}
+            {tipePembayar === "muzakki" ? (
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
                   {t.nipLabel} <span className="text-red-500">*</span>

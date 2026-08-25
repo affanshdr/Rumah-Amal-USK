@@ -13,7 +13,7 @@ import {
   faUnlink,
 } from '@fortawesome/free-solid-svg-icons';
 
-type DosenInfo = {
+type MuzakkiInfo = {
   nip: string;
   nama: string;
   npwp: string | null;
@@ -29,7 +29,7 @@ type DataInfaqModalProps = {
     nama: string;
     nip: string | null;
     noHp: string | null;
-    dosen: DosenInfo | null;
+    muzakki: MuzakkiInfo | null;
     tipePembayar: string;
     jenisInfaq: string;
     kampanyeId: string | null;
@@ -61,8 +61,8 @@ function DetailRow({ icon, label, value }: RowProps) {
 export default function DataInfaqModal({ isOpen, onClose, item }: DataInfaqModalProps) {
   if (!isOpen || !item) return null;
 
-  const noHp = item.dosen?.noHp || item.noHp;
-  const unitKerja = item.dosen?.unitKerja;
+  const noHp = item.muzakki?.noHp || item.noHp;
+  const unitKerja = item.muzakki?.unitKerja;
   const isTerikat = !!item.kampanyeJudul;
 
   return (

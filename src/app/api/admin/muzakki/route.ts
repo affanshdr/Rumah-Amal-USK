@@ -11,35 +11,35 @@ export async function GET(request: NextRequest) {
     const unitKerja = (searchParams.get('unitKerja') || 'all').trim();
     const skip = (page - 1) * limit;
 
-    const searchFilter: Prisma.DosenWhereInput = search
+    const searchFilter: Prisma.MuzakkiWhereInput = search
       ? {
-          OR: [
-            { nama: { contains: search, mode: 'insensitive' } },
-            { nip: { contains: search } },
-            { unitKerja: { contains: search, mode: 'insensitive' } },
-            { noHp: { contains: search } },
-          ],
-        }
+        OR: [
+          { nama: { contains: search, mode: 'insensitive' } },
+          { nip: { contains: search } },
+          { unitKerja: { contains: search, mode: 'insensitive' } },
+          { noHp: { contains: search } },
+        ],
+      }
       : {};
 
-    const unitKerjaFilter: Prisma.DosenWhereInput =
+    const unitKerjaFilter: Prisma.MuzakkiWhereInput =
       unitKerja && unitKerja !== 'all'
         ? { unitKerja: { equals: unitKerja, mode: 'insensitive' } }
         : {};
 
-    const where: Prisma.DosenWhereInput = {
+    const where: Prisma.MuzakkiWhereInput = {
       AND: [searchFilter, unitKerjaFilter],
     };
 
-    const [dosens, total, distinctUnitKerja] = await Promise.all([
-      prisma.dosen.findMany({
+    const [muzakkis, total, distinctUnitKerja] = await Promise.all([
+      prisma.muzakki.findMany({
         where,
         orderBy: { nama: 'asc' },
         skip,
         take: limit,
       }),
-      prisma.dosen.count({ where }),
-      prisma.dosen.findMany({
+      prisma.muzakki.count({ where }),
+      prisma.muzakki.findMany({
         select: { unitKerja: true },
         where: { unitKerja: { not: null } },
         distinct: ['unitKerja'],
@@ -52,16 +52,14 @@ export async function GET(request: NextRequest) {
       .filter((u): u is string => Boolean(u && u.length > 0));
 
     return NextResponse.json({
-      data: dosens,
+      data: muzakkis,
       total,
       page,
       totalPages: Math.ceil(total / limit),
       availableUnitKerja,
     });
   } catch (error) {
-    console.error('Error fetching dosens:', error);
+    console.error('Error fetching muzakkis:', error);
     return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 });
   }
 }
-
-
