@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         }
 
         validRows.push({
-          tipePembayar: 'muzakki',
+          tipePembayar: 'muzakki usk',
           jenisZakat,
           sumberDana: row.sumber_dana?.toString().trim() || null,
           jumlahZakat,

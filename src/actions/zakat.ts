@@ -21,7 +21,7 @@ export async function submitZakat(formData: FormData) {
   const sumberDana = (formData.get('sumber_dana') as string | null)?.trim() || null;
   const jenisPerusahaan = (formData.get('jenis_perusahaan') as string | null)?.trim() || null;
 
-  if (tipePembayar === 'muzakki') {
+  if (tipePembayar === 'muzakki usk' || tipePembayar === 'muzakki') {
     if (!nip) {
       throw new Error('NIP / NIDN wajib diisi untuk Muzakki USK');
     }
@@ -78,7 +78,7 @@ export async function submitZakat(formData: FormData) {
       email: email || null,
       alamat: alamat || null,
       noHp: noHp || null,
-      isHambaAllah: tipePembayar === 'muzakki' ? false : isHambaAllah,
+      isHambaAllah: (tipePembayar === 'muzakki usk' || tipePembayar === 'muzakki') ? false : isHambaAllah,
       bersediaDihubungi,
       pesan: pesan || null,
       buktiPembayaran,

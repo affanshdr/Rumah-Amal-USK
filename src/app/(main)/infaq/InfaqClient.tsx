@@ -7,6 +7,7 @@ import { submitInfaq } from "@/actions/infaq";
 import Image from "next/image";
 import { infaqDictionary, InfaqLanguage } from "@/lib/i18n/infaq";
 import { formatThousand, parseRawNumber } from "@/lib/formatNumber";
+import { TipePembayar } from "@/types";
 
 type KampanyeOption = {
   id: string;
@@ -21,7 +22,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
   const programFromUrl = searchParams.get("program");
 
   const [lang, setLang] = useState<InfaqLanguage>("id");
-  const [tipePembayar, setTipePembayar] = useState<"masyarakat" | "muzakki">("masyarakat");
+  const [tipePembayar, setTipePembayar] = useState<TipePembayar>("masyarakat");
   const [selectedKampanyeId, setSelectedKampanyeId] = useState<string>("");
   const [jenisInfaq, setJenisInfaq] = useState<string>("Infak Umum / Sedekah Sukarela");
   const [jumlahInfaq, setJumlahInfaq] = useState<string>("");
@@ -88,10 +89,10 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
     }
   };
 
-  const handleTipeSwitch = (tipe: "muzakki" | "masyarakat") => {
+  const handleTipeSwitch = (tipe: TipePembayar) => {
     setTipePembayar(tipe);
     setErrorMsg("");
-    if (tipe === "muzakki") setIsHambaAllah(false);
+    if (tipe === "muzakki usk") setIsHambaAllah(false);
   };
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -131,8 +132,8 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
         <div className="inline-flex rounded-xl p-1 bg-gray-200/80 shadow-inner">
           <button
             type="button"
-            onClick={() => handleTipeSwitch("muzakki")}
-            className={`text-xs sm:text-sm font-extrabold px-8 py-2.5 rounded-lg transition-all cursor-pointer ${tipePembayar === "muzakki"
+            onClick={() => handleTipeSwitch("muzakki usk")}
+            className={`text-xs sm:text-sm font-extrabold px-8 py-2.5 rounded-lg transition-all cursor-pointer ${tipePembayar === "muzakki usk"
               ? "bg-[#FFBB0C] text-[#000] shadow-sm"
               : "text-gray-600 hover:text-[#000]"
               }`}
@@ -175,7 +176,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                 {t.formTitle}
               </h3>
               <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-100 text-[#000] uppercase">
-                {tipePembayar === "muzakki" ? t.tipeDosen : t.tipeMasyarakat}
+                {tipePembayar === "muzakki usk" ? t.tipeDosen : t.tipeMasyarakat}
               </span>
             </div>
 
@@ -251,7 +252,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
             </div>
 
             {/* Muzakki: NIP — Masyarakat: Nama/Email/Alamat */}
-            {tipePembayar === "muzakki" ? (
+            {tipePembayar === "muzakki usk" ? (
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
                   {t.nipLabel} <span className="text-red-500">*</span>

@@ -1,4 +1,4 @@
-export type TipePembayar = 'muzakki' | 'masyarakat';
+export type TipePembayar = 'muzakki usk' | 'masyarakat';
 export type StatusPembayaran = 'pending' | 'lunas' | 'ditolak';
 
 export type JenisZakat =

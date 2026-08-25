@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
         }
 
         validRows.push({
-          tipePembayar: 'muzakki',
+          tipePembayar: 'muzakki usk',
           jenisInfaq: jenisInfaq || 'Infak Umum',
           kampanyeId: kampanyeId || null,
           jumlahInfaq,
