@@ -357,7 +357,7 @@ export default function AdminZakatPage() {
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase tracking-wider font-bold">
                 <th className="py-3.5 px-4">Muzakki</th>
-                <th className="py-3.5 px-4">Tanggal</th>
+                <th className="py-3.5 px-4">Jumlah Zakat</th>
                 <th className="py-3.5 px-4">Data Zakat</th>
                 <th className="py-3.5 px-4">Bukti</th>
                 <th className="py-3.5 px-4">Pesan</th>
@@ -391,7 +391,7 @@ export default function AdminZakatPage() {
                         <span className="text-[10px] text-gray-500 font-mono">NIP: {item.nip}</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-gray-600">{item.tanggal}</td>
+                    <td className="py-3.5 px-4 text-gray-600">{formatRupiah(item.jumlahZakat)}</td>
 
                     {/* Data Zakat — Tombol Lihat */}
                     <td className="py-3.5 px-4">

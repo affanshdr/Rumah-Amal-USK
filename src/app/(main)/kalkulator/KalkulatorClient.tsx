@@ -66,9 +66,7 @@ const TABEL_KAMBING = [
   { range: "121–200 ekor", zakat: "2 ekor kambing" },
   { range: "201–299 ekor", zakat: "3 ekor kambing" },
   { range: "300–399 ekor", zakat: "4 ekor kambing" },
-  { range: "400–499 ekor", zakat: "4 ekor kambing" },
-  { range: "500–599 ekor", zakat: "5 ekor kambing" },
-  { range: "≥ 600 ekor", zakat: "Setiap 100 ekor = 1 ekor kambing" },
+  { range: "≥ 400 ekor", zakat: "Setiap 100 ekor = 1 ekor kambing" },
 ];
 
 const TABEL_SAPI = [
