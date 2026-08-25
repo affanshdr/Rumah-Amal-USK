@@ -6,7 +6,13 @@ export type JenisZakat =
   | 'emas'
   | 'profesi'
   | 'perniagaan'
-  | 'perusahaan';
+  | 'perusahaan'
+  | 'pertanian'
+  | 'peternakan';
+
+export type JenisTanamanZakat = 'padi' | 'jagung' | 'gandum' | 'kurma';
+export type JenisPengairan = 'irigasi' | 'hujan_sungai';
+export type JenisTernak = 'kambing' | 'sapi_kerbau';
 
 export type SumberDana =
   | 'remon'
@@ -113,6 +119,10 @@ export interface KalkulatorResult {
   jumlah_zakat: number;
   jenis_zakat: JenisZakat;
   pesan?: string;
+  /** Deskripsi teks output zakat peternakan, misal: '2 ekor anak sapi umur 1–2 tahun' */
+  pesan_ternak?: string;
+  /** Untuk zakat pertanian: hasil zakat dalam kg */
+  jumlah_zakat_kg?: number;
 }
 
 export interface RiwayatZakatItem {

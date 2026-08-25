@@ -3,8 +3,8 @@ export type RiwayatLanguage = 'id' | 'en' | 'ar';
 export const riwayatDictionary: Record<RiwayatLanguage, Record<string, string>> = {
   id: {
     pageTitle: "Cek Riwayat Zakat & Infaq",
-    pageSubtitle: "Gunakan NIP / NIDN dengan verifikasi OTP WhatsApp untuk muzakki USK, atau Email untuk masyarakat umum.",
-    modeNip: "NIP & OTP WhatsApp (Muzakki USK)",
+    pageSubtitle: "Gunakan NIP / NIDN dengan verifikasi OTP WhatsApp untuk Dosen/Staff USK, atau Email untuk masyarakat umum.",
+    modeNip: "NIP & OTP WhatsApp (Dosen/Staff USK)",
     modeEmail: "Email (Masyarakat Umum)",
     labelNip: "NIP / NIDN",
     placeholderNip: "Masukkan NIP / NIDN Anda (Contoh: 198501...)",
@@ -63,8 +63,8 @@ export const riwayatDictionary: Record<RiwayatLanguage, Record<string, string>> 
   },
   en: {
     pageTitle: "Check Zakat & Infaq History",
-    pageSubtitle: "Use NIP / NIDN with WhatsApp OTP verification for USK muzakki, or Email for the general public.",
-    modeNip: "NIP & WhatsApp OTP (USK Muzakki)",
+    pageSubtitle: "Use NIP / NIDN with WhatsApp OTP verification for USK Lecturer/Staff, or Email for the general public.",
+    modeNip: "NIP & WhatsApp OTP (USK Lecturer/Staff)",
     modeEmail: "Email (General Public)",
     labelNip: "NIP / NIDN",
     placeholderNip: "Enter your NIP / NIDN (e.g. 198501...)",
@@ -124,7 +124,7 @@ export const riwayatDictionary: Record<RiwayatLanguage, Record<string, string>> 
   ar: {
     pageTitle: "التحقق من سجل الزكاة والإنفاق",
     pageSubtitle: "استخدم الرقم الوظيفي مع التحقق عبر رمز OTP للواتساب لموظفي الجامعة، أو البريد الإلكتروني للعامة.",
-    modeNip: "الرقم الوظيفي ورمز واتساب OTP (الموظفون)",
+    modeNip: "الرقم الوظيفي ورمز واتساب OTP (أعضاء هيئة التدريس / موظفو USK)",
     modeEmail: "البريد الإلكتروني (عامة الجمهور)",
     labelNip: "الرقم الوظيفي (NIP / NIDN)",
     placeholderNip: "أدخل الرقم الوظيفي الخاص بك (مثال: 198501...)",

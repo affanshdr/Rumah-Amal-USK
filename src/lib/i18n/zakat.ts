@@ -2,7 +2,7 @@ export type ZakatLanguage = 'id' | 'en' | 'ar';
 
 export const zakatDictionary: Record<ZakatLanguage, Record<string, string>> = {
   id: {
-    tipeDosen: 'Muzakki USK',
+    tipeDosen: 'Dosen/Staff USK',
     tipeMasyarakat: 'Masyarakat Umum',
     formTitle: 'Formulir Pembayaran Zakat',
     jenisZakatLabel: 'Jenis Zakat',
@@ -48,7 +48,7 @@ export const zakatDictionary: Record<ZakatLanguage, Record<string, string>> = {
     submittingBtn: 'Memproses Pembayaran...',
   },
   en: {
-    tipeDosen: 'USK Faculty / Staff',
+    tipeDosen: 'USK Lecturer / Staff',
     tipeMasyarakat: 'General Public',
     formTitle: 'Zakat Payment Form',
     jenisZakatLabel: 'Zakat Type',

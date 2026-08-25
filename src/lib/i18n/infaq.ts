@@ -2,7 +2,7 @@ export type InfaqLanguage = 'id' | 'en' | 'ar';
 
 export const infaqDictionary: Record<InfaqLanguage, Record<string, string>> = {
   id: {
-    tipeDosen: 'Muzakki USK',
+    tipeDosen: 'Dosen/Staff USK',
     tipeMasyarakat: 'Masyarakat Umum',
     formTitle: 'Formulir Pembayaran Infaq',
     kategoriLabel: 'Kategori Program Infaq',
@@ -15,7 +15,7 @@ export const infaqDictionary: Record<InfaqLanguage, Record<string, string>> = {
     jumlahLabel: 'Jumlah Infaq',
     jumlahPlaceholder: 'Jumlah infaq yang ingin disalurkan',
     nipLabel: 'NIP / NIDN',
-    nipPlaceholder: 'Masukkan NIP / NIDN Muzakki USK',
+    nipPlaceholder: 'Masukkan NIP / NIDN Dosen/Staff USK',
     namaLabel: 'Nama Lengkap',
     namaPlaceholder: 'Nama Lengkap Donatur',
     hambaAllahLabel: 'Sembunyikan nama saya (Hamba Allah)',
@@ -39,7 +39,7 @@ export const infaqDictionary: Record<InfaqLanguage, Record<string, string>> = {
     errorDefault: 'Terjadi kesalahan saat memproses infaq.',
   },
   en: {
-    tipeDosen: 'USK Faculty / Staff',
+    tipeDosen: 'USK Lecturer / Staff',
     tipeMasyarakat: 'General Public',
     formTitle: 'Infaq Payment Form',
     kategoriLabel: 'Infaq Program Category',
