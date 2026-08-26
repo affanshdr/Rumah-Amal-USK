@@ -6,7 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import { hitungZakat, hitungZakatPertanian, hitungZakatPeternakan, formatRupiah } from "@/lib/kalkulator";
 import { formatThousand, parseRawNumber } from "@/lib/formatNumber";
 import { JenisZakat, JenisPerusahaan, KalkulatorResult } from "@/types";
-import { kalkulatorDictionary, KalkulatorLanguage } from "@/lib/i18n/kalkulator";
+import { kalkulatorDictionary, KalkulatorLanguage, TABEL_KAMBING_I18N, TABEL_SAPI_I18N } from "@/lib/i18n/kalkulator";
 
 interface FieldItem {
   name: string;
@@ -58,29 +58,6 @@ const fieldConfigPerusahaan: Record<string, FieldItem[]> = {
     { name: "laba_sebelum_pajak", label: "Laba Sebelum Pajak (Rp)" },
   ],
 };
-
-// Tabel nisab kambing untuk ditampilkan di info box
-const TABEL_KAMBING = [
-  { range: "< 40 ekor", zakat: "Tidak wajib zakat" },
-  { range: "40–120 ekor", zakat: "1 ekor kambing" },
-  { range: "121–200 ekor", zakat: "2 ekor kambing" },
-  { range: "201–299 ekor", zakat: "3 ekor kambing" },
-  { range: "300–399 ekor", zakat: "4 ekor kambing" },
-  { range: "≥ 400 ekor", zakat: "Setiap 100 ekor = 1 ekor kambing" },
-];
-
-const TABEL_SAPI = [
-  { range: "< 30 ekor", zakat: "Tidak wajib zakat" },
-  { range: "30–39 ekor", zakat: "1 ekor anak sapi umur 1–2 tahun" },
-  { range: "40–59 ekor", zakat: "1 ekor anak sapi umur 2–3 tahun" },
-  { range: "60–69 ekor", zakat: "2 ekor anak sapi umur 1–2 tahun" },
-  { range: "70–79 ekor", zakat: "1 umur 2–3 thn + 1 umur 1–2 thn" },
-  { range: "80–89 ekor", zakat: "2 ekor anak sapi umur 2–3 tahun" },
-  { range: "90–99 ekor", zakat: "3 ekor anak sapi umur 1–2 tahun" },
-  { range: "100–109 ekor", zakat: "1 umur 2–3 thn + 2 umur 1–2 thn" },
-  { range: "110–119 ekor", zakat: "2 umur 2–3 thn + 1 umur 1–2 thn" },
-  { range: "≥ 120 ekor", zakat: "Setiap 30 = 1 ekor (1–2 thn), setiap 40 = 1 ekor (2–3 thn)" },
-];
 
 export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabConfigType }) {
   const [lang, setLang] = useState<KalkulatorLanguage>("id");
@@ -147,6 +124,7 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
       const res = hitungZakatPeternakan({
         jumlah_ternak,
         jenis_ternak: jenisTernak as "kambing" | "sapi_kerbau",
+        lang,
       });
       setModalResult(res);
       setShowModal(true);
@@ -200,8 +178,8 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
             {/* Nisab badge */}
             <div className="bg-white rounded-xl border border-green-200 px-4 py-2.5 flex items-center justify-between shadow-sm">
               <div>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Nisab Minimum</p>
-                <p className="text-xl font-black text-green-800">653 <span className="text-sm font-bold">kg</span></p>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t.nisabMinTitle || "Nisab Minimum"}</p>
+                <p className="text-xl font-black text-green-800">653 <span className="text-sm font-bold">{t.satuanKg || "kg"}</span></p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-green-700 shrink-0">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,27 +189,27 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
             </div>
 
             {/* Tarif cards */}
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Tarif Zakat Berdasarkan Pengairan</p>
+            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t.tarifPengairanTitle || "Tarif Zakat Berdasarkan Pengairan"}</p>
             <div className="grid grid-cols-2 gap-2.5">
               <div className="bg-white rounded-xl border border-green-200 px-3 py-3 shadow-sm space-y-1.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-gray-600 leading-tight">Irigasi / Disiram</span>
+                  <span className="text-[11px] font-bold text-gray-600 leading-tight">{t.irigasiLabel || "Irigasi / Disiram"}</span>
                 </div>
                 <p className="text-2xl font-black text-green-700">5%</p>
-                <p className="text-[10px] text-gray-500 leading-tight">Pengairan buatan / pompa</p>
+                <p className="text-[10px] text-gray-500 leading-tight">{t.irigasiDesc || "Pengairan buatan / pompa"}</p>
               </div>
               <div className="bg-white rounded-xl border border-emerald-300 px-3 py-3 shadow-sm space-y-1.5 ring-1 ring-emerald-200">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-gray-600 leading-tight">Air Hujan / Sungai</span>
+                  <span className="text-[11px] font-bold text-gray-600 leading-tight">{t.hujanSungaiLabel || "Air Hujan / Sungai"}</span>
                 </div>
                 <p className="text-2xl font-black text-emerald-700">10%</p>
-                <p className="text-[10px] text-gray-500 leading-tight">Tadah hujan / aliran sungai</p>
+                <p className="text-[10px] text-gray-500 leading-tight">{t.hujanSungaiDesc || "Tadah hujan / aliran sungai"}</p>
               </div>
             </div>
 
             {/* Note */}
             <p className="text-[11px] text-gray-500 leading-relaxed bg-green-100/60 rounded-lg px-3 py-2 border border-green-200/60">
-              Jika hasil panen ≥ 653 kg, zakat wajib dikeluarkan dari total hasil panen sesuai tarif pengairan.
+              {t.catatanPertanian || "Jika hasil panen ≥ 653 kg, zakat wajib dikeluarkan dari total hasil panen sesuai tarif pengairan."}
             </p>
           </div>
         </div>
@@ -240,24 +218,26 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
 
     if (jenisZakat === "peternakan") {
       const isKambing = !jenisTernak || jenisTernak === "kambing";
-      const tabel = isKambing ? TABEL_KAMBING : TABEL_SAPI;
+      const tabel = isKambing
+        ? (TABEL_KAMBING_I18N[lang] || TABEL_KAMBING_I18N.id)
+        : (TABEL_SAPI_I18N[lang] || TABEL_SAPI_I18N.id);
       const title = isKambing ? t.nisabPeternakanKambingTitle : t.nisabPeternakanSapiTitle;
       return (
-        <div className={`bg-amber-50/80 border-l-4 border-amber-500 p-4 rounded-r-xl text-xs sm:text-sm text-gray-800 space-y-2 ${isAr ? "border-l-0 border-r-4 rounded-r-none rounded-l-xl" : ""}`}>
+        <div className={`bg-amber-50/80 p-4 text-xs sm:text-sm text-gray-800 space-y-2 ${isAr ? "border-r-4 border-amber-500 rounded-l-xl rounded-r-none text-right" : "border-l-4 border-amber-500 rounded-r-xl text-left"}`}>
           <p className="font-extrabold text-amber-800">{title}</p>
           <div className="overflow-x-auto">
             <table className="w-full text-xs border-collapse mt-1">
               <thead>
                 <tr className="bg-amber-100">
-                  <th className="text-left px-2 py-1.5 font-bold text-amber-900 border border-amber-200 rounded-tl-lg">Jumlah</th>
-                  <th className="text-left px-2 py-1.5 font-bold text-amber-900 border border-amber-200 rounded-tr-lg">Zakat yang Dikeluarkan</th>
+                  <th className={`${isAr ? "text-right" : "text-left"} px-2 py-1.5 font-bold text-amber-900 border border-amber-200 rounded-tl-lg`}>{t.thJumlahTernak || "Jumlah Ternak"}</th>
+                  <th className={`${isAr ? "text-right" : "text-left"} px-2 py-1.5 font-bold text-amber-900 border border-amber-200 rounded-tr-lg`}>{t.thKewajibanZakat || "Kewajiban Zakat"}</th>
                 </tr>
               </thead>
               <tbody>
                 {tabel.map((row, i) => (
                   <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-amber-50/40"}>
-                    <td className="px-2 py-1.5 border border-amber-100 font-medium text-gray-700">{row.range}</td>
-                    <td className="px-2 py-1.5 border border-amber-100 text-amber-800 font-semibold">{row.zakat}</td>
+                    <td className={`px-2 py-1.5 border border-amber-100 font-medium text-gray-700 ${isAr ? "text-right" : "text-left"}`}>{row.range}</td>
+                    <td className={`px-2 py-1.5 border border-amber-100 text-amber-800 font-semibold ${isAr ? "text-right" : "text-left"}`}>{row.zakat}</td>
                   </tr>
                 ))}
               </tbody>
@@ -269,9 +249,9 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
 
     // Default: info box emas/profesi
     return (
-      <div className={`bg-amber-50/70 border-l-4 border-[#FFBB0C] p-4 rounded-r-xl text-xs sm:text-sm text-gray-800 space-y-1.5 ${isAr ? "border-l-0 border-r-4 rounded-r-none rounded-l-xl" : ""}`}>
+      <div className={`bg-amber-50/70 p-4 text-xs sm:text-sm text-gray-800 space-y-1.5 ${isAr ? "border-r-4 border-[#FFBB0C] rounded-l-xl rounded-r-none text-right" : "border-l-4 border-[#FFBB0C] rounded-r-xl text-left"}`}>
         <p className="font-extrabold text-[#000]">{t.nisabTitle}</p>
-        <ul className="list-disc list-inside space-y-1.5 text-gray-700 font-medium leading-relaxed">
+        <ul className={`list-disc space-y-1.5 text-gray-700 font-medium leading-relaxed ${isAr ? "list-inside pr-5 pl-0" : "list-inside pl-5"}`}>
           <li>
             {(() => {
               const text = nisabConfig.aturanQanun || 'Qanun Aceh No. 10/2018 tentang Baitul Mal';
@@ -379,7 +359,7 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
         {/* Output: Pertanian → kg */}
         {modalResult.jenis_zakat === "pertanian" && (
           <div className="text-2xl font-black text-green-800 bg-green-50 py-3 rounded-xl border border-green-200">
-            {(modalResult.jumlah_zakat_kg ?? 0).toLocaleString("id-ID", { maximumFractionDigits: 2 })} {t.satuanKg}
+            {(modalResult.jumlah_zakat_kg ?? 0).toLocaleString(lang === "ar" ? "ar-SA" : lang === "en" ? "en-US" : "id-ID", { maximumFractionDigits: 2 })} {t.satuanKg}
           </div>
         )}
 
@@ -414,6 +394,7 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
   return (
     <main
       className={`flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full ${isAr ? "text-right" : ""}`}
+      dir={isAr ? "rtl" : "ltr"}
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Sidebar Navigasi */}
@@ -555,3 +536,4 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
     </main>
   );
 }
+

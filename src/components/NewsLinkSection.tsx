@@ -30,7 +30,7 @@ export default function NewsLinkSection({
   const sectionTitle =
     title ||
     homeDictionary[lang]?.sections?.beritaTerkait ||
-    "BERITA TERKAIT";
+    "RILIS MEDIA EKSTERNAL";
 
   // Deteksi jumlah item per view berdasarkan lebar layar
   useEffect(() => {

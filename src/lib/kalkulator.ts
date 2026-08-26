@@ -127,7 +127,10 @@ export function hitungZakatPertanian(params: {
 // ---------------------------------------------------------------------------
 // Zakat Peternakan — Kambing/Domba
 // ---------------------------------------------------------------------------
-function hitungZakatKambing(jumlah: number): { mencapai_nisab: boolean; pesan_ternak: string } {
+function hitungZakatKambing(
+  jumlah: number,
+  lang: 'id' | 'en' | 'ar' = 'id'
+): { mencapai_nisab: boolean; pesan_ternak: string } {
   if (jumlah < 40) return { mencapai_nisab: false, pesan_ternak: '' };
 
   let ekor: number;
@@ -141,58 +144,125 @@ function hitungZakatKambing(jumlah: number): { mencapai_nisab: boolean; pesan_te
     // Setiap 100 ekor = 1 ekor kambing, dimulai dari 300
     ekor = Math.floor(jumlah / 100);
   }
-  return { mencapai_nisab: true, pesan_ternak: `${ekor} ekor kambing` };
+
+  let pesan = `${ekor} ekor kambing`;
+  if (lang === 'en') {
+    pesan = `${ekor} ${ekor === 1 ? 'goat/sheep' : 'goats/sheep'}`;
+  } else if (lang === 'ar') {
+    if (ekor === 1) pesan = 'شاة واحدة';
+    else if (ekor === 2) pesan = 'شاتان';
+    else if (ekor >= 3 && ekor <= 10) pesan = `${ekor} شياه`;
+    else pesan = `${ekor} رأس من الغنم/الماعز`;
+  }
+
+  return { mencapai_nisab: true, pesan_ternak: pesan };
 }
 
 // ---------------------------------------------------------------------------
 // Zakat Peternakan — Sapi/Kerbau
 // ---------------------------------------------------------------------------
-function hitungZakatSapiKerbau(jumlah: number): { mencapai_nisab: boolean; pesan_ternak: string } {
+function hitungZakatSapiKerbau(
+  jumlah: number,
+  lang: 'id' | 'en' | 'ar' = 'id'
+): { mencapai_nisab: boolean; pesan_ternak: string } {
   if (jumlah < 30) return { mencapai_nisab: false, pesan_ternak: '' };
 
   // Tabel eksplisit 30–119
-  const tabelEksplisit: Array<{ min: number; max: number; pesan: string }> = [
-    { min: 30,  max: 39,  pesan: '1 ekor anak sapi/kerbau umur 1–2 tahun' },
-    { min: 40,  max: 59,  pesan: '1 ekor anak sapi/kerbau umur 2–3 tahun' },
-    { min: 60,  max: 69,  pesan: '2 ekor anak sapi/kerbau umur 1–2 tahun' },
-    { min: 70,  max: 79,  pesan: '1 ekor umur 2–3 tahun + 1 ekor umur 1–2 tahun' },
-    { min: 80,  max: 89,  pesan: '2 ekor anak sapi/kerbau umur 2–3 tahun' },
-    { min: 90,  max: 99,  pesan: '3 ekor anak sapi/kerbau umur 1–2 tahun' },
-    { min: 100, max: 109, pesan: '1 ekor umur 2–3 tahun + 2 ekor umur 1–2 tahun' },
-    { min: 110, max: 119, pesan: '2 ekor umur 2–3 tahun + 1 ekor umur 1–2 tahun' },
+  const tabelEksplisit: Array<{ min: number; max: number; id: string; en: string; ar: string }> = [
+    {
+      min: 30, max: 39,
+      id: '1 ekor anak sapi/kerbau umur 1–2 tahun',
+      en: '1 calf/buffalo (1–2 years old)',
+      ar: 'عجل تبيع (بعمر سنة إلى سنتين)'
+    },
+    {
+      min: 40, max: 59,
+      id: '1 ekor anak sapi/kerbau umur 2–3 tahun',
+      en: '1 calf/buffalo (2–3 years old)',
+      ar: 'مسنة (بعمر سنتين إلى ٣ سنوات)'
+    },
+    {
+      min: 60, max: 69,
+      id: '2 ekor anak sapi/kerbau umur 1–2 tahun',
+      en: '2 calves/buffalos (1–2 years old)',
+      ar: 'تبيعان (بعمر سنة إلى سنتين)'
+    },
+    {
+      min: 70, max: 79,
+      id: '1 ekor umur 2–3 tahun + 1 ekor umur 1–2 tahun',
+      en: '1 head (2–3 yrs) + 1 head (1–2 yrs)',
+      ar: 'مسنة واحدة + تبيع واحد'
+    },
+    {
+      min: 80, max: 89,
+      id: '2 ekor anak sapi/kerbau umur 2–3 tahun',
+      en: '2 calves/buffalos (2–3 years old)',
+      ar: 'مسنتان (بعمر سنتين إلى ٣ سنوات)'
+    },
+    {
+      min: 90, max: 99,
+      id: '3 ekor anak sapi/kerbau umur 1–2 tahun',
+      en: '3 calves/buffalos (1–2 years old)',
+      ar: 'ثلاثة أتبعة (بعمر سنة إلى سنتين)'
+    },
+    {
+      min: 100, max: 109,
+      id: '1 ekor umur 2–3 tahun + 2 ekor umur 1–2 tahun',
+      en: '1 head (2–3 yrs) + 2 head (1–2 yrs)',
+      ar: 'مسنة واحدة + تبيعان'
+    },
+    {
+      min: 110, max: 119,
+      id: '2 ekor umur 2–3 tahun + 1 ekor umur 1–2 tahun',
+      en: '2 head (2–3 yrs) + 1 head (1–2 yrs)',
+      ar: 'مسنتان + تبيع واحد'
+    },
   ];
 
   const cocok = tabelEksplisit.find((r) => jumlah >= r.min && jumlah <= r.max);
-  if (cocok) return { mencapai_nisab: true, pesan_ternak: cocok.pesan };
+  if (cocok) return { mencapai_nisab: true, pesan_ternak: cocok[lang] || cocok.id };
 
   // Kaidah untuk >= 120: setiap 30 = 1 ekor (1–2 thn), setiap 40 = 1 ekor (2–3 thn)
-  // Gunakan kombinasi yang menghasilkan jumlah kelipatan 30 & 40 terbesar
-  let bestPesan = '';
   let bestTotal = -1;
+  let part2to3 = 0;
+  let part1to2 = 0;
   for (let a = 0; a * 30 <= jumlah; a++) {
     for (let b = 0; a * 30 + b * 40 <= jumlah; b++) {
       const used = a * 30 + b * 40;
       if (used > bestTotal && used <= jumlah) {
         bestTotal = used;
-        const parts: string[] = [];
-        if (b > 0) parts.push(`${b} ekor umur 2–3 tahun`);
-        if (a > 0) parts.push(`${a} ekor umur 1–2 tahun`);
-        bestPesan = parts.join(' + ');
+        part1to2 = a;
+        part2to3 = b;
       }
     }
   }
-  return { mencapai_nisab: true, pesan_ternak: bestPesan || `${Math.floor(jumlah / 30)} ekor umur 1–2 tahun` };
+
+  const parts: string[] = [];
+  if (lang === 'en') {
+    if (part2to3 > 0) parts.push(`${part2to3} head (2–3 yrs)`);
+    if (part1to2 > 0) parts.push(`${part1to2} head (1–2 yrs)`);
+    return { mencapai_nisab: true, pesan_ternak: parts.join(' + ') || `${Math.floor(jumlah / 30)} head (1–2 yrs)` };
+  } else if (lang === 'ar') {
+    if (part2to3 > 0) parts.push(part2to3 === 1 ? 'مسنة واحدة' : part2to3 === 2 ? 'مسنتان' : `${part2to3} مسنات`);
+    if (part1to2 > 0) parts.push(part1to2 === 1 ? 'تبيع واحد' : part1to2 === 2 ? 'تبيعان' : `${part1to2} أتبعة`);
+    return { mencapai_nisab: true, pesan_ternak: parts.join(' + ') || `${Math.floor(jumlah / 30)} تبيع` };
+  } else {
+    if (part2to3 > 0) parts.push(`${part2to3} ekor umur 2–3 tahun`);
+    if (part1to2 > 0) parts.push(`${part1to2} ekor umur 1–2 tahun`);
+    return { mencapai_nisab: true, pesan_ternak: parts.join(' + ') || `${Math.floor(jumlah / 30)} ekor umur 1–2 tahun` };
+  }
 }
 
 export function hitungZakatPeternakan(params: {
   jumlah_ternak: number;
   jenis_ternak: 'kambing' | 'sapi_kerbau';
+  lang?: 'id' | 'en' | 'ar';
 }): KalkulatorResult {
-  const { jumlah_ternak, jenis_ternak } = params;
+  const { jumlah_ternak, jenis_ternak, lang = 'id' } = params;
   const hasil =
     jenis_ternak === 'kambing'
-      ? hitungZakatKambing(jumlah_ternak)
-      : hitungZakatSapiKerbau(jumlah_ternak);
+      ? hitungZakatKambing(jumlah_ternak, lang)
+      : hitungZakatSapiKerbau(jumlah_ternak, lang);
   return {
     mencapai_nisab: hasil.mencapai_nisab,
     jumlah_zakat: 0,

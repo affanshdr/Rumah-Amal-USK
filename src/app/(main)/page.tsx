@@ -954,7 +954,7 @@ export default function Home() {
         <MediaSocialSection />
       </RevealOnScroll>
 
-      {/* ===== SECTION 7: BERITA TERKAIT ===== */}
+      {/* ===== SECTION 7: RILIS MEDIA EKSTERNAL ===== */}
       <RevealOnScroll>
         <NewsLinkSection newsLinks={newsLinks} lang={lang} />
       </RevealOnScroll>
