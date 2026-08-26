@@ -37,6 +37,7 @@ const NAV_LABELS: Record<Language, Record<string, string>> = {
     Dokumen: "Dokumen",
     Galeri: "Galeri",
     BayarZakat: "Kalkulator Zakat",
+    CekRiwayat: "Cek Riwayat Zakat & Infaq",
     Bahasa: "Bahasa",
   },
   en: {
@@ -50,6 +51,7 @@ const NAV_LABELS: Record<Language, Record<string, string>> = {
     Dokumen: "Documents",
     Galeri: "Gallery",
     BayarZakat: "Zakat Calculator",
+    CekRiwayat: "Check Zakat & Infaq History",
     Bahasa: "Language",
   },
   ar: {
@@ -63,6 +65,7 @@ const NAV_LABELS: Record<Language, Record<string, string>> = {
     Dokumen: "الوثائق",
     Galeri: "المعرض",
     BayarZakat: "حاسبة الزكاة",
+    CekRiwayat: "التحقق من سجل الزكاة والإنفاق",
     Bahasa: "اللغة",
   },
 };
@@ -147,19 +150,18 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 ease-in-out ${
-          mobileMenuOpen
-            ? "bg-[#383d42] border-b border-transparent shadow-none"
-            : isHomePage
-              ? isScrolled
-                ? "bg-white border-b border-gray-200 shadow-md lg:fixed lg:top-0 lg:inset-x-0 lg:translate-y-0 lg:opacity-100 lg:pointer-events-auto"
-                : "bg-white border-b border-gray-200 shadow-2xs lg:fixed lg:top-0 lg:inset-x-0 lg:-translate-y-full lg:opacity-0 lg:pointer-events-none"
-              : "bg-white border-b border-gray-200 shadow-2xs"
-        }`}
+        className={`sticky top-0 z-50 transition-all duration-300 ease-in-out ${mobileMenuOpen
+          ? "bg-[#383d42] border-b border-transparent shadow-none"
+          : isHomePage
+            ? isScrolled
+              ? "bg-white border-b border-gray-200 shadow-md lg:fixed lg:top-0 lg:inset-x-0 lg:translate-y-0 lg:opacity-100 lg:pointer-events-auto"
+              : "bg-white border-b border-gray-200 shadow-2xs lg:fixed lg:top-0 lg:inset-x-0 lg:-translate-y-full lg:opacity-0 lg:pointer-events-none"
+            : "bg-white border-b border-gray-200 shadow-2xs"
+          }`}
         dir={currentLang === 'ar' ? 'rtl' : 'ltr'}
       >
-        <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-[68px]">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-[68px] gap-4">
 
             {/* Brand Logo */}
             <Link href="/" className="flex items-center shrink-0">
@@ -266,9 +268,8 @@ export default function Navbar() {
                 >
                   <span>{t.Bahasa}</span>
                   <svg
-                    className={`w-3.5 h-3.5 text-white/80 transition-transform duration-200 ${
-                      langDropdownOpen ? "rotate-180 text-white" : ""
-                    }`}
+                    className={`w-3.5 h-3.5 text-white/80 transition-transform duration-200 ${langDropdownOpen ? "rotate-180 text-white" : ""
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -290,11 +291,10 @@ export default function Navbar() {
                             changeGlobalLanguage(langItem.code);
                             setLangDropdownOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2 text-xs transition-colors cursor-pointer ${
-                            isSelected
-                              ? "bg-green-50 text-[#0b6330] font-bold"
-                              : "text-gray-700 font-medium hover:bg-gray-50 hover:text-[#0b6330]"
-                          }`}
+                          className={`w-full text-left px-4 py-2 text-xs transition-colors cursor-pointer ${isSelected
+                            ? "bg-green-50 text-[#0b6330] font-bold"
+                            : "text-gray-700 font-medium hover:bg-gray-50 hover:text-[#0b6330]"
+                            }`}
                         >
                           {langItem.label}
                         </button>
@@ -303,6 +303,14 @@ export default function Navbar() {
                   </div>
                 )}
               </div>
+
+              {/* Cek Riwayat Zakat & Infaq Button */}
+              <Link
+                href="/riwayat"
+                className="hidden lg:inline-flex items-center justify-center bg-[#ffc800] hover:bg-[#e8b500] text-[#1a1a1a] font-extrabold text-[13px] px-4 py-2 rounded-lg transition-all duration-200 shadow-2xs"
+              >
+                {t.CekRiwayat}
+              </Link>
 
               {/* Kalkulator Zakat Button */}
               <Link
@@ -368,9 +376,8 @@ export default function Navbar() {
                             setMobileLangOpen(false);
                             setMobileMenuOpen(false);
                           }}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all cursor-pointer ${
-                            isSelected ? "bg-[#0b6330] text-white shadow-xs font-bold" : "text-gray-700 font-medium hover:bg-gray-200/60"
-                          }`}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all cursor-pointer ${isSelected ? "bg-[#0b6330] text-white shadow-xs font-bold" : "text-gray-700 font-medium hover:bg-gray-200/60"
+                            }`}
                         >
                           {langItem.label}
                         </button>
@@ -483,11 +490,20 @@ export default function Navbar() {
                 {t.Galeri}
               </Link>
 
+              {/* Cek Riwayat Zakat & Infaq */}
+              <Link
+                href="/riwayat"
+                onClick={() => setMobileMenuOpen(false)}
+                className="bg-[#ffc800] hover:bg-[#e8b500] text-[#111111] font-bold text-[16px] text-center px-5 py-3.5 rounded-xl shadow-xs transition-all block mt-2"
+              >
+                {t.CekRiwayat}
+              </Link>
+
               {/* Kalkulator Zakat */}
               <Link
                 href="/kalkulator"
                 onClick={() => setMobileMenuOpen(false)}
-                className="bg-[#ffc800] hover:bg-[#e8b500] text-[#111111] font-bold text-[16px] text-left px-5 py-3.5 rounded-xl shadow-xs transition-all block mt-2"
+                className="bg-[#ffc800] hover:bg-[#e8b500] text-[#111111] font-bold text-[16px] text-center px-5 py-3.5 rounded-xl shadow-xs transition-all block mt-2"
               >
                 {t.BayarZakat}
               </Link>

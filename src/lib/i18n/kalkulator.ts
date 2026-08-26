@@ -283,7 +283,7 @@ export const TABEL_PERTANIAN_I18N: Record<KalkulatorLanguage, Array<{ tanaman: s
     { tanaman: "Kurma", nisab: "653 kg / panen", tarif: "5% (Irigasi/Disiram) • 10% (Tadah Hujan/Alami)" },
   ],
   en: [
-    { tanaman: "Paddy / Rice", nisab: "1,200 kg / harvest", tarif: "5% (Irrigated) • 10% (Rain-fed)" },
+    { tanaman: "Rice", nisab: "1,200 kg / harvest", tarif: "5% (Irrigated) • 10% (Rain-fed)" },
     { tanaman: "Dry Shelled Corn", nisab: "653 kg / harvest", tarif: "5% (Irrigated) • 10% (Rain-fed)" },
     { tanaman: "Dates", nisab: "653 kg / harvest", tarif: "5% (Irrigated) • 10% (Rain-fed)" },
   ],
