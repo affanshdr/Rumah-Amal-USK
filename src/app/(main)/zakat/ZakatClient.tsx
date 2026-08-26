@@ -85,7 +85,10 @@ export default function ZakatClient() {
   };
 
   return (
-    <main className="flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full font-sans">
+    <main
+      className={`flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full font-sans ${isRtl ? "text-right" : ""}`}
+      dir={isRtl ? "rtl" : "ltr"}
+    >
 
       {/* Selector Tab Tipe Pembayar */}
       <div className="text-center mb-8">

@@ -51,7 +51,10 @@ export default function InfaqSuksesPage({
   const isAr = lang === "ar";
 
   return (
-    <main className={`flex-grow py-12 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full ${isAr ? "text-right" : ""}`}>
+    <main
+      className={`flex-grow py-12 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full ${isAr ? "text-right" : ""}`}
+      dir={isAr ? "rtl" : "ltr"}
+    >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <Sidebar />
 

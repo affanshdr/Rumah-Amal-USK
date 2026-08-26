@@ -45,7 +45,7 @@ export default function Sidebar() {
             key={item.href}
             href={item.href}
             className={`w-full font-bold py-4 px-6 rounded-xl transition-all duration-200 flex justify-between items-center text-sm shadow-xs ${
-              isAr ? "flex-row-reverse text-right" : "text-left"
+              isAr ? "text-right" : "text-left"
             } ${
               isActive
                 ? "bg-[#FFBB0C] text-[#0b6330] shadow-md scale-[1.01]"

@@ -126,7 +126,10 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
     : "QRIS BSI Rumah Amal Masjid Jamik USK";
 
   return (
-    <main className="flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full font-sans">
+    <main
+      className={`flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full font-sans ${isRtl ? "text-right" : ""}`}
+      dir={isRtl ? "rtl" : "ltr"}
+    >
       {/* Selector Tab Tipe Pembayar */}
       <div className="text-center mb-8">
         <div className="inline-flex rounded-xl p-1 bg-gray-200/80 shadow-inner">

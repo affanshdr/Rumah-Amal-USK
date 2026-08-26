@@ -7,6 +7,24 @@ import { useState, useRef, useEffect } from "react";
 
 type Language = "id" | "en" | "ar";
 
+const LANG_OPTIONS: Record<Language, { code: Language; label: string }[]> = {
+  id: [
+    { code: "id", label: "Indonesia" },
+    { code: "en", label: "Inggris" },
+    { code: "ar", label: "Arab" },
+  ],
+  en: [
+    { code: "id", label: "Indonesian" },
+    { code: "en", label: "English" },
+    { code: "ar", label: "Arabic" },
+  ],
+  ar: [
+    { code: "id", label: "الإندونيسية" },
+    { code: "en", label: "الإنجليزية" },
+    { code: "ar", label: "العربية" },
+  ],
+};
+
 const NAV_LABELS: Record<Language, Record<string, string>> = {
   id: {
     Beranda: "Beranda",
@@ -19,6 +37,7 @@ const NAV_LABELS: Record<Language, Record<string, string>> = {
     Dokumen: "Dokumen",
     Galeri: "Galeri",
     BayarZakat: "Kalkulator Zakat",
+    Bahasa: "Bahasa",
   },
   en: {
     Beranda: "Home",
@@ -31,6 +50,7 @@ const NAV_LABELS: Record<Language, Record<string, string>> = {
     Dokumen: "Documents",
     Galeri: "Gallery",
     BayarZakat: "Zakat Calculator",
+    Bahasa: "Language",
   },
   ar: {
     Beranda: "الرئيسية",
@@ -43,18 +63,22 @@ const NAV_LABELS: Record<Language, Record<string, string>> = {
     Dokumen: "الوثائق",
     Galeri: "المعرض",
     BayarZakat: "حاسبة الزكاة",
+    Bahasa: "اللغة",
   },
 };
 
 export default function Navbar() {
   const pathname = usePathname();
   const [programDropdownOpen, setProgramDropdownOpen] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileProgramOpen, setMobileProgramOpen] = useState(false);
+  const [mobileLangOpen, setMobileLangOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState<Language>("id");
   const [isScrolled, setIsScrolled] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const langDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -94,6 +118,9 @@ export default function Navbar() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setProgramDropdownOpen(false);
       }
+      if (langDropdownRef.current && !langDropdownRef.current.contains(event.target as Node)) {
+        setLangDropdownOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -102,6 +129,7 @@ export default function Navbar() {
   }, []);
 
   const t = NAV_LABELS[currentLang] || NAV_LABELS.id;
+  const languages = LANG_OPTIONS[currentLang] || LANG_OPTIONS.id;
 
   const navLinks = [
     { href: "/", label: t.Beranda },
@@ -227,41 +255,53 @@ export default function Navbar() {
 
             {/* Right Group: Bayar Zakat Button & Language Switcher & Mobile Toggle */}
             <div className="flex items-center gap-3 shrink-0" dir="ltr">
-              {/* Global Language Switcher */}
-              <div className="hidden lg:inline-flex rounded-xl p-1 bg-gray-100 border border-gray-200 shadow-2xs items-center gap-0.5">
+              {/* Global Language Switcher Dropdown */}
+              <div className="hidden lg:relative lg:block" ref={langDropdownRef}>
                 <button
                   type="button"
-                  onClick={() => changeGlobalLanguage("id")}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${currentLang === "id"
-                    ? "bg-[#0b6330] text-white shadow-xs"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
-                    }`}
+                  onClick={() => setLangDropdownOpen((prev) => !prev)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-[#0b6330] hover:bg-[#084d25] rounded-xl transition-all duration-200 cursor-pointer shadow-xs"
+                  aria-expanded={langDropdownOpen}
+                  aria-label="Select Language"
                 >
-                  <span>🇮🇩</span>
-                  <span>ID</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => changeGlobalLanguage("en")}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${currentLang === "en"
-                    ? "bg-[#0b6330] text-white shadow-xs"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
+                  <span>{t.Bahasa}</span>
+                  <svg
+                    className={`w-3.5 h-3.5 text-white/80 transition-transform duration-200 ${
+                      langDropdownOpen ? "rotate-180 text-white" : ""
                     }`}
-                >
-                  <span>🇬🇧</span>
-                  <span>EN</span>
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => changeGlobalLanguage("ar")}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${currentLang === "ar"
-                    ? "bg-[#0b6330] text-white shadow-xs"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
-                    }`}
-                >
-                  <span>🇸🇦</span>
-                  <span>AR</span>
-                </button>
+
+                {/* Dropdown Menu */}
+                {langDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-1.5 w-36 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-50">
+                    {languages.map((langItem) => {
+                      const isSelected = currentLang === langItem.code;
+                      return (
+                        <button
+                          key={langItem.code}
+                          type="button"
+                          onClick={() => {
+                            changeGlobalLanguage(langItem.code);
+                            setLangDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 text-xs transition-colors cursor-pointer ${
+                            isSelected
+                              ? "bg-green-50 text-[#0b6330] font-bold"
+                              : "text-gray-700 font-medium hover:bg-gray-50 hover:text-[#0b6330]"
+                          }`}
+                        >
+                          {langItem.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Kalkulator Zakat Button */}
@@ -297,44 +337,47 @@ export default function Navbar() {
           <div className="lg:hidden fixed inset-x-0 top-[68px] bottom-0 bg-[#383d42]/90 backdrop-blur-xs z-50 overflow-y-auto px-4 py-4 sm:px-6">
             <div className="bg-white rounded-2xl p-6 shadow-2xl max-w-lg mx-auto flex flex-col gap-2 border border-gray-100">
 
-              {/* Mobile Language Switcher */}
-              <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-2">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Pilih Bahasa / Language</span>
-                <div className="inline-flex rounded-xl p-1 bg-gray-100 border border-gray-200 items-center gap-0.5">
-                  <button
-                    type="button"
-                    onClick={() => changeGlobalLanguage("id")}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${currentLang === "id"
-                      ? "bg-[#0b6330] text-white shadow-xs"
-                      : "text-gray-600 hover:bg-gray-200/60"
-                      }`}
+              {/* Mobile Language Switcher Dropdown */}
+              <div className="border-b border-gray-100 pb-3 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setMobileLangOpen((prev) => !prev)}
+                  className="w-full flex items-center justify-between px-4 py-2.5 bg-[#0b6330] hover:bg-[#084d25] text-white rounded-xl font-bold text-sm transition-all cursor-pointer shadow-xs"
+                >
+                  <span>{t.Bahasa}</span>
+                  <svg
+                    className={`w-4 h-4 text-white/80 transition-transform duration-200 ${mobileLangOpen ? "rotate-180 text-white" : ""}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <span>🇮🇩</span>
-                    <span>ID</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => changeGlobalLanguage("en")}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${currentLang === "en"
-                      ? "bg-[#0b6330] text-white shadow-xs"
-                      : "text-gray-600 hover:bg-gray-200/60"
-                      }`}
-                  >
-                    <span>🇬🇧</span>
-                    <span>EN</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => changeGlobalLanguage("ar")}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${currentLang === "ar"
-                      ? "bg-[#0b6330] text-white shadow-xs"
-                      : "text-gray-600 hover:bg-gray-200/60"
-                      }`}
-                  >
-                    <span>🇸🇦</span>
-                    <span>AR</span>
-                  </button>
-                </div>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {mobileLangOpen && (
+                  <div className="mt-1.5 p-1 bg-gray-50 rounded-xl border border-gray-100 flex flex-col gap-1">
+                    {languages.map((langItem) => {
+                      const isSelected = currentLang === langItem.code;
+                      return (
+                        <button
+                          key={langItem.code}
+                          type="button"
+                          onClick={() => {
+                            changeGlobalLanguage(langItem.code);
+                            setMobileLangOpen(false);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all cursor-pointer ${
+                            isSelected ? "bg-[#0b6330] text-white shadow-xs font-bold" : "text-gray-700 font-medium hover:bg-gray-200/60"
+                          }`}
+                        >
+                          {langItem.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Beranda */}

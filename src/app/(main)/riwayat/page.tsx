@@ -164,7 +164,7 @@ export default function RiwayatPage() {
       setNipStep('input_otp');
       setOtpInput('');
     } catch (err: any) {
-      setError(err.message || 'Gagal mengirimkan kode OTP via WhatsApp.');
+      setError(err.message || t.errSendOtpFailed);
     } finally {
       setLoading(false);
     }
@@ -182,7 +182,7 @@ export default function RiwayatPage() {
       setMaskedPhone(res.maskedPhone);
       setCooldown(res.cooldownSeconds || 60);
     } catch (err: any) {
-      setError(err.message || 'Gagal mengirim ulang kode OTP.');
+      setError(err.message || t.errResendOtpFailed);
     } finally {
       setResendLoading(false);
     }
@@ -215,7 +215,7 @@ export default function RiwayatPage() {
         setSelectedTahun('all');
       }
     } catch (err: any) {
-      setError(err.message || 'Verifikasi OTP gagal.');
+      setError(err.message || t.errVerifyOtpFailed);
     } finally {
       setLoading(false);
     }
@@ -250,7 +250,7 @@ export default function RiwayatPage() {
         setData({ ...result });
       }
     } catch (err: any) {
-      setError(err.message || 'Gagal mengambil data riwayat.');
+      setError(err.message || t.errFetchFailed);
     } finally {
       setLoading(false);
     }
@@ -305,7 +305,10 @@ export default function RiwayatPage() {
   const isDosen = mode === 'nip';
 
   return (
-    <main className={`flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full font-sans ${isAr ? 'text-right' : ''}`}>
+    <main
+      className={`flex-grow py-10 px-4 sm:px-6 lg:px-8 max-w-[1340px] mx-auto w-full font-sans ${isAr ? 'text-right' : ''}`}
+      dir={isAr ? 'rtl' : 'ltr'}
+    >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <Sidebar />
 
@@ -366,7 +369,7 @@ export default function RiwayatPage() {
 
                   <div className="flex items-center gap-2 p-3 bg-emerald-50/70 border border-emerald-100 rounded-xl text-emerald-800 text-xs">
                     <FontAwesomeIcon icon={faWhatsapp} className="w-4 h-4 text-[#25D366] shrink-0" />
-                    <span>Kode OTP verifikasi akan dikirimkan langsung ke nomor WhatsApp yang terdaftar di database.</span>
+                    <span>{t.otpInfoNotice}</span>
                   </div>
 
                   <div className="flex justify-end pt-1">
@@ -409,7 +412,7 @@ export default function RiwayatPage() {
                           NIP: <span className="font-bold text-gray-700">{nipInput}</span>
                         </p>
                         <p className="text-[11px] text-gray-500 mt-0.5 font-semibold">
-                          Jika nomor tidak sesuai, silahkan hubungi rumah amal untuk melakukan perubahan data.
+                          {t.otpContactNotice}
                         </p>
                       </div>
                     </div>
