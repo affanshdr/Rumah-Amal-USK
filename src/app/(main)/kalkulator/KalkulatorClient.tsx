@@ -6,7 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import { hitungZakat, hitungZakatPertanian, hitungZakatPeternakan, formatRupiah } from "@/lib/kalkulator";
 import { formatThousand, parseRawNumber } from "@/lib/formatNumber";
 import { JenisZakat, JenisPerusahaan, KalkulatorResult } from "@/types";
-import { kalkulatorDictionary, KalkulatorLanguage, TABEL_KAMBING_I18N, TABEL_SAPI_I18N } from "@/lib/i18n/kalkulator";
+import { kalkulatorDictionary, KalkulatorLanguage, TABEL_KAMBING_I18N, TABEL_SAPI_I18N, TABEL_PERTANIAN_I18N } from "@/lib/i18n/kalkulator";
 
 interface FieldItem {
   name: string;
@@ -63,6 +63,7 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
   const [lang, setLang] = useState<KalkulatorLanguage>("id");
   const [jenisZakat, setJenisZakat] = useState<string>("");
   const [jenisPerusahaan, setJenisPerusahaan] = useState<string>("");
+  const [jenisTanaman, setJenisTanaman] = useState<string>("");
   const [jenisPengairan, setJenisPengairan] = useState<string>("");
   const [jenisTernak, setJenisTernak] = useState<string>("");
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
@@ -107,10 +108,12 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
     }
 
     if (jenisZakat === "pertanian") {
+      if (!jenisTanaman) { alert(t.alertSelectTanaman); return; }
       if (!jenisPengairan) { alert(t.alertSelectPengairan); return; }
       const jumlah_panen_kg = Number(fieldValues["jumlah_panen_kg"] || 0);
       const res = hitungZakatPertanian({
         jumlah_panen_kg,
+        jenis_tanaman: jenisTanaman,
         jenis_pengairan: jenisPengairan as "irigasi" | "hujan_sungai",
       });
       setModalResult(res);
@@ -151,6 +154,7 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
 
   const resetSubState = () => {
     setJenisPerusahaan("");
+    setJenisTanaman("");
     setJenisPengairan("");
     setJenisTernak("");
     setFieldValues({});
@@ -164,54 +168,35 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
   // Render info box yang relevan berdasarkan jenis zakat
   const renderInfoBox = () => {
     if (jenisZakat === "pertanian") {
+      const tabel = TABEL_PERTANIAN_I18N[lang] || TABEL_PERTANIAN_I18N.id;
       return (
-        <div className="rounded-2xl border border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden">
-          {/* Header strip */}
-          <div className="bg-green-700 px-4 py-2.5 flex items-center gap-2">
-            <svg className="w-4 h-4 text-green-200 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            <span className="text-xs font-extrabold text-white tracking-wide">{t.nisabPertanianTitle}</span>
+        <div className={`bg-green-50/80 p-4 text-xs sm:text-sm text-gray-800 space-y-2.5 ${isAr ? "border-r-4 border-green-600 rounded-l-xl rounded-r-none text-right" : "border-l-4 border-green-600 rounded-r-xl text-left"}`}>
+          <div className="flex items-center gap-2">
+            <p className="font-extrabold text-green-900">{t.nisabPertanianTitle}</p>
           </div>
-
-          <div className="p-4 space-y-3">
-            {/* Nisab badge */}
-            <div className="bg-white rounded-xl border border-green-200 px-4 py-2.5 flex items-center justify-between shadow-sm">
-              <div>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t.nisabMinTitle || "Nisab Minimum"}</p>
-                <p className="text-xl font-black text-green-800">653 <span className="text-sm font-bold">{t.satuanKg || "kg"}</span></p>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-green-700 shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                </svg>
-              </div>
-            </div>
-
-            {/* Tarif cards */}
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{t.tarifPengairanTitle || "Tarif Zakat Berdasarkan Pengairan"}</p>
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="bg-white rounded-xl border border-green-200 px-3 py-3 shadow-sm space-y-1.5">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-gray-600 leading-tight">{t.irigasiLabel || "Irigasi / Disiram"}</span>
-                </div>
-                <p className="text-2xl font-black text-green-700">5%</p>
-                <p className="text-[10px] text-gray-500 leading-tight">{t.irigasiDesc || "Pengairan buatan / pompa"}</p>
-              </div>
-              <div className="bg-white rounded-xl border border-emerald-300 px-3 py-3 shadow-sm space-y-1.5 ring-1 ring-emerald-200">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-gray-600 leading-tight">{t.hujanSungaiLabel || "Air Hujan / Sungai"}</span>
-                </div>
-                <p className="text-2xl font-black text-emerald-700">10%</p>
-                <p className="text-[10px] text-gray-500 leading-tight">{t.hujanSungaiDesc || "Tadah hujan / aliran sungai"}</p>
-              </div>
-            </div>
-
-            {/* Note */}
-            <p className="text-[11px] text-gray-500 leading-relaxed bg-green-100/60 rounded-lg px-3 py-2 border border-green-200/60">
-              {t.catatanPertanian || "Jika hasil panen ≥ 653 kg, zakat wajib dikeluarkan dari total hasil panen sesuai tarif pengairan."}
-            </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border-collapse mt-1">
+              <thead>
+                <tr className="bg-green-100/90">
+                  <th className={`${isAr ? "text-right" : "text-left"} px-2.5 py-2 font-bold text-green-900 border border-green-200 rounded-tl-lg`}>{t.thJenisTanaman || "Jenis Komoditas"}</th>
+                  <th className={`${isAr ? "text-right" : "text-left"} px-2.5 py-2 font-bold text-green-900 border border-green-200`}>{t.thNisab || "Nisab per Panen"}</th>
+                  <th className={`${isAr ? "text-right" : "text-left"} px-2.5 py-2 font-bold text-green-900 border border-green-200 rounded-tr-lg`}>{t.thTarifZakat || "Tarif Zakat"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tabel.map((row, i) => (
+                  <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-green-50/40"}>
+                    <td className={`px-2.5 py-2 border border-green-100 font-medium text-gray-700 ${isAr ? "text-right" : "text-left"}`}>{row.tanaman}</td>
+                    <td className={`px-2.5 py-2 border border-green-100 font-bold text-green-900 ${isAr ? "text-right" : "text-left"}`}>{row.nisab}</td>
+                    <td className={`px-2.5 py-2 border border-green-100 text-green-800 font-medium ${isAr ? "text-right" : "text-left"}`}>{row.tarif}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+          <p className="text-[11px] text-gray-600 leading-relaxed bg-green-100/50 rounded-lg px-3 py-2 border border-green-200/60">
+            {t.catatanPertanian}
+          </p>
         </div>
       );
     }
@@ -450,6 +435,25 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
                 <option value="">{t.selectJenisPerusahaanDefault}</option>
                 <option value="dagang_industri">{t.optDagangIndustri}</option>
                 <option value="jasa">{t.optJasa}</option>
+              </select>
+            </div>
+          )}
+
+          {/* Pilih Jenis Tanaman (hanya untuk pertanian) */}
+          {jenisZakat === "pertanian" && (
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                {t.jenisTanamanLabel}
+              </label>
+              <select
+                value={jenisTanaman}
+                onChange={(e) => setJenisTanaman(e.target.value)}
+                className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white"
+              >
+                <option value="">{t.selectJenisTanamanDefault}</option>
+                <option value="padi">{t.optPadi}</option>
+                <option value="jagung">{t.optJagung}</option>
+                <option value="kurma">{t.optKurma}</option>
               </select>
             </div>
           )}

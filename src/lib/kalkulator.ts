@@ -106,15 +106,22 @@ export function hitungZakat(
 // ---------------------------------------------------------------------------
 // Zakat Pertanian
 // ---------------------------------------------------------------------------
-const NISAB_PERTANIAN_KG = 653;
+export const NISAB_PERTANIAN_MAP: Record<string, number> = {
+  padi: 1200,
+  jagung: 653,
+  kurma: 653,
+  gandum: 653,
+};
 
 export function hitungZakatPertanian(params: {
   jumlah_panen_kg: number;
   jenis_pengairan: 'irigasi' | 'hujan_sungai';
+  jenis_tanaman?: string;
 }): KalkulatorResult {
-  const { jumlah_panen_kg, jenis_pengairan } = params;
+  const { jumlah_panen_kg, jenis_pengairan, jenis_tanaman } = params;
   const tarif = jenis_pengairan === 'hujan_sungai' ? 0.1 : 0.05;
-  const mencapai_nisab = jumlah_panen_kg >= NISAB_PERTANIAN_KG;
+  const nisab = (jenis_tanaman && NISAB_PERTANIAN_MAP[jenis_tanaman]) ? NISAB_PERTANIAN_MAP[jenis_tanaman] : 653;
+  const mencapai_nisab = jumlah_panen_kg >= nisab;
   const jumlah_zakat_kg = mencapai_nisab ? jumlah_panen_kg * tarif : 0;
   return {
     mencapai_nisab,

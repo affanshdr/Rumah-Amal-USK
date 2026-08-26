@@ -356,12 +356,12 @@ export default function AdminZakatPage() {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-100 text-gray-500 uppercase tracking-wider font-bold">
-                <th className="py-3.5 px-4">Muzakki</th>
-                <th className="py-3.5 px-4">Jumlah Zakat</th>
-                <th className="py-3.5 px-4">Data Zakat</th>
-                <th className="py-3.5 px-4">Bukti</th>
-                <th className="py-3.5 px-4">Pesan</th>
-                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4 text-center">Muzakki</th>
+                <th className="py-3.5 px-4 text-center">Jumlah Zakat</th>
+                <th className="py-3.5 px-4 text-center">Data Zakat</th>
+                <th className="py-3.5 px-4 text-center">Bukti</th>
+                <th className="py-3.5 px-4 text-center">Pesan</th>
+                <th className="py-3.5 px-4 text-center">Status</th>
                 <th className="py-3.5 px-4 text-center">Aksi</th>
               </tr>
             </thead>
@@ -391,10 +391,10 @@ export default function AdminZakatPage() {
                         <span className="text-[10px] text-gray-500 font-mono">NIP: {item.nip}</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-gray-600">{formatRupiah(item.jumlahZakat)}</td>
+                    <td className="py-3.5 px-4 text-gray-800 text-center">{formatRupiah(item.jumlahZakat)}</td>
 
                     {/* Data Zakat — Tombol Lihat */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 text-center">
                       <button
                         type="button"
                         onClick={() => setSelectedZakatItem(item)}
@@ -402,10 +402,12 @@ export default function AdminZakatPage() {
                       >
                         Lihat <FontAwesomeIcon icon={faTableList} className="w-2.5 h-2.5" />
                       </button>
+                      <br />
+                      <span className="font-semibold text-gray-500 text-[10px]">{item.tanggal}</span>
                     </td>
 
                     {/* Bukti */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 text-center">
                       {item.buktiPembayaran ? (
                         <a
                           href={item.buktiPembayaran}
@@ -421,7 +423,7 @@ export default function AdminZakatPage() {
                     </td>
 
                     {/* Pesan */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 text-center">
                       {item.pesan && item.pesan.trim() !== '' && item.pesan.trim() !== '-' ? (
                         <button
                           type="button"
@@ -443,7 +445,7 @@ export default function AdminZakatPage() {
                     </td>
 
                     {/* Status */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 text-center">
                       <StatusBadge status={item.status} />
                     </td>
 
