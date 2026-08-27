@@ -1,14 +1,19 @@
-import prisma from '@/lib/prisma';
+import { getNewsLinks } from '@/actions/berita-eksternal';
 import BeritaEksternalClient from './BeritaEksternalClient';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminBeritaEksternalPage() {
-  const newsLinks = await prisma.newsLink.findMany({
-    orderBy: { createdAt: 'desc' },
-  });
+export default async function AdminBeritaEksternalPage(
+  props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }
+) {
+  const searchParams = await props.searchParams;
+  const page = parseInt((searchParams.page as string) || '1', 10);
+  const search = (searchParams.search as string) || '';
+  const limit = 8;
 
-  const serialised = newsLinks.map((item) => ({
+  const { items, totalCount, totalPages, activeCount, inactiveCount } = await getNewsLinks(page, limit, search);
+
+  const serialised = items.map((item) => ({
     ...item,
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),
@@ -24,12 +29,26 @@ export default async function AdminBeritaEksternalPage() {
             Tambah dan kelola berita dari media eksternal untuk ditampilkan di halaman publik
           </p>
         </div>
-        <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-100 self-start sm:self-auto">
-          {serialised.filter((i) => i.isActive).length} Aktif
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-xl border border-emerald-100">
+            {activeCount} Aktif
+          </span>
+          <span className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-bold rounded-xl border border-gray-200">
+            {inactiveCount} Nonaktif
+          </span>
+        </div>
       </div>
 
-      <BeritaEksternalClient initialData={serialised} />
+      <BeritaEksternalClient
+        initialData={serialised}
+        currentPage={page}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        activeCount={activeCount}
+        inactiveCount={inactiveCount}
+        initialSearch={search}
+      />
     </div>
   );
 }
+
