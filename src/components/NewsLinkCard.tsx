@@ -9,6 +9,7 @@ interface NewsLinkCardProps {
   description: string | null;
   source: string | null;
   lang?: HomeLanguage;
+  shouldLoadImage?: boolean;
 }
 
 export default function NewsLinkCard({
@@ -18,6 +19,7 @@ export default function NewsLinkCard({
   description,
   source,
   lang = 'id',
+  shouldLoadImage = true,
 }: NewsLinkCardProps) {
   const newsLabel = lang === 'ar' ? 'أخبار' : lang === 'en' ? 'News' : 'Berita';
 
@@ -31,13 +33,21 @@ export default function NewsLinkCard({
       {/* Gambar */}
       <div className="relative aspect-[16/9] w-full bg-gray-100 overflow-hidden flex-shrink-0">
         {image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={image}
-            alt={title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            loading="lazy"
-          />
+          shouldLoadImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={image}
+              alt={title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200/80 animate-pulse flex items-center justify-center">
+              <svg className="w-6 h-6 text-gray-300/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+          )
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 gap-1.5">
             <svg

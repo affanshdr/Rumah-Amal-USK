@@ -25,6 +25,7 @@ export default function NewsLinkSection({
   const [itemsPerView, setItemsPerView] = useState(4);
   const [currentIndex, setCurrentIndex] = useState(4);
   const [isTransitioning, setIsTransitioning] = useState(true);
+  const [loadedImageIds, setLoadedImageIds] = useState<Record<string, boolean>>({});
   const isHovering = useRef(false);
 
   const sectionTitle =
@@ -62,11 +63,33 @@ export default function NewsLinkSection({
   // Duplikasi item di awal dan akhir untuk efek infinite loop meluncur ke kiri
   const extendedItems = canSlide
     ? [
-        ...newsLinks.slice(-itemsPerView),
-        ...newsLinks,
-        ...newsLinks.slice(0, itemsPerView),
-      ]
+      ...newsLinks.slice(-itemsPerView),
+      ...newsLinks,
+      ...newsLinks.slice(0, itemsPerView),
+    ]
     : newsLinks;
+
+  // Virtual preloading logic: Hanya load gambar untuk kartu yang sedang/akan bergeser ke layar
+  useEffect(() => {
+    if (!extendedItems || extendedItems.length === 0) return;
+    const buffer = 1; // 1 kartu penyangga di kiri & kanan
+    const minVisibleIdx = currentIndex - buffer;
+    const maxVisibleIdx = currentIndex + itemsPerView + buffer - 1;
+
+    setLoadedImageIds((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      extendedItems.forEach((item, idx) => {
+        if (idx >= minVisibleIdx && idx <= maxVisibleIdx) {
+          if (!next[item.id]) {
+            next[item.id] = true;
+            changed = true;
+          }
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [currentIndex, itemsPerView, extendedItems]);
 
   const nextSlide = useCallback(() => {
     if (!canSlide) return;
@@ -166,11 +189,11 @@ export default function NewsLinkSection({
         <div className="overflow-hidden rounded-2xl">
           <div
             onTransitionEnd={handleTransitionEnd}
-            className={`flex -mx-2 sm:-mx-2.5 ${
-              isTransitioning ? "transition-transform duration-500 ease-in-out" : ""
-            }`}
+            className={`flex -mx-2 sm:-mx-2.5 will-change-transform ${isTransitioning ? "transition-transform duration-500 ease-in-out" : ""
+              }`}
             style={{
-              transform: `translateX(-${activeTranslateIndex * itemWidthPercent}%)`,
+              transform: `translate3d(-${activeTranslateIndex * itemWidthPercent}%, 0, 0)`,
+              willChange: "transform",
             }}
           >
             {extendedItems.map((item, idx) => (
@@ -186,32 +209,12 @@ export default function NewsLinkSection({
                   description={item.description}
                   source={item.source}
                   lang={lang}
+                  shouldLoadImage={Boolean(loadedImageIds[item.id])}
                 />
               </div>
             ))}
           </div>
         </div>
-
-        {/* Dots Indicator */}
-        {canSlide && (
-          <div className="flex justify-center items-center gap-1.5 mt-6">
-            {newsLinks.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  setIsTransitioning(true);
-                  setCurrentIndex(itemsPerView + idx);
-                }}
-                aria-label={`Go to slide ${idx + 1}`}
-                className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                  realActiveIndex === idx
-                    ? "w-6 bg-[#0b6330]"
-                    : "w-2 bg-gray-300 hover:bg-gray-400"
-                }`}
-              />
-            ))}
-          </div>
-        )}
       </div>
     </section>
   );
