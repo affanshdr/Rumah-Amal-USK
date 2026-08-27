@@ -297,6 +297,7 @@ export default function KampanyeClient({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const formElement = e.currentTarget;
     setIsSubmitting(true);
     try {
       // ── Auto-translate jika EN/AR belum terisi ──────────────────────
@@ -316,7 +317,7 @@ export default function KampanyeClient({
         }
       }
 
-      const fd = new FormData(e.currentTarget);
+      const fd = new FormData(formElement);
       fd.set("imageUrl", coverPreview);
       fd.set("judul", liveJudul);
       fd.set("judulEn", finalJudulEn);
