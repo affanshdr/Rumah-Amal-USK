@@ -160,115 +160,115 @@ export default function Navbar() {
           }`}
         dir={currentLang === 'ar' ? 'rtl' : 'ltr'}
       >
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-[68px] gap-4">
+        <div className="w-full px-3 sm:px-6 lg:px-4 xl:px-8">
+          <div className="flex items-center justify-between h-[64px] sm:h-[68px] gap-2 lg:gap-4">
 
-            {/* Brand Logo */}
+            {/* Sisi Kiri: Hanya Logo */}
             <Link href="/" className="flex items-center shrink-0">
               <Image
                 src="/logo/rumah-amal.png"
                 alt="Rumah Amal Masjid Jamik USK"
-                width={200}
-                height={50}
+                width={180}
+                height={45}
                 priority
-                className={`h-10 sm:h-11 w-auto object-contain transition-all ${mobileMenuOpen ? "brightness-0 invert" : ""
+                className={`h-8 sm:h-9 xl:h-10 w-auto object-contain transition-all ${mobileMenuOpen ? "brightness-0 invert" : ""
                   }`}
               />
             </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center justify-between flex-1 mx-6 xl:mx-12 text-[13.5px] font-semibold" dir="ltr">
-              {navLinks.map((link) => {
-                const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+            {/* Sisi Kanan: Menu Navigasi + Tombol Aksi */}
+            <div className="flex items-center gap-1.5 lg:gap-2 xl:gap-3 shrink-0" dir="ltr">
+              {/* Desktop Navigation */}
+              <nav className="hidden lg:flex items-center gap-0 xl:gap-1 text-[11px] xl:text-[12.5px] 2xl:text-[13.5px] font-semibold whitespace-nowrap">
+                {navLinks.map((link) => {
+                  const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
 
-                if (link.hasDropdown) {
-                  return (
-                    <div
-                      key={link.label}
-                      ref={dropdownRef}
-                      className="relative"
-                      onMouseEnter={() => setProgramDropdownOpen(true)}
-                      onMouseLeave={() => setProgramDropdownOpen(false)}
-                    >
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setProgramDropdownOpen((prev) => !prev);
-                        }}
-                        className="group relative flex items-center gap-1 px-2.5 py-1.5 text-gray-600 hover:text-[#0b6330] transition-colors duration-200 cursor-pointer"
-                      >
-                        <span>{link.label}</span>
-                        <svg
-                          className={`w-3.5 h-3.5 mt-0.5 transition-transform duration-200 ${programDropdownOpen ? "rotate-180 text-[#0b6330]" : "text-gray-400"
-                            }`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                        <span className="absolute bottom-0 left-0 h-[2.5px] bg-[#0b6330] w-0 group-hover:w-full transition-all duration-300 ease-out" />
-                      </button>
-
+                  if (link.hasDropdown) {
+                    return (
                       <div
-                        className={`absolute top-full left-0 w-44 pt-1.5 z-50 transition-all duration-200 ease-out transform before:content-[''] before:absolute before:-top-4 before:inset-x-0 before:h-4 ${programDropdownOpen
-                          ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
-                          : "opacity-0 translate-y-2 scale-95 pointer-events-none"
-                          }`}
+                        key={link.label}
+                        ref={dropdownRef}
+                        className="relative"
+                        onMouseEnter={() => setProgramDropdownOpen(true)}
+                        onMouseLeave={() => setProgramDropdownOpen(false)}
                       >
-                        <div className="bg-white rounded-xl shadow-2xl border border-gray-100/80 py-1.5">
-                          <Link
-                            href="/program"
-                            onClick={() => setProgramDropdownOpen(false)}
-                            className="block px-4 py-2 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProgramDropdownOpen((prev) => !prev);
+                          }}
+                          className="group relative flex items-center gap-0.5 px-1.5 xl:px-2 py-1 text-gray-600 hover:text-[#0b6330] transition-colors duration-200 cursor-pointer"
+                        >
+                          <span>{link.label}</span>
+                          <svg
+                            className={`w-3 h-3 transition-transform duration-200 ${programDropdownOpen ? "rotate-180 text-[#0b6330]" : "text-gray-400"
+                              }`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
                           >
-                            {t.Program}
-                          </Link>
-                          <Link
-                            href="/kampanye"
-                            onClick={() => setProgramDropdownOpen(false)}
-                            className="block px-4 py-2 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
-                          >
-                            {t.Kampanye}
-                          </Link>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                          <span className="absolute bottom-0 left-0 h-[2.5px] bg-[#0b6330] w-0 group-hover:w-full transition-all duration-300 ease-out" />
+                        </button>
+
+                        <div
+                          className={`absolute top-full left-0 w-44 pt-1.5 z-50 transition-all duration-200 ease-out transform before:content-[''] before:absolute before:-top-4 before:inset-x-0 before:h-4 ${programDropdownOpen
+                            ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
+                            : "opacity-0 translate-y-2 scale-95 pointer-events-none"
+                            }`}
+                        >
+                          <div className="bg-white rounded-xl shadow-2xl border border-gray-100/80 py-1.5">
+                            <Link
+                              href="/program"
+                              onClick={() => setProgramDropdownOpen(false)}
+                              className="block px-4 py-2 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
+                            >
+                              {t.Program}
+                            </Link>
+                            <Link
+                              href="/kampanye"
+                              onClick={() => setProgramDropdownOpen(false)}
+                              className="block px-4 py-2 text-[13px] text-gray-700 font-semibold hover:bg-gray-50 hover:text-[#0b6330] transition-colors"
+                            >
+                              {t.Kampanye}
+                            </Link>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                }
+                    );
+                  }
 
-                return (
-                  <Link
-                    key={link.label}
-                    href={link.href}
-                    className={`group relative px-2.5 py-1.5 transition-colors duration-200 ${isActive ? "text-[#0b6330] font-bold" : "text-gray-600 hover:text-[#0b6330]"
-                      }`}
-                  >
-                    {link.label}
-                    <span
-                      className={`absolute bottom-0 left-0 h-[2.5px] bg-[#0b6330] transition-all duration-300 ease-out ${isActive ? "w-full" : "w-0 group-hover:w-full"
+                  return (
+                    <Link
+                      key={link.label}
+                      href={link.href}
+                      className={`group relative px-1.5 xl:px-2 py-1 transition-colors duration-200 ${isActive ? "text-[#0b6330] font-bold" : "text-gray-600 hover:text-[#0b6330]"
                         }`}
-                    />
-                  </Link>
-                );
-              })}
-            </nav>
+                    >
+                      {link.label}
+                      <span
+                        className={`absolute bottom-0 left-0 h-[2.5px] bg-[#0b6330] transition-all duration-300 ease-out ${isActive ? "w-full" : "w-0 group-hover:w-full"
+                          }`}
+                      />
+                    </Link>
+                  );
+                })}
+              </nav>
 
-            {/* Right Group: Bayar Zakat Button & Language Switcher & Mobile Toggle */}
-            <div className="flex items-center gap-3 shrink-0" dir="ltr">
               {/* Global Language Switcher Dropdown */}
               <div className="hidden lg:relative lg:block" ref={langDropdownRef}>
                 <button
                   type="button"
                   onClick={() => setLangDropdownOpen((prev) => !prev)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-[#0b6330] hover:bg-[#084d25] rounded-xl transition-all duration-200 cursor-pointer shadow-xs"
+                  className="flex items-center gap-1 px-2 xl:px-2.5 py-1 text-[10px] xl:text-xs font-bold text-white bg-[#0b6330] hover:bg-[#084d25] rounded-lg transition-all duration-200 cursor-pointer shadow-xs"
                   aria-expanded={langDropdownOpen}
                   aria-label="Select Language"
                 >
                   <span>{t.Bahasa}</span>
                   <svg
-                    className={`w-3.5 h-3.5 text-white/80 transition-transform duration-200 ${langDropdownOpen ? "rotate-180 text-white" : ""
+                    className={`w-3 h-3 text-white/80 transition-transform duration-200 ${langDropdownOpen ? "rotate-180 text-white" : ""
                       }`}
                     fill="none"
                     stroke="currentColor"
@@ -307,7 +307,7 @@ export default function Navbar() {
               {/* Cek Riwayat Zakat & Infaq Button */}
               <Link
                 href="/riwayat"
-                className="hidden lg:inline-flex items-center justify-center bg-[#ffc800] hover:bg-[#e8b500] text-[#1a1a1a] font-extrabold text-[13px] px-4 py-2 rounded-lg transition-all duration-200 shadow-2xs"
+                className="hidden lg:inline-flex items-center justify-center bg-[#ffc800] hover:bg-[#e8b500] text-[#1a1a1a] font-bold text-[10px] xl:text-[12px] px-2 xl:px-3.5 py-1.5 rounded-lg transition-all duration-200 shadow-2xs whitespace-nowrap"
               >
                 {t.CekRiwayat}
               </Link>
@@ -315,7 +315,7 @@ export default function Navbar() {
               {/* Kalkulator Zakat Button */}
               <Link
                 href="/kalkulator"
-                className="hidden lg:inline-flex items-center justify-center bg-[#ffc800] hover:bg-[#e8b500] text-[#1a1a1a] font-extrabold text-[13px] px-4 py-2 rounded-lg transition-all duration-200 shadow-2xs"
+                className="hidden lg:inline-flex items-center justify-center bg-[#ffc800] hover:bg-[#e8b500] text-[#1a1a1a] font-bold text-[10px] xl:text-[12px] px-2 xl:px-3.5 py-1.5 rounded-lg transition-all duration-200 shadow-2xs whitespace-nowrap"
               >
                 {t.BayarZakat}
               </Link>
