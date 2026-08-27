@@ -52,8 +52,8 @@ type LangTab = "id" | "en" | "ar";
 const CATEGORIES = [
   "PENDIDIKAN",
   "PEMBERDAYAAN",
-  "SOSIAL & KEMANUSIAAN",
-  "SYIAR & QURBAN",
+  "SOSIAL",
+  "SYIAR & DAKWAH",
   "KEMITRAAN",
   "FASILITATOR & RELAWAN",
 ];
