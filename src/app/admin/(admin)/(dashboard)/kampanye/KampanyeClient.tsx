@@ -108,7 +108,6 @@ function PreviewPanel({
           </div>
           <div className="flex items-center justify-between text-[11px] text-gray-400 pt-1">
             <span>Progress: {pctText}%</span>
-            <span>Batas Waktu: {tanggalSelesai ? formatTanggal(new Date(tanggalSelesai)) : "Tanpa batas"}</span>
           </div>
         </div>
 
@@ -446,7 +445,6 @@ export default function KampanyeClient({
                         </div>
                         <div className="flex items-center justify-between text-[10px] text-gray-400">
                           <span>{pctText}% terkumpul</span>
-                          <span>{formatTanggal(item.tanggalSelesai)}</span>
                         </div>
                       </div>
 
@@ -612,8 +610,8 @@ export default function KampanyeClient({
                     </div>
                   </div>
 
-                  {/* General Configs: Target Dana, Terkumpul, Tanggal, Status */}
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-gray-50/80 p-4 rounded-xl border border-gray-200">
+                  {/* General Configs: Target Dana, Terkumpul, Status */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50/80 p-4 rounded-xl border border-gray-200">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5">Target Dana (Rp)</label>
                       <input
@@ -632,15 +630,6 @@ export default function KampanyeClient({
                         onChange={(e) => setLiveTerkumpul(Number(parseRawNumber(e.target.value)))}
                         placeholder="Contoh: 15.000.000"
                         className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white font-medium"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1.5">Batas Waktu</label>
-                      <input
-                        type="date" name="tanggalSelesai"
-                        value={liveDate}
-                        onChange={(e) => setLiveDate(e.target.value)}
-                        className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#005621] bg-white"
                       />
                     </div>
                     <div className="flex flex-col justify-end pb-2">

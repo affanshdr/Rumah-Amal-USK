@@ -94,29 +94,34 @@ export default function NewsletterPage() {
     <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1340px] mx-auto">
 
-        {/* Title */}
-        <h1 className={`text-3xl sm:text-4xl font-extrabold text-center text-[#2d3238] tracking-tight mb-8 uppercase ${lang === 'ar' ? 'font-serif' : ''}`}>
-          {dict.title}
-        </h1>
+        {/* Header Section: Title & Search Bar Inline */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 mt-1 pb-4 border-b border-gray-100">
+          <div>
+            <h1 className={`text-2xl sm:text-3xl font-extrabold text-[#2d3238] tracking-tight uppercase ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+              {dict.title}
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium mt-1">
+              {lang === 'ar' ? 'النشرات الإخبارية والتقارير الدورية' : lang === 'en' ? 'Newsletters and periodic reports' : 'Buletin berkala dan warta informasi Rumah Amal USK'}
+            </p>
+          </div>
 
-
-
-        {/* Form Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="max-w-2xl mx-auto mb-12 flex gap-3">
-          <input
-            type="text"
-            placeholder={dict.searchPlaceholder}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#0b6330] transition-colors shadow-2xs"
-          />
-          <button
-            type="submit"
-            className="bg-[#0b6330] hover:bg-[#084823] text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors shadow-2xs cursor-pointer shrink-0"
-          >
-            {dict.searchBtn}
-          </button>
-        </form>
+          {/* Search Bar */}
+          <form onSubmit={handleSearchSubmit} className="w-full md:w-80 lg:w-96 flex gap-2 shrink-0">
+            <input
+              type="text"
+              placeholder={dict.searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 px-3.5 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 font-medium focus:outline-none focus:border-[#0b6330] focus:ring-1 focus:ring-[#0b6330] transition-colors shadow-2xs"
+            />
+            <button
+              type="submit"
+              className="bg-[#0b6330] hover:bg-[#074722] text-white font-bold text-sm px-5 py-2 rounded-lg transition-colors shadow-2xs cursor-pointer shrink-0"
+            >
+              {dict.searchBtn}
+            </button>
+          </form>
+        </div>
 
         {/* Loading State */}
         {loading ? (
@@ -138,21 +143,21 @@ export default function NewsletterPage() {
             </p>
           </div>
         ) : (
-          /* Newsletter Grid (3 Kolom sesuai website asli) */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          /* Newsletter Grid (3 Kolom lanskap sejajar Pengumuman/Berita) */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 mb-12">
             {items.map((item) => (
               <Link
                 key={item.id}
                 href={`/newsletter/${item.id}`}
-                className="group bg-white rounded-2xl border border-gray-100 shadow-2xs hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer flex flex-col p-4 block"
+                className="group bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer flex flex-col"
               >
                 {/* Cover Image Container */}
-                <div className="relative aspect-[3/4] w-full bg-gray-50 rounded-xl overflow-hidden mb-5">
+                <div className="relative aspect-[16/9] w-full bg-gray-50 overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={item.imageUrl}
                     alt={`Newsletter ${item.judul}`}
-                    className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+                    className="w-full h-full object-cover object-top group-hover:scale-103 transition-transform duration-300"
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300 flex items-center justify-center">
@@ -163,11 +168,11 @@ export default function NewsletterPage() {
                 </div>
 
                 {/* Info Text */}
-                <div className="mt-auto px-1">
-                  <h3 className="font-extrabold text-[#112b27] text-base tracking-tight mb-2 uppercase leading-snug">
+                <div className="p-4.5 sm:p-5 flex flex-col flex-1">
+                  <h3 className="font-bold text-[#112b27] text-base tracking-tight mb-2.5 uppercase leading-snug line-clamp-2">
                     {dict.prefixTitle}{(lang === 'en' ? item.judulEn : lang === 'ar' ? item.judulAr : item.judul) || item.judul}
                   </h3>
-                  <p className="text-xs text-gray-500 font-medium">
+                  <p className="text-xs text-gray-500 font-medium mt-auto">
                     {formatDate(item.tanggal)}
                   </p>
                 </div>
@@ -214,11 +219,10 @@ export default function NewsletterPage() {
                   <button
                     key={p}
                     onClick={() => handlePageChange(p)}
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
-                      p === page
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${p === page
                         ? 'bg-[#ffc800] text-[#1a1a1a] font-extrabold shadow-2xs'
                         : 'text-gray-600 hover:bg-gray-100 hover:text-[#0b6330]'
-                    }`}
+                      }`}
                   >
                     {p}
                   </button>

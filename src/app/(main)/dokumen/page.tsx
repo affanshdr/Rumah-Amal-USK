@@ -24,7 +24,6 @@ export default function DokumenPage() {
   const [activeQuery, setActiveQuery] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedCover, setSelectedCover] = useState<string | null>(null);
   // Track download counts yang diupdate secara lokal (optimistic update)
   const [localDownloadCounts, setLocalDownloadCounts] = useState<Record<string, number>>({});
 
@@ -110,29 +109,34 @@ export default function DokumenPage() {
     <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-[1340px] mx-auto">
 
-        {/* Title */}
-        <h1 className={`text-3xl sm:text-4xl font-extrabold text-center text-[#2d3238] tracking-tight mb-8 uppercase ${lang === 'ar' ? 'font-serif' : ''}`}>
-          {dict.title}
-        </h1>
+        {/* Header Section: Title & Search Bar Inline */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 mt-1 pb-4 border-b border-gray-100">
+          <div>
+            <h1 className={`text-2xl sm:text-3xl font-extrabold text-[#2d3238] tracking-tight uppercase ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+              {dict.title}
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium mt-1">
+              {lang === 'ar' ? 'الوثائق الرسمية والتقارير المالية' : lang === 'en' ? 'Official documents and financial reports' : 'Dokumen publikasi dan laporan transparansi Rumah Amal USK'}
+            </p>
+          </div>
 
-
-
-        {/* Form Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="max-w-2xl mx-auto mb-12 flex gap-3">
-          <input
-            type="text"
-            placeholder={dict.searchPlaceholder}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#0b6330] transition-colors shadow-2xs"
-          />
-          <button
-            type="submit"
-            className="bg-[#0b6330] hover:bg-[#084823] text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors shadow-2xs cursor-pointer"
-          >
-            {dict.searchBtn}
-          </button>
-        </form>
+          {/* Search Bar */}
+          <form onSubmit={handleSearchSubmit} className="w-full md:w-80 lg:w-96 flex gap-2 shrink-0">
+            <input
+              type="text"
+              placeholder={dict.searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 px-3.5 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 font-medium focus:outline-none focus:border-[#0b6330] focus:ring-1 focus:ring-[#0b6330] transition-colors shadow-2xs"
+            />
+            <button
+              type="submit"
+              className="bg-[#0b6330] hover:bg-[#074722] text-white font-bold text-sm px-5 py-2 rounded-lg transition-colors shadow-2xs cursor-pointer shrink-0"
+            >
+              {dict.searchBtn}
+            </button>
+          </form>
+        </div>
 
         {/* Loading State */}
         {loading ? (
@@ -154,32 +158,31 @@ export default function DokumenPage() {
             </p>
           </div>
         ) : (
-          /* Documents Grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          /* Documents Grid (3 Kolom lanskap) */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 mb-12">
             {items.map((item) => {
               const displayDownloadCount = localDownloadCounts[item.id] ?? item.downloadCount;
               return (
                 <div
                   key={item.id}
-                  className="group bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col"
+                  className="group bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col"
                 >
-                  {/* Cover Image — klik untuk perbesar */}
+                  {/* Cover Image — klik untuk unduh/buka PDF */}
                   <div
-                    className="relative w-full bg-gray-50 cursor-pointer overflow-hidden"
-                    style={{ aspectRatio: '3/4' }}
-                    onClick={() => setSelectedCover(item.imageUrl || '/cover/Cover Doc RA.jpeg')}
+                    className="relative aspect-[16/9] w-full bg-gray-50 cursor-pointer overflow-hidden"
+                    onClick={() => handleDownload(item)}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={item.imageUrl || '/cover/Cover Doc RA.jpeg'}
                       alt={`Cover ${item.judul}`}
-                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                      className="w-full h-full object-cover object-top group-hover:scale-103 transition-transform duration-300"
                       loading="lazy"
                     />
                     {/* Overlay hover */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300 flex items-center justify-center">
                       <span className="opacity-0 group-hover:opacity-100 bg-white/90 text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow-xs transition-opacity duration-300">
-                        {dict.expandCover}
+                        {dict.downloadBtn}
                       </span>
                     </div>
                   </div>
@@ -273,11 +276,10 @@ export default function DokumenPage() {
                   <button
                     key={p}
                     onClick={() => handlePageChange(p)}
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
-                      p === page
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${p === page
                         ? 'bg-[#ffc800] text-[#1a1a1a] font-extrabold shadow-2xs'
                         : 'text-gray-600 hover:bg-gray-100 hover:text-[#0b6330]'
-                    }`}
+                      }`}
                   >
                     {p}
                   </button>
@@ -295,33 +297,6 @@ export default function DokumenPage() {
           </div>
         )}
       </div>
-
-      {/* Lightbox Cover Modal */}
-      {selectedCover && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4"
-          onClick={() => setSelectedCover(null)}
-        >
-          <div
-            className="relative bg-white rounded-2xl shadow-2xl p-3 sm:p-4 max-w-3xl max-h-[90vh] flex flex-col items-center justify-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setSelectedCover(null)}
-              className="absolute -top-3 -right-3 bg-white text-gray-700 hover:text-black w-8 h-8 rounded-full shadow-lg border border-gray-200 flex items-center justify-center text-sm font-bold transition-all hover:scale-110 z-20 cursor-pointer"
-              aria-label="Tutup Modal"
-            >
-              ✕
-            </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={selectedCover}
-              alt="Cover Fullsize"
-              className="max-w-full max-h-[80vh] object-contain rounded-xl"
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

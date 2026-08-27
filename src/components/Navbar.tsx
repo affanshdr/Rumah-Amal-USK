@@ -280,7 +280,7 @@ export default function Navbar() {
 
                 {/* Dropdown Menu */}
                 {langDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-1.5 w-36 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-50">
+                  <div className={`absolute top-full mt-1.5 w-36 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-50 ${currentLang === 'ar' ? 'left-0' : 'right-0'}`}>
                     {languages.map((langItem) => {
                       const isSelected = currentLang === langItem.code;
                       return (
@@ -291,7 +291,7 @@ export default function Navbar() {
                             changeGlobalLanguage(langItem.code);
                             setLangDropdownOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2 text-xs transition-colors cursor-pointer ${isSelected
+                          className={`w-full px-4 py-2 text-xs transition-colors cursor-pointer ${currentLang === 'ar' ? 'text-right' : 'text-left'} ${isSelected
                             ? "bg-green-50 text-[#0b6330] font-bold"
                             : "text-gray-700 font-medium hover:bg-gray-50 hover:text-[#0b6330]"
                             }`}

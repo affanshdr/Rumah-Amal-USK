@@ -90,28 +90,31 @@ export default function PublicProgramPage() {
   return (
     <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-[1340px] mx-auto">
-        {/* Header & Breadcrumb */}
-        <div className="my-6">
+        {/* Header Section: Title & Category Filter Inline */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 mt-1 pb-4 border-b border-gray-100">
+          <div>
+            <h1 className={`text-2xl sm:text-3xl font-extrabold text-[#333333] tracking-tight uppercase ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+              {t.pageTitle}
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium mt-1">
+              {lang === 'ar' ? 'برامج ومبادرات الخير' : lang === 'en' ? 'Programs and community initiatives' : 'Program pemberdayaan dan pilar kebaikan Rumah Amal USK'}
+            </p>
+          </div>
 
-
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#333333] tracking-tight uppercase mb-4 text-center">
-            {t.pageTitle}
-          </h1>
-        </div>
-
-        {/* Filter Kategori Dropdown */}
-        <div className="w-full mb-8 mt-4">
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full px-4 py-3 border border-[#0b6330] rounded-md text-sm text-gray-800 font-semibold focus:outline-none focus:ring-1 focus:ring-[#0b6330] bg-white cursor-pointer tracking-wider uppercase shadow-2xs"
-          >
-            {CATEGORIES_RAW.map((cat) => (
-              <option key={cat} value={cat}>
-                {CATEGORIES_TRANSLATED[lang]?.[cat] || cat}
-              </option>
-            ))}
-          </select>
+          {/* Filter Kategori Dropdown */}
+          <div className="w-full md:w-72 shrink-0">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full px-3.5 py-2 border border-[#0b6330] rounded-lg text-sm text-gray-800 font-semibold focus:outline-none focus:ring-1 focus:ring-[#0b6330] bg-white cursor-pointer tracking-wider uppercase shadow-2xs"
+            >
+              {CATEGORIES_RAW.map((cat) => (
+                <option key={cat} value={cat}>
+                  {CATEGORIES_TRANSLATED[lang]?.[cat] || cat}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Loading State */}
@@ -137,9 +140,8 @@ export default function PublicProgramPage() {
             <p className="text-lg font-semibold mb-2">{t.notFoundTitle}</p>
             <p className="text-sm text-gray-400">
               {selectedCategory !== 'SEMUA'
-                ? `${t.notFoundCategory} "${
-                    CATEGORIES_TRANSLATED[lang]?.[selectedCategory] || selectedCategory
-                  }".`
+                ? `${t.notFoundCategory} "${CATEGORIES_TRANSLATED[lang]?.[selectedCategory] || selectedCategory
+                }".`
                 : t.notFoundEmpty}
             </p>
           </div>
@@ -209,11 +211,10 @@ export default function PublicProgramPage() {
                   <button
                     key={p}
                     onClick={() => handlePageChange(p)}
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
-                      p === page
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${p === page
                         ? 'bg-[#ffc800] text-[#1a1a1a] font-extrabold shadow-2xs'
                         : 'text-gray-600 hover:bg-gray-100 hover:text-[#0b6330]'
-                    }`}
+                      }`}
                   >
                     {p}
                   </button>

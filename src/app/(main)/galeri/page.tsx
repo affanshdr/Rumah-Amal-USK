@@ -95,10 +95,17 @@ export default function GaleriPage() {
     <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-[1340px] mx-auto">
 
-        {/* Title */}
-        <h1 className={`text-3xl sm:text-4xl font-extrabold text-center text-[#2d3238] tracking-tight mb-8 uppercase ${lang === 'ar' ? 'font-serif' : ''}`}>
-          {dict.title}
-        </h1>
+        {/* Header Section: Title Inline */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 mt-1 pb-4 border-b border-gray-100">
+          <div>
+            <h1 className={`text-2xl sm:text-3xl font-extrabold text-[#2d3238] tracking-tight uppercase ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+              {dict.title}
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium mt-1">
+              {lang === 'ar' ? 'معرض الصور والتوثيق الميداني' : lang === 'en' ? 'Photo gallery and field documentation' : 'Dokumentasi foto dan kegiatan penyaluran Rumah Amal USK'}
+            </p>
+          </div>
+        </div>
 
         {/* Loading State */}
         {loading ? (
@@ -172,11 +179,10 @@ export default function GaleriPage() {
                   <button
                     key={p}
                     onClick={() => handlePageChange(p)}
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
-                      p === page
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${p === page
                         ? 'bg-[#ffc800] text-[#1a1a1a] font-extrabold shadow-xs'
                         : 'text-gray-600 hover:bg-gray-100 hover:text-[#0b6330]'
-                    }`}
+                      }`}
                   >
                     {p}
                   </button>

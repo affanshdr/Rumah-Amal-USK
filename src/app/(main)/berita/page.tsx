@@ -103,39 +103,44 @@ export default function PublicNewsListPage() {
   return (
     <div className="min-h-screen bg-white py-10 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-[1340px] mx-auto">
-        {/* Big Page Title */}
-        <div className="text-center mb-6">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#374151] tracking-tight uppercase mb-6">
-            {labels.pageTitle}
-          </h1>
-        </div>
+        {/* Header Section: Title & Search Bar Inline */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 mt-1 pb-4 border-b border-gray-100">
+          <div>
+            <h1 className={`text-2xl sm:text-3xl font-extrabold text-[#374151] tracking-tight uppercase ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
+              {labels.pageTitle}
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-500 font-medium mt-1">
+              {lang === 'ar' ? 'أحدث الأخبار والمستجدات الرسمية' : lang === 'en' ? 'Latest news and official updates' : 'Kabar dan berita kegiatan terkini Rumah Amal USK'}
+            </p>
+          </div>
 
-        {/* Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="max-w-xl mx-auto mb-14 flex gap-2.5">
-          <input
-            type="text"
-            placeholder={labels.searchPlaceholder}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-md text-sm text-gray-700 font-medium focus:outline-none focus:border-[#0b6330] focus:ring-1 focus:ring-[#0b6330] transition-colors shadow-2xs"
-          />
-          <button
-            type="submit"
-            className="bg-[#0b6330] hover:bg-[#074722] text-white font-bold text-sm px-6 py-2.5 rounded-md transition-colors shadow-2xs cursor-pointer shrink-0"
-          >
-            {labels.searchBtn}
-          </button>
-        </form>
+          {/* Search Bar */}
+          <form onSubmit={handleSearchSubmit} className="w-full md:w-80 lg:w-96 flex gap-2 shrink-0">
+            <input
+              type="text"
+              placeholder={labels.searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 px-3.5 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 font-medium focus:outline-none focus:border-[#0b6330] focus:ring-1 focus:ring-[#0b6330] transition-colors shadow-2xs"
+            />
+            <button
+              type="submit"
+              className="bg-[#0b6330] hover:bg-[#074722] text-white font-bold text-sm px-5 py-2 rounded-lg transition-colors shadow-2xs cursor-pointer shrink-0"
+            >
+              {labels.searchBtn}
+            </button>
+          </form>
+        </div>
 
         {/* Loading State */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 animate-pulse mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 animate-pulse mb-12">
             {[...Array(ITEMS_PER_PAGE)].map((_, i) => (
               <div
                 key={i}
                 className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden flex flex-col"
               >
-                <div className="bg-gray-200 aspect-[16/10] w-full"></div>
+                <div className="bg-gray-200 aspect-[16/9] w-full"></div>
                 <div className="p-5 flex flex-col flex-1">
                   <div className="bg-gray-200 h-5 w-24 rounded-md mb-3"></div>
                   <div className="bg-gray-200 h-5 w-3/4 rounded-sm mb-3"></div>
@@ -154,12 +159,12 @@ export default function PublicNewsListPage() {
           </div>
         ) : (
           /* News Grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 mb-12">
             {items.map((item) => {
               const displayTitle =
                 lang === 'en' && item.titleEn ? item.titleEn
-                : lang === 'ar' && item.titleAr ? item.titleAr
-                : item.title;
+                  : lang === 'ar' && item.titleAr ? item.titleAr
+                    : item.title;
               return (
                 <Link
                   key={item.id}
@@ -167,7 +172,7 @@ export default function PublicNewsListPage() {
                   className="group bg-white rounded-2xl border border-gray-100 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer flex flex-col"
                 >
                   {/* Cover Image */}
-                  <div className="relative aspect-[16/10] w-full bg-gray-50 overflow-hidden">
+                  <div className="relative aspect-[16/9] w-full bg-gray-50 overflow-hidden">
                     {item.coverImageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -208,9 +213,8 @@ export default function PublicNewsListPage() {
 
                     <div className="flex flex-col justify-between flex-1">
                       <h3
-                        className={`font-bold text-[#112b27] text-sm sm:text-base leading-tight mb-3 line-clamp-4 group-hover:text-[#0b6330] transition-colors ${
-                          lang === 'ar' ? 'font-serif text-right' : ''
-                        }`}
+                        className={`font-bold text-[#112b27] text-sm sm:text-base leading-tight mb-3 line-clamp-4 group-hover:text-[#0b6330] transition-colors ${lang === 'ar' ? 'font-serif text-right' : ''
+                          }`}
                       >
                         {displayTitle}
                       </h3>
@@ -266,11 +270,10 @@ export default function PublicNewsListPage() {
                   <button
                     key={p}
                     onClick={() => handlePageChange(p)}
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
-                      p === page
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${p === page
                         ? 'bg-[#ffc800] text-[#1a1a1a] font-extrabold shadow-2xs'
                         : 'text-gray-600 hover:bg-gray-100 hover:text-[#0b6330]'
-                    }`}
+                      }`}
                   >
                     {p}
                   </button>

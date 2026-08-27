@@ -244,20 +244,6 @@ export default function Home() {
     return new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
   };
 
-  const getDurasiText = (tanggalSelesaiStr: string | null) => {
-    if (!tanggalSelesaiStr) return '-';
-    try {
-      const targetDate = new Date(tanggalSelesaiStr);
-      const now = new Date();
-      const diffTime = targetDate.getTime() - now.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays <= 0) return lang === 'ar' ? 'مكتمل' : lang === 'en' ? 'Finished' : 'Selesai';
-      return lang === 'ar' ? `${diffDays} أيام` : lang === 'en' ? `${diffDays} days` : `${diffDays} hari`;
-    } catch {
-      return '-';
-    }
-  };
-
   // 1. Take strictly 1 latest announcement with cover image
   const firstAnn = announcements.find((item) => Boolean(item.coverImageUrl && item.coverImageUrl.trim() !== ''));
   const announcementSlides = firstAnn ? [{
@@ -511,7 +497,6 @@ export default function Home() {
                 const current = item.terkumpul || 0;
                 const rawPct = target > 0 ? (current / target) * 100 : 0;
                 const barWidth = rawPct > 0 ? Math.max(1.5, Math.min(100, rawPct)) : 0;
-                const durasiText = getDurasiText(item.tanggalSelesai);
 
                 return (
                   <div
@@ -535,14 +520,6 @@ export default function Home() {
                       <h3 className={`font-bold text-[#112b27] text-base sm:text-lg md:text-[19px] leading-tight mb-3 sm:mb-4 line-clamp-2 min-h-[44px] sm:min-h-[48px] group-hover:text-[#0b6330] transition-colors ${lang === 'ar' ? 'font-serif text-right' : ''}`}>
                         {(lang === 'en' ? item.judulEn : lang === 'ar' ? item.judulAr : item.judul) || item.judul}
                       </h3>
-
-                      {/* Durasi */}
-                      <div className="flex justify-end items-center mb-3">
-                        <div className="text-right">
-                          <span className="block text-xs font-semibold text-gray-500">{dict.sections.durasi}</span>
-                          <span className="block text-xs sm:text-sm font-semibold text-gray-600">{durasiText}</span>
-                        </div>
-                      </div>
 
                       {/* Progress Bar */}
                       <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden mb-4">
