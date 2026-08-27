@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import Image from 'next/image';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import ConfirmModal from '@/components/admin/ConfirmModal';
 
 interface NewsLinkItem {
@@ -27,6 +28,16 @@ interface PreviewData {
 interface ToastState {
   message: string;
   type: 'success' | 'error';
+}
+
+interface BeritaEksternalClientProps {
+  initialData: NewsLinkItem[];
+  currentPage?: number;
+  totalPages?: number;
+  totalCount?: number;
+  activeCount?: number;
+  inactiveCount?: number;
+  initialSearch?: string;
 }
 
 function Toast({ toast, onClose }: { toast: ToastState; onClose: () => void }) {
@@ -60,12 +71,38 @@ function ImagePlaceholder() {
   );
 }
 
+const DEBOUNCE_MS = 400;
+
 export default function BeritaEksternalClient({
   initialData,
-}: {
-  initialData: NewsLinkItem[];
-}) {
+  currentPage = 1,
+  totalPages = 1,
+  totalCount = initialData.length,
+  activeCount = initialData.filter((d) => d.isActive).length,
+  inactiveCount = initialData.filter((d) => !d.isActive).length,
+  initialSearch = "",
+}: BeritaEksternalClientProps) {
+  const router = useRouter();
   const [items, setItems] = useState<NewsLinkItem[]>(initialData);
+
+  useEffect(() => {
+    setItems(initialData);
+  }, [initialData]);
+
+  const [search, setSearch] = useState(initialSearch);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (val) params.set("search", val);
+      params.set("page", "1");
+      router.push(`/admin/berita-eksternal?${params.toString()}`);
+    }, DEBOUNCE_MS);
+  };
+
   const [urlInput, setUrlInput] = useState('');
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [preview, setPreview] = useState<PreviewData | null>(null);
@@ -130,6 +167,7 @@ export default function BeritaEksternalClient({
         );
         showToast('Berita berhasil diperbarui.', 'success');
         setEditingModalItem(null);
+        router.refresh();
       } else {
         showToast(data.error || 'Gagal memperbarui berita.', 'error');
       }
@@ -199,6 +237,7 @@ export default function BeritaEksternalClient({
         setItems((prev) => [data.newsLink, ...prev]);
         showToast('Berita berhasil ditambahkan!', 'success');
         handleReset();
+        router.refresh();
       }
     } catch {
       showToast('Terjadi kesalahan. Coba lagi.', 'error');
@@ -224,6 +263,7 @@ export default function BeritaEksternalClient({
           !item.isActive ? 'Berita diaktifkan.' : 'Berita dinonaktifkan.',
           'success'
         );
+        router.refresh();
       } else {
         showToast(data.error || 'Gagal mengubah status.', 'error');
       }
@@ -243,6 +283,7 @@ export default function BeritaEksternalClient({
       if (res.ok) {
         setItems((prev) => prev.filter((i) => i.id !== id));
         showToast('Berita berhasil dihapus.', 'success');
+        router.refresh();
       } else {
         const data = await res.json();
         showToast(data.error || 'Gagal menghapus.', 'error');
@@ -299,52 +340,56 @@ export default function BeritaEksternalClient({
             <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <div>
-              <p className="text-sm font-semibold text-red-700">{previewError}</p>
-              <p className="text-xs text-red-500 mt-0.5">Kamu tetap bisa mengisi judul secara manual dan menyimpan tanpa gambar.</p>
-              <button
-                onClick={() => {
-                  setPreviewError('');
-                  setPreview({ url: urlInput.trim(), title: '', image: null, description: null, source: null });
-                  setEditTitle('');
-                  setEditDesc('');
-                }}
-                className="mt-2 text-xs font-bold text-red-600 underline cursor-pointer"
-              >
-                Isi manual →
-              </button>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-red-800">Gagal Mengambil Preview</p>
+              <p className="text-xs text-red-600 mt-0.5">{previewError}</p>
             </div>
+            <button onClick={() => setPreviewError('')} className="text-red-400 hover:text-red-600 text-sm font-bold cursor-pointer">
+              ×
+            </button>
           </div>
         )}
 
-        {/* Preview Card */}
+        {/* Preview Card (Form simpan berita) */}
         {preview && (
-          <div className="border border-gray-200 rounded-2xl overflow-hidden bg-gray-50">
-            <div className="grid grid-cols-1 sm:grid-cols-[280px_1fr] gap-0">
-              {/* Gambar */}
-              <div className="relative aspect-video sm:aspect-auto sm:h-full min-h-[160px] bg-gray-100 border-b sm:border-b-0 sm:border-r border-gray-200 overflow-hidden">
+          <div className="border border-gray-200 rounded-2xl p-5 bg-gray-50/50 space-y-4 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+                Preview Metadata — Silakan Periksa & Edit jika Perlu
+              </span>
+              <button
+                onClick={handleReset}
+                className="text-xs text-gray-400 hover:text-gray-600 font-semibold cursor-pointer"
+              >
+                Reset
+              </button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Image Preview */}
+              <div className="w-full sm:w-48 h-32 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200 relative">
                 {preview.image ? (
                   <img
                     src={preview.image}
-                    alt="Preview"
+                    alt={preview.title}
                     className="w-full h-full object-cover"
+                    onError={() => setPreview((p) => (p ? { ...p, image: null } : null))}
                   />
                 ) : (
                   <ImagePlaceholder />
                 )}
-              </div>
-
-              {/* Form Edit */}
-              <div className="p-5 flex flex-col gap-4">
                 {preview.source && (
-                  <span className="self-start px-2.5 py-1 bg-[#063A1E]/10 text-[#063A1E] text-xs font-bold rounded-lg">
+                  <span className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 text-white text-[10px] font-bold rounded-md backdrop-blur-xs">
                     {preview.source}
                   </span>
                 )}
+              </div>
 
+              {/* Editable Fields */}
+              <div className="flex-1 space-y-3">
                 <div>
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5 block">
-                    Judul <span className="text-red-500">*</span>
+                    Judul Berita <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -401,21 +446,47 @@ export default function BeritaEksternalClient({
 
       {/* ===== Daftar Berita Tersimpan ===== */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-base font-black text-gray-800">
-            Daftar Berita ({items.length})
-          </h2>
-          <span className="text-xs text-gray-400 font-medium">
-            {items.filter((i) => i.isActive).length} aktif · {items.filter((i) => !i.isActive).length} nonaktif
-          </span>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-5 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <h2 className="text-base font-black text-gray-800">
+              Daftar Berita ({totalCount})
+            </h2>
+            <span className="text-xs text-gray-400 font-medium">
+              {activeCount} aktif · {inactiveCount} nonaktif
+            </span>
+          </div>
+
+          <div className="relative w-full sm:w-72">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Cari berita eksternal…"
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-[#063A1E] bg-gray-50/60 placeholder-gray-400 transition-all"
+            />
+            {search && (
+              <button
+                onClick={() => handleSearchChange("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer"
+              >
+                ×
+              </button>
+            )}
+          </div>
         </div>
 
         {items.length === 0 ? (
           <div className="py-16 text-center text-gray-400">
-            <svg className="w-12 h-12 mx-auto mb-3 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-            </svg>
-            <p className="text-sm font-semibold">Belum ada berita ditambahkan</p>
+            <div className="flex flex-col items-center gap-2">
+              <svg className="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-.586-1.414l-4.5-4.5A2 2 0 0014.586 3H5" />
+              </svg>
+              <p className="text-sm font-semibold">{search ? "Tidak ada berita yang cocok" : "Belum ada berita ditambahkan"}</p>
+              {search && <p className="text-xs text-gray-300">Coba gunakan kata kunci pencarian yang lain.</p>}
+            </div>
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
@@ -525,6 +596,84 @@ export default function BeritaEksternalClient({
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* ===== Pagination Bar ===== */}
+        {totalCount > 0 && (
+          <div className="px-5 py-4 border-t border-gray-100 bg-gray-50/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-xs text-gray-500 font-medium">
+              Menampilkan <span className="font-bold text-gray-700">{items.length}</span> dari <span className="font-bold text-gray-700">{totalCount}</span> berita
+            </p>
+
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1.5">
+                {currentPage > 1 ? (
+                  <Link
+                    href={`/admin/berita-eksternal?page=${currentPage - 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
+                    className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors shadow-2xs"
+                  >
+                    « Prev
+                  </Link>
+                ) : (
+                  <span className="px-3 py-1.5 bg-gray-50 border border-gray-100 text-gray-300 text-xs font-bold rounded-lg cursor-not-allowed">
+                    « Prev
+                  </span>
+                )}
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
+                    const isActive = p === currentPage;
+                    const showPage =
+                      p === 1 ||
+                      p === totalPages ||
+                      Math.abs(p - currentPage) <= 1;
+
+                    if (!showPage) {
+                      if (p === 2 && currentPage > 3) {
+                        return <span key="ellipsis-start" className="text-xs text-gray-400 px-1">...</span>;
+                      }
+                      if (p === totalPages - 1 && currentPage < totalPages - 2) {
+                        return <span key="ellipsis-end" className="text-xs text-gray-400 px-1">...</span>;
+                      }
+                      return null;
+                    }
+
+                    return (
+                      <Link
+                        key={p}
+                        href={`/admin/berita-eksternal?page=${p}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-colors ${isActive
+                          ? "bg-[#063A1E] text-white shadow-xs"
+                          : "bg-white border border-gray-200 hover:bg-gray-100 text-gray-700"
+                          }`}
+                      >
+                        {p}
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {currentPage < totalPages ? (
+                  <Link
+                    href={`/admin/berita-eksternal?page=${currentPage + 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
+                    className="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold rounded-lg transition-colors shadow-2xs"
+                  >
+                    Next »
+                  </Link>
+                ) : (
+                  <span className="px-3 py-1.5 bg-gray-50 border border-gray-100 text-gray-300 text-xs font-bold rounded-lg cursor-not-allowed">
+                    Next »
+                  </span>
+                )}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 text-xs text-gray-400">
+              <span>Aktif: <span className="text-emerald-600 font-bold">{activeCount}</span></span>
+              <span className="text-gray-200">|</span>
+              <span>Nonaktif: <span className="text-gray-600 font-bold">{inactiveCount}</span></span>
+            </div>
           </div>
         )}
       </div>
