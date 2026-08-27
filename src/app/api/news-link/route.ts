@@ -5,7 +5,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '6', 10)));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '10', 10)));
     const skip = (page - 1) * limit;
 
     const [newsLinks, total] = await Promise.all([
@@ -18,11 +18,15 @@ export async function GET(req: NextRequest) {
       prisma.newsLink.count({ where: { isActive: true } }),
     ]);
 
+    const totalPages = Math.ceil(total / limit);
+    const hasMore = page < totalPages;
+
     return NextResponse.json({
       newsLinks,
       total,
       page,
-      totalPages: Math.ceil(total / limit),
+      totalPages,
+      hasMore,
     });
   } catch (error) {
     console.error('[GET /api/news-link]', error);

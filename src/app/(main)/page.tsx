@@ -174,7 +174,7 @@ export default function Home() {
           fetch('/api/announcements?limit=4'),
           fetch('/api/newsletter?limit=3'),
           fetch('/api/banner'),
-          fetch('/api/news-link?limit=6'),
+          fetch('/api/news-link?limit=10'),
         ]);
 
         if (kampanyeRes.ok) {

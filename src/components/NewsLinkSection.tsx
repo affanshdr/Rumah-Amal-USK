@@ -14,7 +14,7 @@ interface NewsLinkItem {
 }
 
 export default function NewsLinkSection({
-  newsLinks,
+  newsLinks: initialNewsLinks,
   lang = "id",
   title,
 }: {
@@ -22,6 +22,11 @@ export default function NewsLinkSection({
   lang?: HomeLanguage;
   title?: string;
 }) {
+  const [items, setItems] = useState<NewsLinkItem[]>(initialNewsLinks || []);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   const [itemsPerView, setItemsPerView] = useState(4);
   const [currentIndex, setCurrentIndex] = useState(4);
   const [isTransitioning, setIsTransitioning] = useState(true);
@@ -32,6 +37,16 @@ export default function NewsLinkSection({
     title ||
     homeDictionary[lang]?.sections?.beritaTerkait ||
     "RILIS MEDIA EKSTERNAL";
+
+  // Sync initial prop items when prop changes or loads
+  useEffect(() => {
+    if (initialNewsLinks && initialNewsLinks.length > 0) {
+      setItems(initialNewsLinks);
+      if (initialNewsLinks.length < 10) {
+        setHasMore(false);
+      }
+    }
+  }, [initialNewsLinks]);
 
   // Deteksi jumlah item per view berdasarkan lebar layar
   useEffect(() => {
@@ -58,16 +73,54 @@ export default function NewsLinkSection({
     setCurrentIndex(itemsPerView);
   }, [itemsPerView]);
 
-  const canSlide = newsLinks && newsLinks.length > itemsPerView;
+  // Function to load the next batch of external news links from backend API
+  const loadNextBatch = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+    try {
+      const nextPage = page + 1;
+      const res = await fetch(`/api/news-link?page=${nextPage}&limit=10`);
+      if (res.ok) {
+        const data = await res.json();
+        const newItems: NewsLinkItem[] = data.newsLinks || [];
+        if (newItems.length > 0) {
+          setItems((prev) => {
+            const existingIds = new Set(prev.map((i) => i.id));
+            const uniqueNew = newItems.filter((i) => !existingIds.has(i.id));
+            return [...prev, ...uniqueNew];
+          });
+          setPage(nextPage);
+        }
+        setHasMore(Boolean(data.hasMore));
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error("Error loading more news links:", err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasMore, page]);
+
+  const canSlide = items && items.length > itemsPerView;
+
+  // Trigger background loading of next page when sliding near the end of loaded items
+  useEffect(() => {
+    if (canSlide && hasMore && !isLoadingMore) {
+      if (currentIndex >= items.length - itemsPerView - 1) {
+        loadNextBatch();
+      }
+    }
+  }, [currentIndex, items.length, itemsPerView, canSlide, hasMore, isLoadingMore, loadNextBatch]);
 
   // Duplikasi item di awal dan akhir untuk efek infinite loop meluncur ke kiri
   const extendedItems = canSlide
     ? [
-      ...newsLinks.slice(-itemsPerView),
-      ...newsLinks,
-      ...newsLinks.slice(0, itemsPerView),
+      ...items.slice(-itemsPerView),
+      ...items,
+      ...items.slice(0, itemsPerView),
     ]
-    : newsLinks;
+    : items;
 
   // Virtual preloading logic: Hanya load gambar untuk kartu yang sedang/akan bergeser ke layar
   useEffect(() => {
@@ -119,22 +172,22 @@ export default function NewsLinkSection({
   const handleTransitionEnd = () => {
     if (!canSlide) return;
 
-    if (currentIndex >= newsLinks.length + itemsPerView) {
+    if (currentIndex >= items.length + itemsPerView) {
       setIsTransitioning(false);
-      setCurrentIndex(currentIndex - newsLinks.length);
+      setCurrentIndex(currentIndex - items.length);
     } else if (currentIndex < itemsPerView) {
       setIsTransitioning(false);
-      setCurrentIndex(currentIndex + newsLinks.length);
+      setCurrentIndex(currentIndex + items.length);
     }
   };
 
-  if (!newsLinks || newsLinks.length === 0) return null;
+  if (!items || items.length === 0) return null;
 
   const itemWidthPercent = 100 / itemsPerView;
 
   // Hitung active index yang sebenarnya untuk titik navigasi (dots)
   const realActiveIndex = canSlide
-    ? ((currentIndex - itemsPerView) % newsLinks.length + newsLinks.length) % newsLinks.length
+    ? ((currentIndex - itemsPerView) % items.length + items.length) % items.length
     : 0;
 
   const activeTranslateIndex = canSlide ? currentIndex : 0;
