@@ -51,8 +51,8 @@ export const kalkulatorDictionary: Record<KalkulatorLanguage, Record<string, str
     // Pertanian
     jenisTanamanLabel: "Jenis Komoditas / Tanaman",
     selectJenisTanamanDefault: "-- Pilih Jenis Komoditas --",
-    optPadi: "Padi / Gabah",
-    optJagung: "Jagung Pipil Kering",
+    optPadi: "Padi",
+    optJagung: "Jagung",
     optKurma: "Kurma",
     jenisPengairanLabel: "Jenis Pengairan",
     selectJenisPengairanDefault: "-- Pilih Jenis Pengairan --",
@@ -142,8 +142,8 @@ export const kalkulatorDictionary: Record<KalkulatorLanguage, Record<string, str
     // Pertanian
     jenisTanamanLabel: "Crop / Commodity Type",
     selectJenisTanamanDefault: "-- Select Commodity Type --",
-    optPadi: "Paddy / Rice",
-    optJagung: "Dry Shelled Corn",
+    optPadi: "Rice",
+    optJagung: "Corn",
     optKurma: "Dates",
     jenisPengairanLabel: "Irrigation Type",
     selectJenisPengairanDefault: "-- Select Irrigation Type --",
@@ -233,8 +233,8 @@ export const kalkulatorDictionary: Record<KalkulatorLanguage, Record<string, str
     // Pertanian
     jenisTanamanLabel: "نوع المحصول / الصنف",
     selectJenisTanamanDefault: "-- اختر نوع المحصول --",
-    optPadi: "الأرز / الحبوب",
-    optJagung: "الذرة (حبوب جافة)",
+    optPadi: "الأرز",
+    optJagung: "الذرة",
     optKurma: "التمر",
     jenisPengairanLabel: "نوع الري",
     selectJenisPengairanDefault: "-- اختر نوع الري --",
@@ -278,18 +278,18 @@ export const kalkulatorDictionary: Record<KalkulatorLanguage, Record<string, str
 
 export const TABEL_PERTANIAN_I18N: Record<KalkulatorLanguage, Array<{ tanaman: string; nisab: string; tarif: string }>> = {
   id: [
-    { tanaman: "Padi / Gabah", nisab: "1.200 kg / panen", tarif: "5% (Irigasi/Disiram) • 10% (Tadah Hujan/Alami)" },
-    { tanaman: "Jagung Pipil Kering", nisab: "653 kg / panen", tarif: "5% (Irigasi/Disiram) • 10% (Tadah Hujan/Alami)" },
+    { tanaman: "Padi", nisab: "1.200 kg / panen", tarif: "5% (Irigasi/Disiram) • 10% (Tadah Hujan/Alami)" },
+    { tanaman: "Jagung", nisab: "653 kg / panen", tarif: "5% (Irigasi/Disiram) • 10% (Tadah Hujan/Alami)" },
     { tanaman: "Kurma", nisab: "653 kg / panen", tarif: "5% (Irigasi/Disiram) • 10% (Tadah Hujan/Alami)" },
   ],
   en: [
     { tanaman: "Rice", nisab: "1,200 kg / harvest", tarif: "5% (Irrigated) • 10% (Rain-fed)" },
-    { tanaman: "Dry Shelled Corn", nisab: "653 kg / harvest", tarif: "5% (Irrigated) • 10% (Rain-fed)" },
+    { tanaman: "Corn", nisab: "653 kg / harvest", tarif: "5% (Irrigated) • 10% (Rain-fed)" },
     { tanaman: "Dates", nisab: "653 kg / harvest", tarif: "5% (Irrigated) • 10% (Rain-fed)" },
   ],
   ar: [
-    { tanaman: "الأرز (حبوب)", nisab: "١٢٠٠ كجم / الحصاد", tarif: "٥٪ (بالري) • ١٠٪ (بماء المطر)" },
-    { tanaman: "الذرة (حبوب جافة)", nisab: "٦٥٣ كجم / الحصاد", tarif: "٥٪ (بالري) • ١٠٪ (بماء المطر)" },
+    { tanaman: "الأرز", nisab: "١٢٠٠ كجم / الحصاد", tarif: "٥٪ (بالري) • ١٠٪ (بماء المطر)" },
+    { tanaman: "الذرة", nisab: "٦٥٣ كجم / الحصاد", tarif: "٥٪ (بالري) • ١٠٪ (بماء المطر)" },
     { tanaman: "التمر", nisab: "٦٥٣ كجم / الحصاد", tarif: "٥٪ (بالري) • ١٠٪ (بماء المطر)" },
   ],
 };
