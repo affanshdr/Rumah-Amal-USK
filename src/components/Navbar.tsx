@@ -164,14 +164,14 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-[64px] sm:h-[68px] gap-1.5 xl:gap-2.5 w-full">
 
             {/* Logo */}
-            <Link href="/" className="flex items-center shrink-0 mx-1.5 sm:mx-3 xl:mx-4">
+            <Link href="/" className="flex items-center shrink-0">
               <Image
                 src="/logo/rumah-amal.png"
                 alt="Rumah Amal Masjid Jamik USK"
                 width={180}
                 height={45}
                 priority
-                className={`h-8 sm:h-9 xl:h-10 w-auto object-contain transition-all ${mobileMenuOpen ? "brightness-0 invert" : ""
+                className={` h-8 sm:h-9 xl:h-10 w-auto object-contain transition-all ${mobileMenuOpen ? "brightness-0 invert" : ""
                   }`}
               />
             </Link>
