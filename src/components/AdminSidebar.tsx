@@ -99,10 +99,10 @@ export default function AdminSidebar({ adminName }: { adminName: string }) {
           <Link href="/admin/dashboard" className="block group">
             <div className="bg-white/95 group-hover:bg-white p-2.5 rounded-xl shadow-sm transition-all flex items-center justify-center">
               <Image
-                src="/logo/rumah-amal.png"
+                src="/logo/Rumah Amal.png"
                 alt="Rumah Amal USK"
-                width={160}
-                height={40}
+                width={180}
+                height={45}
                 className="h-8 w-auto object-contain"
                 priority
               />
