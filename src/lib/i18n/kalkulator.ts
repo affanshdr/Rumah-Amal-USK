@@ -70,7 +70,7 @@ export const kalkulatorDictionary: Record<KalkulatorLanguage, Record<string, str
     alertSelectTernak: "Silakan pilih jenis ternak terlebih dahulu.",
     // Info box dinamis
     nisabPertanianTitle: "Ketentuan Zakat Pertanian / Hasil Tanaman:",
-    nisabPertanianDesc: "Nisab zakat pertanian berbeda berdasarkan komoditas: Padi 1.200 kg/panen, Jagung (kering) 653 kg/panen, Kurma 653 kg/panen, dan Gandum 653 kg/panen. Tarif: 5% jika disiram/irigasi, dan 10% jika tadah hujan/sungai.",
+    nisabPertanianDesc: "Nisab zakat pertanian berbeda berdasarkan komoditas: Padi 653 kg/panen, Jagung (kering) 653 kg/panen, Kurma 653 kg/panen, dan Gandum 653 kg/panen. Tarif: 5% jika disiram/irigasi, dan 10% jika tadah hujan/sungai.",
     nisabPeternakanKambingTitle: "Ketentuan Zakat Peternakan Kambing/Domba:",
     nisabPeternakanSapiTitle: "Ketentuan Zakat Peternakan Sapi/Kerbau:",
     // Modal
@@ -91,6 +91,7 @@ export const kalkulatorDictionary: Record<KalkulatorLanguage, Record<string, str
     hujanSungaiLabel: "Air Hujan / Sungai",
     hujanSungaiDesc: "Tadah hujan / aliran sungai",
     catatanPertanian: "Tarif zakat: 5% jika menggunakan pengairan buatan / irigasi, dan 10% jika menggunakan air hujan / aliran sungai alami tanpa biaya tambahan.",
+    sumberTabel: "Sumber: Peraturan Kementerian Agama Nomor 52 Tahun 2014",
   },
   en: {
     pageTitle: "Interactive Zakat Calculator",
@@ -161,7 +162,7 @@ export const kalkulatorDictionary: Record<KalkulatorLanguage, Record<string, str
     alertSelectTernak: "Please select livestock type first.",
     // Info box
     nisabPertanianTitle: "Agricultural Zakat Provisions:",
-    nisabPertanianDesc: "Agricultural zakat nisab varies by crop: Rice 1,200 kg/harvest, Corn (dry) 653 kg/harvest, Dates 653 kg/harvest, and Wheat 653 kg/harvest. Rate: 5% for irrigated crops and 10% for rain-fed crops.",
+    nisabPertanianDesc: "Agricultural zakat nisab varies by crop: Rice 653 kg/harvest, Corn (dry) 653 kg/harvest, Dates 653 kg/harvest, and Wheat 653 kg/harvest. Rate: 5% for irrigated crops and 10% for rain-fed crops.",
     nisabPeternakanKambingTitle: "Goat/Sheep Livestock Zakat Provisions:",
     nisabPeternakanSapiTitle: "Cow/Buffalo Livestock Zakat Provisions:",
     // Modal
@@ -182,6 +183,7 @@ export const kalkulatorDictionary: Record<KalkulatorLanguage, Record<string, str
     hujanSungaiLabel: "Rainwater / River",
     hujanSungaiDesc: "Rain-fed / river flow",
     catatanPertanian: "Zakat rate: 5% if using artificial irrigation, and 10% if using rainwater or natural river flow without additional costs.",
+    sumberTabel: "Source: Regulation of the Ministry of Religious Affairs No. 52 of 2014",
   },
   ar: {
     pageTitle: "حاسبة الزكاة التفاعلية",
@@ -252,7 +254,7 @@ export const kalkulatorDictionary: Record<KalkulatorLanguage, Record<string, str
     alertSelectTernak: "يرجى اختيار نوع الماشية أولاً.",
     // Info box
     nisabPertanianTitle: "أحكام زكاة الزراعة والمحاصيل:",
-    nisabPertanianDesc: "يختلف نصاب زكاة الزراعة باختلاف الصنف: الأرز ١٢٠٠ كجم/حصاد، الذرة (الجافة) ٦٥٣ كجم/حصاد، التمر ٦٥٣ كجم/حصاد، والقمح ٦٥٣ كجم/حصاد. النسبة: ٥٪ إذا سُقيت بالري، و١٠٪ إذا سُقيت بمياه الأمطار أو الأنهار.",
+    nisabPertanianDesc: "نصاب زكاة الزراعة هو ٦٥٣ كجم لكل حصاد. النسبة: ٥٪ إذا سُقيت بالري، و١٠٪ إذا سُقيت بمياه الأمطار أو الأنهار.",
     nisabPeternakanKambingTitle: "أحكام زكاة الغنم والماعز:",
     nisabPeternakanSapiTitle: "أحكام زكاة البقر والجاموس:",
     // Modal
@@ -273,22 +275,23 @@ export const kalkulatorDictionary: Record<KalkulatorLanguage, Record<string, str
     hujanSungaiLabel: "مياه الأمطار / الأنهار",
     hujanSungaiDesc: "مياه الأمطار / مجرى النهر",
     catatanPertanian: "نسبة الزكاة: ٥٪ إذا كان الري اصطناعياً، و١٠٪ إذا كان بمياه الأمطار أو الأنهار الطبيعية دون كلفة إضافية.",
+    sumberTabel: "المصدر: لائحة وزارة الشؤون الدينية رقم ٥٢ لعام ٢٠١٤",
   },
 };
 
 export const TABEL_PERTANIAN_I18N: Record<KalkulatorLanguage, Array<{ tanaman: string; nisab: string; tarif: string }>> = {
   id: [
-    { tanaman: "Padi", nisab: "1.200 kg / panen", tarif: "5% (Irigasi/Disiram) • 10% (Tadah Hujan/Alami)" },
+    { tanaman: "Padi", nisab: "653 kg / panen", tarif: "5% (Irigasi/Disiram) • 10% (Tadah Hujan/Alami)" },
     { tanaman: "Jagung", nisab: "653 kg / panen", tarif: "5% (Irigasi/Disiram) • 10% (Tadah Hujan/Alami)" },
     { tanaman: "Kurma", nisab: "653 kg / panen", tarif: "5% (Irigasi/Disiram) • 10% (Tadah Hujan/Alami)" },
   ],
   en: [
-    { tanaman: "Rice", nisab: "1,200 kg / harvest", tarif: "5% (Irrigated) • 10% (Rain-fed)" },
+    { tanaman: "Rice", nisab: "653 kg / harvest", tarif: "5% (Irrigated) • 10% (Rain-fed)" },
     { tanaman: "Corn", nisab: "653 kg / harvest", tarif: "5% (Irrigated) • 10% (Rain-fed)" },
     { tanaman: "Dates", nisab: "653 kg / harvest", tarif: "5% (Irrigated) • 10% (Rain-fed)" },
   ],
   ar: [
-    { tanaman: "الأرز", nisab: "١٢٠٠ كجم / الحصاد", tarif: "٥٪ (بالري) • ١٠٪ (بماء المطر)" },
+    { tanaman: "الأرز", nisab: "٦٥٣ كجم / الحصاد", tarif: "٥٪ (بالري) • ١٠٪ (بماء المطر)" },
     { tanaman: "الذرة", nisab: "٦٥٣ كجم / الحصاد", tarif: "٥٪ (بالري) • ١٠٪ (بماء المطر)" },
     { tanaman: "التمر", nisab: "٦٥٣ كجم / الحصاد", tarif: "٥٪ (بالري) • ١٠٪ (بماء المطر)" },
   ],

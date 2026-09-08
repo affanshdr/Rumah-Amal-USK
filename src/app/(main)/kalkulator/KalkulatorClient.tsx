@@ -197,6 +197,9 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
           <p className="text-[11px] text-gray-600 leading-relaxed bg-green-100/50 rounded-lg px-3 py-2 border border-green-200/60">
             {t.catatanPertanian}
           </p>
+          <p className="text-[10px] text-gray-500 italic mt-1">
+            {t.sumberTabel}
+          </p>
         </div>
       );
     }
@@ -228,6 +231,9 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
               </tbody>
             </table>
           </div>
+          <p className="text-[10px] text-gray-500 italic mt-1">
+            {t.sumberTabel}
+          </p>
         </div>
       );
     }
@@ -500,21 +506,25 @@ export default function KalkulatorClient({ nisabConfig }: { nisabConfig: NisabCo
           {/* Field Input Dinamis */}
           {activeFields.length > 0 && (
             <div className="space-y-4 pt-2 border-t border-gray-100">
-              {activeFields.map((field) => (
-                <div key={field.name}>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                    {t[`field_${field.name}`] || field.label}
-                  </label>
-                  <input
-                    type="number"
-                    value={fieldValues[field.name] || ""}
-                    onChange={(e) => handleInputChange(field.name, e.target.value)}
-                    placeholder={t.inputPlaceholder}
-                    min={0}
-                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white font-medium"
-                  />
-                </div>
-              ))}
+              {activeFields.map((field) => {
+                const isPlainNumber = field.name === "jumlah_panen_kg" || field.name === "jumlah_ternak" || field.name.includes("gram");
+                return (
+                  <div key={field.name}>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                      {t[`field_${field.name}`] || field.label}
+                    </label>
+                    <input
+                      type={isPlainNumber ? "number" : "text"}
+                      inputMode="numeric"
+                      value={fieldValues[field.name] || ""}
+                      onChange={(e) => handleInputChange(field.name, e.target.value)}
+                      placeholder={t.inputPlaceholder}
+                      min={isPlainNumber ? 0 : undefined}
+                      className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white font-medium"
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
 
