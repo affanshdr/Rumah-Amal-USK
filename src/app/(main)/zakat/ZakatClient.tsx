@@ -9,6 +9,17 @@ import { zakatDictionary, ZakatLanguage } from "@/lib/i18n/zakat";
 import { formatThousand, parseRawNumber } from "@/lib/formatNumber";
 import { TipePembayar } from "@/types";
 
+/* ── Inline field error component ───────────────────────────────── */
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p className="mt-1.5 text-xs text-red-600 font-semibold flex items-center gap-1">
+      <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+      {message}
+    </p>
+  );
+}
+
 export default function ZakatClient() {
   const searchParams = useSearchParams();
   const [lang, setLang] = useState<ZakatLanguage>("id");
@@ -29,6 +40,7 @@ export default function ZakatClient() {
   const [fileName, setFileName] = useState<string>("File...");
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const readLang = () => {
@@ -57,6 +69,7 @@ export default function ZakatClient() {
   const handleTipeSwitch = (tipe: TipePembayar) => {
     setTipePembayar(tipe);
     setErrorMsg("");
+    setFieldErrors({});
     if (tipe === "muzakki usk") {
       setIsHambaAllah(false);
     }
@@ -71,10 +84,55 @@ export default function ZakatClient() {
     }
   };
 
+  /** Clear a specific field error when user interacts */
+  const clearError = (field: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitting(true);
     setErrorMsg("");
+
+    // ── Custom validation ──
+    const errors: Record<string, string> = {};
+
+    if (!jenisZakat) errors.jenis_zakat = t.vSelectZakat;
+    if (!jumlahZakat.trim()) errors.jumlah_zakat = t.vJumlah;
+
+    if (tipePembayar === "muzakki usk") {
+      if (!nip.trim()) errors.nip = t.vNip;
+    } else {
+      if (!nama.trim()) errors.nama = t.vNama;
+      if (!email.trim()) {
+        errors.email = t.vEmail;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errors.email = t.vEmailInvalid;
+      }
+    }
+
+    // Bukti upload
+    const buktiInput = e.currentTarget.querySelector<HTMLInputElement>('input[name="bukti_pembayaran"]');
+    if (!buktiInput?.files?.length) errors.bukti = t.uploadRequired;
+
+    // Terms
+    if (!setujuTerms) errors.terms = t.vTerms;
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      // Scroll to first error
+      const firstKey = Object.keys(errors)[0];
+      const el = document.querySelector(`[data-field="${firstKey}"]`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    setFieldErrors({});
+    setSubmitting(true);
     const formData = new FormData(e.currentTarget);
     try {
       await submitZakat(formData);
@@ -83,6 +141,10 @@ export default function ZakatClient() {
       setSubmitting(false);
     }
   };
+
+  /** Helper: border class for field with error */
+  const errBorder = (field: string) =>
+    fieldErrors[field] ? "border-red-400 ring-1 ring-red-300" : "border-gray-300";
 
   return (
     <main
@@ -122,7 +184,7 @@ export default function ZakatClient() {
         <Sidebar />
 
         {/* Form Pembayaran Zakat */}
-        <form onSubmit={handleFormSubmit} className="contents">
+        <form onSubmit={handleFormSubmit} noValidate className="contents">
           <input type="hidden" name="tipe_pembayar" value={tipePembayar} />
 
           <div className="lg:col-span-5 bg-white p-6 sm:p-7 rounded-2xl shadow-md border border-gray-100 space-y-4">
@@ -143,14 +205,13 @@ export default function ZakatClient() {
             </div>
 
             {/* Jenis Zakat */}
-            <div>
+            <div data-field="jenis_zakat">
               <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.jenisZakatLabel} <span className="text-red-500">*</span></label>
               <select
                 name="jenis_zakat"
                 value={jenisZakat}
-                onChange={(e) => setJenisZakat(e.target.value)}
-                required
-                className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] focus:ring-1 focus:ring-[#0b6330] transition-all bg-white"
+                onChange={(e) => { setJenisZakat(e.target.value); clearError("jenis_zakat"); }}
+                className={`w-full border ${errBorder("jenis_zakat")} rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] focus:ring-1 focus:ring-[#0b6330] transition-all bg-white`}
               >
                 <option value="">{t.selectJenisZakat}</option>
                 <option value="maal">{t.maal}</option>
@@ -159,6 +220,7 @@ export default function ZakatClient() {
                 <option value="perniagaan">{t.perniagaan}</option>
                 <option value="perusahaan">{t.perusahaan}</option>
               </select>
+              <FieldError message={fieldErrors.jenis_zakat} />
             </div>
 
             {/* Sumber Dana (Tampil jika Jenis Zakat = Profesi) */}
@@ -199,27 +261,27 @@ export default function ZakatClient() {
             )}
 
             {/* Jumlah Zakat */}
-            <div>
+            <div data-field="jumlah_zakat">
               <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.jumlahZakatLabel} <span className="text-red-500">*</span></label>
-              <div className="flex rounded-xl shadow-2xs overflow-hidden border border-gray-300 focus-within:border-[#0b6330] focus-within:ring-1 focus-within:ring-[#0b6330]">
+              <div className={`flex rounded-xl shadow-2xs overflow-hidden border ${errBorder("jumlah_zakat")} focus-within:border-[#0b6330] focus-within:ring-1 focus-within:ring-[#0b6330]`}>
                 <span className="inline-flex items-center px-4 bg-gray-100 text-gray-600 text-xs font-bold border-r border-gray-300">
                   Rp.
                 </span>
                 <input
                   type="text"
                   value={jumlahZakat}
-                  onChange={(e) => setJumlahZakat(formatThousand(e.target.value))}
-                  required
+                  onChange={(e) => { setJumlahZakat(formatThousand(e.target.value)); clearError("jumlah_zakat"); }}
                   placeholder={t.jumlahZakatPlaceholder}
                   className="flex-1 block w-full px-3.5 py-2.5 text-sm focus:outline-none bg-white font-medium"
                 />
                 <input type="hidden" name="jumlah_zakat" value={parseRawNumber(jumlahZakat)} />
               </div>
+              <FieldError message={fieldErrors.jumlah_zakat} />
             </div>
 
             {/* Muzakki: cukup NIP — masyarakat: nama/email/alamat */}
             {tipePembayar === "muzakki usk" ? (
-              <div>
+              <div data-field="nip">
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
                   {t.nipLabel} <span className="text-red-500">*</span>
                 </label>
@@ -227,27 +289,27 @@ export default function ZakatClient() {
                   type="text"
                   name="nip"
                   value={nip}
-                  onChange={(e) => setNip(e.target.value)}
-                  required
+                  onChange={(e) => { setNip(e.target.value); clearError("nip"); }}
                   placeholder={t.nipPlaceholder}
-                  className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white font-mono"
+                  className={`w-full border ${errBorder("nip")} rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white font-mono`}
                 />
+                <FieldError message={fieldErrors.nip} />
               </div>
             ) : (
               <>
                 {/* Nama Lengkap */}
-                <div>
+                <div data-field="nama">
                   <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.namaLabel} <span className="text-red-500">*</span></label>
                   <input
                     type="text"
                     name="nama"
                     value={nama}
-                    onChange={(e) => setNama(e.target.value)}
+                    onChange={(e) => { setNama(e.target.value); clearError("nama"); }}
                     readOnly={isHambaAllah}
-                    required
                     placeholder={t.namaPlaceholder}
-                    className={`w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] transition-all ${isHambaAllah ? "bg-gray-100 text-gray-500" : "bg-white"}`}
+                    className={`w-full border ${errBorder("nama")} rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] transition-all ${isHambaAllah ? "bg-gray-100 text-gray-500" : "bg-white"}`}
                   />
+                  <FieldError message={fieldErrors.nama} />
                 </div>
 
                 {/* Checkbox Hamba Allah */}
@@ -258,7 +320,7 @@ export default function ZakatClient() {
                     name="is_hamba_allah"
                     value="1"
                     checked={isHambaAllah}
-                    onChange={(e) => handleHambaAllahChange(e.target.checked)}
+                    onChange={(e) => { handleHambaAllahChange(e.target.checked); clearError("nama"); }}
                     className="w-4 h-4 text-[#000] rounded focus:ring-[#0b6330] cursor-pointer"
                   />
                   <label htmlFor="anon-check-zakat" className="text-xs text-gray-600 font-semibold cursor-pointer">
@@ -267,17 +329,17 @@ export default function ZakatClient() {
                 </div>
 
                 {/* Email */}
-                <div>
+                <div data-field="email">
                   <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.emailLabel} <span className="text-red-500">*</span></label>
                   <input
                     type="email"
                     name="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    onChange={(e) => { setEmail(e.target.value); clearError("email"); }}
                     placeholder={t.emailPlaceholder}
-                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white"
+                    className={`w-full border ${errBorder("email")} rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#0b6330] bg-white`}
                   />
+                  <FieldError message={fieldErrors.email} />
                 </div>
 
                 {/* Alamat */}
@@ -363,15 +425,19 @@ export default function ZakatClient() {
             </div>
 
             {/* Upload Bukti Pembayaran */}
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.uploadLabel}</label>
-              <div className="flex items-center justify-between border border-gray-300 rounded-xl p-2 bg-gray-50/80">
+            <div data-field="bukti">
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">{t.uploadLabel} <span className="text-red-500">*</span></label>
+              <div className={`flex items-center justify-between rounded-xl p-2 bg-gray-50/80 border ${errBorder("bukti")}`}>
                 <input
                   type="file"
                   id="bukti-zakat"
                   name="bukti_pembayaran"
                   className="hidden"
-                  onChange={(e) => setFileName(e.target.files?.[0]?.name || t.chooseFileBtn)}
+                  accept="image/*,.pdf"
+                  onChange={(e) => {
+                    setFileName(e.target.files?.[0]?.name || t.chooseFileBtn);
+                    if (e.target.files?.length) clearError("bukti");
+                  }}
                 />
                 <span className="text-xs text-gray-500 truncate px-2 max-w-[200px]">{fileName}</span>
                 <button
@@ -382,23 +448,26 @@ export default function ZakatClient() {
                   {t.chooseFileBtn}
                 </button>
               </div>
+              <FieldError message={fieldErrors.bukti} />
             </div>
 
             {/* Setuju Syarat & Ketentuan */}
-            <div className="flex items-start gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="terms-zakat"
-                name="setuju_terms"
-                value="1"
-                checked={setujuTerms}
-                onChange={(e) => setSetujuTerms(e.target.checked)}
-                required
-                className="w-4 h-4 text-[#000] rounded focus:ring-[#0b6330] mt-0.5 cursor-pointer"
-              />
-              <label htmlFor="terms-zakat" className="text-xs text-gray-600 leading-snug cursor-pointer">
-                {t.termsLabel}
-              </label>
+            <div data-field="terms">
+              <div className="flex items-start gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="terms-zakat"
+                  name="setuju_terms"
+                  value="1"
+                  checked={setujuTerms}
+                  onChange={(e) => { setSetujuTerms(e.target.checked); clearError("terms"); }}
+                  className="w-4 h-4 text-[#000] rounded focus:ring-[#0b6330] mt-0.5 cursor-pointer"
+                />
+                <label htmlFor="terms-zakat" className="text-xs text-gray-600 leading-snug cursor-pointer">
+                  {t.termsLabel}
+                </label>
+              </div>
+              <FieldError message={fieldErrors.terms} />
             </div>
 
             {/* Submit Button */}
