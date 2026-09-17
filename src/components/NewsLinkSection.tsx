@@ -26,6 +26,7 @@ export default function NewsLinkSection({
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [prevInitialNewsLinks, setPrevInitialNewsLinks] = useState(initialNewsLinks);
 
   const [itemsPerView, setItemsPerView] = useState(4);
   const [currentIndex, setCurrentIndex] = useState(4);
@@ -38,15 +39,17 @@ export default function NewsLinkSection({
     homeDictionary[lang]?.sections?.beritaTerkait ||
     "RILIS MEDIA EKSTERNAL";
 
-  // Sync initial prop items when prop changes or loads
-  useEffect(() => {
+  // Sync initial prop items when prop changes or loads (adjust state during
+  // render instead of in an effect, per https://react.dev/learn/you-might-not-need-an-effect)
+  if (initialNewsLinks !== prevInitialNewsLinks) {
+    setPrevInitialNewsLinks(initialNewsLinks);
     if (initialNewsLinks && initialNewsLinks.length > 0) {
       setItems(initialNewsLinks);
       if (initialNewsLinks.length < 10) {
         setHasMore(false);
       }
     }
-  }, [initialNewsLinks]);
+  }
 
   // Deteksi jumlah item per view berdasarkan lebar layar
   useEffect(() => {
@@ -67,11 +70,13 @@ export default function NewsLinkSection({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Sinkronkan index saat itemsPerView berubah
-  useEffect(() => {
+  // Sinkronkan index saat itemsPerView berubah (adjust state during render)
+  const [prevItemsPerView, setPrevItemsPerView] = useState(itemsPerView);
+  if (itemsPerView !== prevItemsPerView) {
+    setPrevItemsPerView(itemsPerView);
     setIsTransitioning(false);
     setCurrentIndex(itemsPerView);
-  }, [itemsPerView]);
+  }
 
   // Function to load the next batch of external news links from backend API
   const loadNextBatch = useCallback(async () => {
@@ -108,6 +113,7 @@ export default function NewsLinkSection({
   useEffect(() => {
     if (canSlide && hasMore && !isLoadingMore) {
       if (currentIndex >= items.length - itemsPerView - 1) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- loadNextBatch sets isLoadingMore synchronously as a re-entrancy guard before its fetch; this is a legitimate data-fetch effect, not derived state.
         loadNextBatch();
       }
     }
@@ -129,6 +135,7 @@ export default function NewsLinkSection({
     const minVisibleIdx = currentIndex - buffer;
     const maxVisibleIdx = currentIndex + itemsPerView + buffer - 1;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- accumulates a sticky "ever visible" cache keyed off scroll position; not derivable during render.
     setLoadedImageIds((prev) => {
       let changed = false;
       const next = { ...prev };

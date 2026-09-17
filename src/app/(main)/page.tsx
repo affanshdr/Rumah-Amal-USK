@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import MitraSection from "@/components/MitraSection";
 import MediaSocialSection from "@/components/MediaSocialSection";
 import NewsLinkSection from "@/components/NewsLinkSection";
+import MiminBotWidget from "@/components/MiminBotWidget";
 
 import { homeDictionary, HomeLanguage } from "@/lib/i18n/home";
 
@@ -940,6 +941,8 @@ export default function Home() {
       <RevealOnScroll>
         <MitraSection />
       </RevealOnScroll>
+
+      <MiminBotWidget />
 
     </main>
   );
