@@ -2,8 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const STORAGE_KEY = "ra_bot_announcement_seen_v1";
-const ALWAYS_SHOW = process.env.NODE_ENV === "development";
 const MIMIN_BOT_IMG = "/mimin-bot.png";
 const CHAT_LINK = "https://103.55.38.120.nip.io/pilih-channel";
 const BOT_MESSAGE =
@@ -66,14 +64,9 @@ export default function MiminBotWidget() {
   }
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    // Saat `next dev`, abaikan gate "sudah pernah lihat" supaya widget selalu
-    // muncul tiap refresh dan gampang dites. Di production tetap sekali saja.
-    if (!ALWAYS_SHOW && localStorage.getItem(STORAGE_KEY)) return;
-    const t = setTimeout(() => {
-      show();
-      if (!ALWAYS_SHOW) localStorage.setItem(STORAGE_KEY, "1");
-    }, 900);
+    // Selalu muncul tiap kali halaman beranda dibuka/direfresh (tanpa gate
+    // localStorage) supaya user yang kelewatan baca tetap bisa lihat lagi.
+    const t = setTimeout(show, 900);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

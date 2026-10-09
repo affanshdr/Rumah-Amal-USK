@@ -251,6 +251,7 @@ export default function PublicNewsDetailPage({
 
             {/* Content Body */}
             <style>{`
+              /* === Tombol Link & Download — tampil sebagai kotak === */
               .article-body a[data-type="download-button"],
               .article-body a[data-type="link-button"],
               .article-body a[download],
@@ -262,7 +263,7 @@ export default function PublicNewsDetailPage({
                 justify-content: center !important;
                 text-align: center !important;
                 box-sizing: border-box !important;
-                border-radius: 16px !important;
+                border-radius: 10px !important;
                 direction: ltr !important;
                 unicode-bidi: isolate !important;
               }
@@ -272,26 +273,63 @@ export default function PublicNewsDetailPage({
               .article-body div.my-4 a {
                 background: #0b6330 !important;
                 color: #ffffff !important;
-                padding: 12px 24px !important;
+                padding: 12px 28px !important;
                 font-weight: 700 !important;
                 text-decoration: none !important;
                 font-size: 14px !important;
                 box-shadow: 0 2px 8px rgba(11, 99, 48, 0.25) !important;
-                margin: 16px 0 !important;
+                margin: 12px 0 !important;
+                border-radius: 10px !important;
               }
-              .article-body p { margin-bottom: 1.25rem; line-height: 1.8; }
-              .article-body h1 { font-size: 1.75rem; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; color: #111827; }
-              .article-body h2 { font-size: 1.4rem; font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.75rem; color: #111827; }
-              .article-body h3 { font-size: 1.15rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #111827; }
-              .article-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.25rem; }
-              .article-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1.25rem; }
-              .article-body li { margin-bottom: 0.35rem; }
+
+              /* === Paragraf & Body === */
+              .article-body p { margin-bottom: 1rem; line-height: 1.85; }
+
+              /* === Heading / Section Titles — gap yang jelas antar bagian === */
+              .article-body h1 { font-size: 1.5rem; font-weight: 800; margin-top: 2.25rem; margin-bottom: 0.75rem; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.35rem; }
+              .article-body h2 { font-size: 1.25rem; font-weight: 700; margin-top: 2rem; margin-bottom: 0.65rem; color: #111827; border-bottom: 1.5px solid #f3f4f6; padding-bottom: 0.25rem; }
+              .article-body h3 { font-size: 1.05rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #111827; }
+
+              /* === List — spacing yang wajar === */
+              .article-body ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 0.5rem; margin-bottom: 1rem; }
+              .article-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-top: 0.5rem; margin-bottom: 1rem; }
+              .article-body li { margin-bottom: 0.4rem; line-height: 1.7; }
+              .article-body li + li { margin-top: 0; }
+
+              /* === Blockquote === */
               .article-body blockquote { border-left: 4px solid #0b6330; padding-left: 1.25rem; color: #4b5563; font-style: italic; margin: 1.5rem 0; background: #f9fafb; padding: 1rem; border-radius: 0 0.75rem 0.75rem 0; }
-              .article-body a { color: #0b6330; text-decoration: underline; font-weight: 600; }
-              .article-body img { max-width: 100%; height: auto; border-radius: 1rem; margin: 1.5rem 0; shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+              /* === Inline link === */
+              .article-body a { color: #0b6330; text-decoration: underline; font-weight: 500; }
+
+              /* === AUTO-FALLBACK: Link sendirian dalam paragraf — otomatis jadi tombol kotak === */
+              .article-body p:has(> a:only-child) { margin: 10px 0 !important; }
+              .article-body p > a:only-child {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                background: #0b6330 !important;
+                color: #ffffff !important;
+                padding: 12px 28px !important;
+                border-radius: 10px !important;
+                font-weight: 700 !important;
+                text-decoration: none !important;
+                font-size: 14px !important;
+                box-shadow: 0 2px 8px rgba(11, 99, 48, 0.25) !important;
+                text-align: center !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+              }
+
+              /* === Gambar === */
+              .article-body img { max-width: 100%; height: auto; border-radius: 1rem; margin: 1.5rem 0; }
+
+              /* === RTL === */
               .rtl-body { text-align: right; direction: rtl; font-family: serif, sans-serif; }
               .rtl-body blockquote { border-left: none; border-right: 4px solid #0b6330; padding-left: 0; padding-right: 1.25rem; border-radius: 0.75rem 0 0 0.75rem; }
               .rtl-body ul, .rtl-body ol { padding-left: 0; padding-right: 1.5rem; }
+
+              /* === Bank Banner === */
               div[data-type="bank-banner"] { direction: ltr !important; unicode-bidi: isolate !important; text-align: center !important; }
               div[data-type="bank-banner"] div { direction: ltr !important; text-align: center !important; }
             `}</style>
