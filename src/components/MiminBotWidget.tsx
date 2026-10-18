@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const MIMIN_BOT_IMG = "/mimin-bot.png";
-const CHAT_LINK = "https://103.55.38.120.nip.io/pilih-channel";
+const CHAT_LINK = "https://cs.rumahamal.usk.ac.id";
 const BOT_MESSAGE =
   "Assalamu'alaikum! \u{1F44B} Sekarang ada Mimin AI di Rumah Amal USK. Tanya zakat, infak & program langsung lewat chat.";
 
@@ -85,15 +85,15 @@ export default function MiminBotWidget() {
     phase === "idle"
       ? "ra-bot-bubble ra-bot-bubble-enter"
       : phase === "bubble-exit" || phase === "robot-exit"
-      ? "ra-bot-bubble ra-bot-bubble-exit"
-      : "ra-bot-bubble";
+        ? "ra-bot-bubble ra-bot-bubble-exit"
+        : "ra-bot-bubble";
 
   const robotClass =
     phase === "robot-enter"
       ? "ra-bot-figure ra-bot-robot-enter"
       : phase === "robot-exit"
-      ? "ra-bot-figure ra-bot-robot-exit"
-      : "ra-bot-figure ra-bot-idle";
+        ? "ra-bot-figure ra-bot-robot-exit"
+        : "ra-bot-figure ra-bot-idle";
 
   const showCaret = typedText.length > 0 && typedText.length < BOT_MESSAGE.length;
 

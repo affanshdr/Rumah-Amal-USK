@@ -27,8 +27,7 @@ export async function loginAdmin(prevState: string | null, formData: FormData) {
             return 'Email atau password salah.';
         }
 
-        // Kembalikan error lain agar tampil di web untuk debugging
-        return `Error sistem: ${error?.message || 'Terjadi kesalahan'}`;
+        return 'Terjadi kesalahan sistem. Silakan coba beberapa saat lagi.';
     }
     return null;
 }

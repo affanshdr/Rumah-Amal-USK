@@ -90,7 +90,7 @@ export default function PublicAnnouncementDetailPage({
         setAnnouncement(data.announcement);
 
         if (data.announcement?.id) {
-          fetch(`/api/announcements/${data.announcement.id}/views`, { method: 'POST' }).catch(() => {});
+          fetch(`/api/announcements/${data.announcement.id}/views`, { method: 'POST' }).catch(() => { });
           fetchComments(data.announcement.id);
         }
       }
@@ -228,8 +228,8 @@ export default function PublicAnnouncementDetailPage({
             {lang === 'ar'
               ? 'الإعلان الذي تبحث عنه غير متوفر أو تم حذفه.'
               : lang === 'en'
-              ? 'The announcement you are looking for is not available or has been deleted.'
-              : 'Pengumuman yang Anda cari tidak tersedia atau telah dihapus.'}
+                ? 'The announcement you are looking for is not available or has been deleted.'
+                : 'Pengumuman yang Anda cari tidak tersedia atau telah dihapus.'}
           </p>
           <Link
             href="/"
@@ -289,18 +289,20 @@ export default function PublicAnnouncementDetailPage({
             <div className="prose max-w-none text-gray-800 mb-8">
               <style>{`
                 /* === Paragraf & Body === */
-                .public-article-content p { margin-bottom: 1rem; line-height: 1.85; font-size: 1rem; color: #374151; }
+                .public-article-content p { margin-bottom: 1rem; line-height: 1.85; font-size: 1rem; color: #374151; text-align: justify; }
 
-                /* === Heading / Section Titles — gap yang jelas antar bagian === */
-                .public-article-content h1 { font-size: 1.5rem; font-weight: 800; margin-top: 2.25rem; margin-bottom: 0.75rem; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.35rem; }
-                .public-article-content h2 { font-size: 1.25rem; font-weight: 800; margin-top: 2rem; margin-bottom: 0.6rem; color: #111827; border-bottom: 1.5px solid #f3f4f6; padding-bottom: 0.25rem; }
-                .public-article-content h3 { font-size: 1.05rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #1f2937; }
+                /* === Heading / Section Titles — gap yang lebih besar antar judul === */
+                .public-article-content h1 { font-size: 1.5rem; font-weight: 800; margin-top: 2.75rem; margin-bottom: 0.6rem; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.35rem; }
+                .public-article-content h2 { font-size: 1.25rem; font-weight: 800; margin-top: 2.5rem; margin-bottom: 0.5rem; color: #111827; border-bottom: 1.5px solid #f3f4f6; padding-bottom: 0.25rem; }
+                .public-article-content h3 { font-size: 1.05rem; font-weight: 700; margin-top: 2rem; margin-bottom: 0.4rem; color: #1f2937; }
 
-                /* === List — spacing yang wajar, tidak terlalu renggang === */
-                .public-article-content ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 0.5rem; margin-bottom: 1rem; }
-                .public-article-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-top: 0.5rem; margin-bottom: 1rem; }
-                .public-article-content li { margin-bottom: 0.4rem; line-height: 1.7; font-size: 0.97rem; color: #374151; }
+                /* === List — gap kecil antar poin, gap lebih besar antar paragraf === */
+                .public-article-content ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 0.25rem; margin-bottom: 0.25rem; }
+                .public-article-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-top: 0.25rem; margin-bottom: 0.25rem; }
+                .public-article-content li { margin-bottom: 0.15rem; line-height: 1.7; font-size: 0.97rem; color: #374151; text-align: justify; }
                 .public-article-content li + li { margin-top: 0; }
+                /* === Reset margin <p> di dalam <li> (Quill membungkus li dengan <p>) === */
+                .public-article-content li > p { margin-bottom: 0 !important; margin-top: 0 !important; }
 
                 /* === Blockquote === */
                 .public-article-content blockquote { border-left: 4px solid #d1d5db; padding-left: 1rem; color: #6b7280; font-style: italic; margin: 1.25rem 0; }
@@ -309,8 +311,10 @@ export default function PublicAnnouncementDetailPage({
                 .public-article-content a { color: #0b6330; text-decoration: underline; font-weight: 500; }
 
                 /* === AUTO-FALLBACK: Link sendirian dalam paragraf — otomatis jadi tombol kotak === */
-                .public-article-content p:has(> a:only-child) { margin: 10px 0 !important; }
-                .public-article-content p > a:only-child {
+                .public-article-content p:has(> a:only-child),
+                .public-article-content p:has(> strong > a:only-child) { margin: 10px 0 !important; }
+                .public-article-content p > a:only-child,
+                .public-article-content p > strong > a:only-child {
                   display: flex !important;
                   align-items: center !important;
                   justify-content: center !important;
@@ -325,6 +329,10 @@ export default function PublicAnnouncementDetailPage({
                   text-align: center !important;
                   width: 100% !important;
                   box-sizing: border-box !important;
+                }
+                .public-article-content p > a:only-child *,
+                .public-article-content p > strong > a:only-child * {
+                  color: #ffffff !important;
                 }
 
                 /* === Gambar === */
@@ -369,6 +377,12 @@ export default function PublicAnnouncementDetailPage({
                   box-shadow: 0 2px 8px rgba(11, 99, 48, 0.25) !important;
                   margin: 12px 0 !important;
                   border-radius: 10px !important;
+                }
+                .public-article-content a[data-type="download-button"] *,
+                .public-article-content a[data-type="link-button"] *,
+                .public-article-content a[download] *,
+                .public-article-content div.my-4 a * {
+                  color: #ffffff !important;
                 }
               `}</style>
               <div

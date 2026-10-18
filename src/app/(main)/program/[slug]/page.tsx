@@ -244,18 +244,20 @@ export default function PublicProgramDetailPage({
           <div className="prose max-w-none text-gray-800">
             <style>{`
               /* === Paragraf & Body === */
-              .program-detail-content p { margin-bottom: 1rem; line-height: 1.85; font-size: 1rem; color: #374151; }
+              .program-detail-content p { margin-bottom: 1rem; line-height: 1.85; font-size: 1rem; color: #374151; text-align: justify; }
 
-              /* === Heading / Section Titles — gap yang jelas antar bagian === */
-              .program-detail-content h1 { font-size: 1.5rem; font-weight: 800; margin-top: 2.25rem; margin-bottom: 0.75rem; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.35rem; }
-              .program-detail-content h2 { font-size: 1.25rem; font-weight: 800; margin-top: 2rem; margin-bottom: 0.6rem; color: #111827; border-bottom: 1.5px solid #f3f4f6; padding-bottom: 0.25rem; }
-              .program-detail-content h3 { font-size: 1.05rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #1f2937; }
+              /* === Heading / Section Titles — gap lebih besar antar judul === */
+              .program-detail-content h1 { font-size: 1.5rem; font-weight: 800; margin-top: 2.75rem; margin-bottom: 0.6rem; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.35rem; }
+              .program-detail-content h2 { font-size: 1.25rem; font-weight: 800; margin-top: 2.5rem; margin-bottom: 0.5rem; color: #111827; border-bottom: 1.5px solid #f3f4f6; padding-bottom: 0.25rem; }
+              .program-detail-content h3 { font-size: 1.05rem; font-weight: 700; margin-top: 2rem; margin-bottom: 0.4rem; color: #1f2937; }
 
-              /* === List — spacing yang wajar, tidak terlalu renggang === */
-              .program-detail-content ul { list-style-type: decimal; padding-left: 1.5rem; margin-top: 0.5rem; margin-bottom: 1rem; }
-              .program-detail-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-top: 0.5rem; margin-bottom: 1rem; }
-              .program-detail-content li { margin-bottom: 0.4rem; line-height: 1.7; color: #374151; font-size: 0.97rem; }
+              /* === List — gap kecil antar poin === */
+              .program-detail-content ul { list-style-type: decimal; padding-left: 1.5rem; margin-top: 0.25rem; margin-bottom: 0.25rem; }
+              .program-detail-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-top: 0.25rem; margin-bottom: 0.25rem; }
+              .program-detail-content li { margin-bottom: 0.15rem; line-height: 1.7; color: #374151; font-size: 0.97rem; text-align: justify; }
               .program-detail-content li + li { margin-top: 0; }
+              /* === Reset margin <p> di dalam <li> (Quill membungkus li dengan <p>) === */
+              .program-detail-content li > p { margin-bottom: 0 !important; margin-top: 0 !important; }
 
               /* === Blockquote === */
               .program-detail-content blockquote { border-left: 4px solid #d1d5db; padding-left: 1rem; color: #6b7280; font-style: italic; margin: 1.25rem 0; }
@@ -264,8 +266,10 @@ export default function PublicProgramDetailPage({
               .program-detail-content a { color: #0b6330; text-decoration: underline; font-weight: 500; }
 
               /* === AUTO-FALLBACK: Link sendirian dalam paragraf — otomatis jadi tombol kotak === */
-              .program-detail-content p:has(> a:only-child) { margin: 10px 0 !important; }
-              .program-detail-content p > a:only-child {
+              .program-detail-content p:has(> a:only-child),
+              .program-detail-content p:has(> strong > a:only-child) { margin: 10px 0 !important; }
+              .program-detail-content p > a:only-child,
+              .program-detail-content p > strong > a:only-child {
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
@@ -280,6 +284,10 @@ export default function PublicProgramDetailPage({
                 text-align: center !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
+              }
+              .program-detail-content p > a:only-child *,
+              .program-detail-content p > strong > a:only-child * {
+                color: #ffffff !important;
               }
 
               /* === Gambar === */
@@ -320,6 +328,12 @@ export default function PublicProgramDetailPage({
                 box-shadow: 0 2px 8px rgba(11, 99, 48, 0.25) !important;
                 margin: 12px 0 !important;
                 border-radius: 10px !important;
+              }
+              .program-detail-content a[data-type="download-button"] *,
+              .program-detail-content a[data-type="link-button"] *,
+              .program-detail-content a[download] *,
+              .program-detail-content div.my-4 a * {
+                color: #ffffff !important;
               }
             `}</style>
             <div

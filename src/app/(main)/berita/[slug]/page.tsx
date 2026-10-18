@@ -281,20 +281,28 @@ export default function PublicNewsDetailPage({
                 margin: 12px 0 !important;
                 border-radius: 10px !important;
               }
+              .article-body a[data-type="download-button"] *,
+              .article-body a[data-type="link-button"] *,
+              .article-body a[download] *,
+              .article-body div.my-4 a * {
+                color: #ffffff !important;
+              }
 
               /* === Paragraf & Body === */
-              .article-body p { margin-bottom: 1rem; line-height: 1.85; }
+              .article-body p { margin-bottom: 1rem; line-height: 1.85; text-align: justify; }
 
-              /* === Heading / Section Titles — gap yang jelas antar bagian === */
-              .article-body h1 { font-size: 1.5rem; font-weight: 800; margin-top: 2.25rem; margin-bottom: 0.75rem; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.35rem; }
-              .article-body h2 { font-size: 1.25rem; font-weight: 700; margin-top: 2rem; margin-bottom: 0.65rem; color: #111827; border-bottom: 1.5px solid #f3f4f6; padding-bottom: 0.25rem; }
-              .article-body h3 { font-size: 1.05rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #111827; }
+              /* === Heading / Section Titles — gap lebih besar antar judul === */
+              .article-body h1 { font-size: 1.5rem; font-weight: 800; margin-top: 2.75rem; margin-bottom: 0.6rem; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 0.35rem; }
+              .article-body h2 { font-size: 1.25rem; font-weight: 700; margin-top: 2.5rem; margin-bottom: 0.5rem; color: #111827; border-bottom: 1.5px solid #f3f4f6; padding-bottom: 0.25rem; }
+              .article-body h3 { font-size: 1.05rem; font-weight: 700; margin-top: 2rem; margin-bottom: 0.4rem; color: #111827; }
 
-              /* === List — spacing yang wajar === */
-              .article-body ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 0.5rem; margin-bottom: 1rem; }
-              .article-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-top: 0.5rem; margin-bottom: 1rem; }
-              .article-body li { margin-bottom: 0.4rem; line-height: 1.7; }
+              /* === List — gap kecil antar poin === */
+              .article-body ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 0.25rem; margin-bottom: 0.25rem; }
+              .article-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-top: 0.25rem; margin-bottom: 0.25rem; }
+              .article-body li { margin-bottom: 0.15rem; line-height: 1.7; text-align: justify; }
               .article-body li + li { margin-top: 0; }
+              /* === Reset margin <p> di dalam <li> (Quill membungkus li dengan <p>) === */
+              .article-body li > p { margin-bottom: 0 !important; margin-top: 0 !important; }
 
               /* === Blockquote === */
               .article-body blockquote { border-left: 4px solid #0b6330; padding-left: 1.25rem; color: #4b5563; font-style: italic; margin: 1.5rem 0; background: #f9fafb; padding: 1rem; border-radius: 0 0.75rem 0.75rem 0; }
@@ -303,8 +311,10 @@ export default function PublicNewsDetailPage({
               .article-body a { color: #0b6330; text-decoration: underline; font-weight: 500; }
 
               /* === AUTO-FALLBACK: Link sendirian dalam paragraf — otomatis jadi tombol kotak === */
-              .article-body p:has(> a:only-child) { margin: 10px 0 !important; }
-              .article-body p > a:only-child {
+              .article-body p:has(> a:only-child),
+              .article-body p:has(> strong > a:only-child) { margin: 10px 0 !important; }
+              .article-body p > a:only-child,
+              .article-body p > strong > a:only-child {
                 display: flex !important;
                 align-items: center !important;
                 justify-content: center !important;
@@ -319,6 +329,10 @@ export default function PublicNewsDetailPage({
                 text-align: center !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
+              }
+              .article-body p > a:only-child *,
+              .article-body p > strong > a:only-child * {
+                color: #ffffff !important;
               }
 
               /* === Gambar === */

@@ -35,7 +35,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
   const [lang, setLang] = useState<InfaqLanguage>("id");
   const [tipePembayar, setTipePembayar] = useState<TipePembayar>("masyarakat");
   const [selectedKampanyeId, setSelectedKampanyeId] = useState<string>("");
-  const [jenisInfaq, setJenisInfaq] = useState<string>("Infak Umum / Sedekah Sukarela");
+  const [jenisInfaq, setJenisInfaq] = useState<string>("Infak Umum");
   const [jumlahInfaq, setJumlahInfaq] = useState<string>("");
   const [nama, setNama] = useState<string>("");
   const [isHambaAllah, setIsHambaAllah] = useState<boolean>(false);
@@ -94,7 +94,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
   const handleKampanyeChange = (value: string) => {
     setSelectedKampanyeId(value);
     if (!value) {
-      setJenisInfaq("Infak Umum / Sedekah Sukarela");
+      setJenisInfaq("Infak Umum");
     } else {
       const selected = programs.find((p) => p.id === value);
       if (selected) setJenisInfaq(selected.judul);
@@ -263,7 +263,7 @@ export default function InfaqClient({ programs }: { programs: KampanyeOption[] }
                 className="w-full border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-[#005621] bg-white font-medium"
               >
                 <optgroup label={t.groupBebas}>
-                  <option value="Infak Umum / Sedekah Sukarela">{t.infakUmum}</option>
+                  <option value="Infak Umum">{t.infakUmum}</option>
                   <option value="Komunitas Infaq Rutin">{t.komunitas}</option>
                 </optgroup>
                 {programs.length > 0 && (
