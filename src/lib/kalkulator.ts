@@ -110,7 +110,6 @@ export const NISAB_PERTANIAN_MAP: Record<string, number> = {
   padi: 653,
   jagung: 653,
   kurma: 653,
-  gandum: 653,
 };
 
 export function hitungZakatPertanian(params: {
