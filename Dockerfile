@@ -29,15 +29,26 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy source code
 COPY . .
 
-# Generate Prisma Client & build Next.js
-# Environment variables needed at build time should be passed as build args
+# Environment variables needed at build time
+# NEXT_PUBLIC_* vars are inlined into the JS bundle during build
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG SUPABASE_SERVICE_ROLE_KEY
 ARG DATABASE_URL
 ARG DIRECT_URL
+ARG AUTH_SECRET
+ARG NEXTAUTH_SECRET
 
+ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+ENV SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
 ENV DATABASE_URL=${DATABASE_URL}
 ENV DIRECT_URL=${DIRECT_URL}
+ENV AUTH_SECRET=${AUTH_SECRET}
+ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Generate Prisma Client & build Next.js
 RUN npm run build
 
 # ==============================================================================
