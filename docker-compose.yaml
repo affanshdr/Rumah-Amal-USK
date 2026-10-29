@@ -6,7 +6,6 @@ services:
       args:
         - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
         - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-        - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
         - DATABASE_URL=${DATABASE_URL}
         - DIRECT_URL=${DIRECT_URL}
         - AUTH_SECRET=${AUTH_SECRET}
@@ -20,7 +19,7 @@ services:
       - "3000"
 
   nginx:
-    image: nginx:alpine
+    image: docker.io/library/nginx:alpine
     restart: unless-stopped
     ports:
       - "80:80"
