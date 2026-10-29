@@ -34,7 +34,7 @@ export default function Footer() {
             {/* Logo Box */}
             <div className="bg-white rounded-xl px-5 py-3 inline-flex items-center self-start shadow-md">
               <Image
-                src="/logo/rumah-amal.png"
+                src="/logo/Rumah Amal.png"
                 alt="Rumah Amal Masjid Jamik USK"
                 width={180}
                 height={45}
