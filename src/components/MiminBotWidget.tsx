@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const MIMIN_BOT_IMG = "/mimin-bot.png";
-const CHAT_LINK = "https://cs.rumahamal.usk.ac.id";
+const CHAT_LINK = "https://cs.rumahamal.usk.ac.id/pilih-channel";
 const BOT_MESSAGE =
   "Assalamu'alaikum! \u{1F44B} Sekarang ada Mimin AI di Rumah Amal USK. Tanya zakat, infak & program langsung lewat chat.";
 
