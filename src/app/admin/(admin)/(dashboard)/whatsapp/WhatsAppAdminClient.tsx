@@ -7,75 +7,72 @@ import {
   faCheckCircle,
   faCircleNotch,
   faPaperPlane,
-  faRightFromBracket,
   faInfoCircle,
-  faShieldHalved,
   faRotateRight,
-  faQrcode,
   faExclamationTriangle,
+  faCloud,
+  faKey,
+  faCoins,
+  faCalendarCheck,
+  faComments,
+  faBoxArchive,
+  faArrowUpRightFromSquare,
+  faSignal,
+  faCircleXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import ConfirmModal from '@/components/admin/ConfirmModal';
-import AdminToast, { ToastState } from '@/components/admin/AdminToast';
 
-type GatewayStatus = {
-  status: 'connected' | 'connecting' | 'disconnected' | 'offline';
-  qrImage?: string | null;
-  connectedUser?: string | null;
-  error?: string;
+type FonnteStatus = {
+  status: 'connected' | 'disconnected' | 'not_configured' | 'offline' | 'error' | 'loading';
+  isWhatsAppActive?: boolean;
+  deviceStatus?: 'connect' | 'disconnect';
+  device?: string | null;
+  name?: string | null;
+  quota?: string | number | null;
+  package?: string | null;
+  expired?: string | null;
+  messages?: number | null;
+  error?: string | null;
+  checkedAt?: string | null;
 };
 
 export default function WhatsAppAdminClient() {
-  const [data, setData] = useState<GatewayStatus>({ status: 'connecting' });
+  const [data, setData] = useState<FonnteStatus>({ status: 'loading' });
+  const [loadingStatus, setLoadingStatus] = useState(false);
   const [testPhone, setTestPhone] = useState('');
   const [testMessage, setTestMessage] = useState(
-    "Assalamu'alaikum, ini uji coba pesan dari WhatsApp Gateway Rumah Amal USK."
+    "Assalamu'alaikum Wr. Wb.\nIni adalah uji coba pesan WhatsApp OTP dari sistem Rumah Amal USK via Fonnte."
   );
   const [sendingTest, setSendingTest] = useState(false);
   const [testSuccessMsg, setTestSuccessMsg] = useState('');
   const [testErrorMsg, setTestErrorMsg] = useState('');
-  const [loggingOut, setLoggingOut] = useState(false);
-  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
-  const [toast, setToast] = useState<ToastState | null>(null);
 
-  async function fetchStatus() {
+  async function fetchStatus(showLoading = false) {
+    if (showLoading) setLoadingStatus(true);
     try {
       const res = await fetch('/api/admin/whatsapp/status', { cache: 'no-store' });
       if (res.ok) {
         const json = await res.json();
         setData(json);
       } else {
-        setData({ status: 'offline', error: 'Service Gateway tidak aktif.' });
+        setData({ status: 'offline', error: 'Service status tidak merespon.' });
       }
     } catch {
-      setData({ status: 'offline', error: 'Gagal menghubungi service gateway.' });
+      setData({ status: 'offline', error: 'Gagal menghubungi server aplikasi.' });
+    } finally {
+      if (showLoading) setLoadingStatus(false);
     }
   }
 
   useEffect(() => {
     fetchStatus();
-    const interval = setInterval(fetchStatus, 3000);
+
+    // Polling otomatis setiap 10 detik terutama jika sedang disconnected/belum login
+    const interval = setInterval(() => {
+      fetchStatus(false);
+    }, 10000);
+
     return () => clearInterval(interval);
   }, []);
-
-  async function handleConfirmLogout() {
-    setLoggingOut(true);
-    try {
-      const res = await fetch('/api/admin/whatsapp/logout', { method: 'POST' });
-      const json = await res.json();
-      if (json.success) {
-        setData({ status: 'connecting', qrImage: null });
-        setToast({ message: 'Sesi WhatsApp berhasil diputuskan.', type: 'success' });
-        fetchStatus();
-      } else {
-        setToast({ message: json.error || 'Gagal logout', type: 'error' });
-      }
-    } catch (err: any) {
-      setToast({ message: 'Error: ' + err.message, type: 'error' });
-    } finally {
-      setLoggingOut(false);
-      setIsLogoutConfirmOpen(false);
-    }
-  }
 
   async function handleTestSend(e: React.FormEvent) {
     e.preventDefault();
@@ -97,21 +94,34 @@ export default function WhatsAppAdminClient() {
 
       const json = await res.json();
       if (json.success) {
-        setTestSuccessMsg(`Pesan berhasil terkirim ke +${testPhone}!`);
-        setTimeout(() => setTestSuccessMsg(''), 4000);
+        setTestSuccessMsg(json.message || `Pesan berhasil terkirim ke +${testPhone}!`);
+        // Refresh status & kuota setelah kirim
+        fetchStatus(false);
+        setTimeout(() => setTestSuccessMsg(''), 6000);
       } else {
         setTestErrorMsg(json.error || 'Gagal mengirim pesan uji coba.');
       }
     } catch (err: any) {
-      setTestErrorMsg(err.message || 'Terjadi kesalahan sistem.');
+      setTestErrorMsg(err.message || 'Terjadi kesalahan sistem saat kirim pesan.');
     } finally {
       setSendingTest(false);
     }
   }
 
   const isConnected = data.status === 'connected';
-  const isConnecting = data.status === 'connecting' || (data.status === 'disconnected' && Boolean(data.qrImage));
-  const isOffline = data.status === 'offline';
+  const isDisconnected = data.status === 'disconnected';
+  const isNotConfigured = data.status === 'not_configured';
+  const isErrorOrOffline = data.status === 'error' || data.status === 'offline';
+  const isLoading = data.status === 'loading';
+
+  // Format jam terakhir cek
+  const formattedCheckedTime = data.checkedAt
+    ? new Date(data.checkedAt).toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      })
+    : null;
 
   return (
     <div className="space-y-6">
@@ -122,227 +132,367 @@ export default function WhatsAppAdminClient() {
             <FontAwesomeIcon icon={faWhatsapp} />
           </div>
           <div>
-            <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">
-              WhatsApp Gateway Server
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">
+                WhatsApp OTP Gateway (Fonnte)
+              </h1>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <FontAwesomeIcon icon={faCloud} className="text-[9px]" /> Cloud API
+              </span>
+            </div>
             <p className="text-xs text-gray-500 mt-0.5">
-              Kelola koneksi bot WhatsApp resmi Rumah Amal USK untuk pengiriman OTP verifikasi donatur.
+              Pantau status login nomor WhatsApp resmi Rumah Amal USK di Fonnte untuk pengiriman kode OTP.
             </p>
           </div>
         </div>
 
-        {/* Status Pill */}
+        {/* Status Pill & Refresh Button */}
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => fetchStatus(true)}
+            disabled={loadingStatus}
+            className="p-2.5 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1.5 text-xs font-bold"
+            title="Muat Ulang Status"
+          >
+            <FontAwesomeIcon icon={faRotateRight} className={loadingStatus ? 'animate-spin' : ''} />
+            <span className="hidden sm:inline">Periksa Status</span>
+          </button>
+
           {isConnected ? (
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              ONLINE & TERHUBUNG
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              🟢 WA AKTIF (TERHUBUNG)
             </span>
-          ) : isConnecting ? (
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
-              <FontAwesomeIcon icon={faQrcode} className="w-3 h-3" />
-              MENUNGGU SCAN QR
+          ) : isDisconnected ? (
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-red-100 text-red-800 border border-red-300">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+              🔴 WA BELUM LOGIN DI FONNTE
+            </span>
+          ) : isNotConfigured ? (
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-amber-100 text-amber-800 border border-amber-300">
+              <FontAwesomeIcon icon={faKey} className="w-3 h-3 text-amber-600" />
+              TOKEN BELUM DIISI
+            </span>
+          ) : isLoading ? (
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">
+              <FontAwesomeIcon icon={faCircleNotch} className="animate-spin w-3 h-3 text-gray-500" />
+              Memeriksa...
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200">
-              <FontAwesomeIcon icon={faExclamationTriangle} className="w-3 h-3" />
-              GATEWAY OFFLINE
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black bg-red-100 text-red-800 border border-red-300">
+              <FontAwesomeIcon icon={faExclamationTriangle} className="w-3 h-3 text-red-600" />
+              TOKEN ERROR
             </span>
           )}
         </div>
       </div>
 
-      {/* Main Container Grid */}
+      {/* Main Grid Container */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Kolom Kiri: Status Koneksi & QR Code Scan */}
-        <div className={`${isConnected ? 'lg:col-span-6' : 'lg:col-span-12'} bg-white p-6 sm:p-8 rounded-2xl shadow-xs border border-gray-100 flex flex-col justify-between`}>
+        {/* Kolom Kiri: Kartu Status Login WhatsApp di Fonnte */}
+        <div className="lg:col-span-6 bg-white p-6 sm:p-8 rounded-2xl shadow-xs border border-gray-100 flex flex-col justify-between">
           <div>
-            <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2 mb-1">
-              <FontAwesomeIcon icon={faShieldHalved} className="text-[#0b6330]" />
-              Status Perangkat WhatsApp
-            </h2>
-            <p className="text-xs text-gray-500 mb-6">
-              Autentikasi multi-device WhatsApp resmi Rumah Amal USK.
-            </p>
-
-            {isOffline && (
-              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold space-y-2">
-                <p className="font-bold flex items-center gap-2">
-                  <FontAwesomeIcon icon={faExclamationTriangle} /> Service WhatsApp Gateway Sedang Offline
-                </p>
-                <p className="text-[11px] text-red-600 leading-relaxed">
-                  Pastikan background service di folder <code className="bg-red-100 px-1 py-0.5 rounded font-mono">services/wa-gateway</code> sudah dijalankan dengan perintah <code className="bg-red-100 px-1 py-0.5 rounded font-mono">npm start</code>.
-                </p>
-              </div>
-            )}
-
-            {isConnecting && (
-              <div className="flex flex-col items-center justify-center py-4 text-center">
-                {data.qrImage ? (
-                  <div className="bg-white p-3 rounded-2xl shadow-md border-2 border-dashed border-gray-300 inline-block mb-4">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={data.qrImage}
-                      alt="WhatsApp QR Code"
-                      className="w-64 h-64 rounded-xl object-contain"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-64 h-64 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 gap-2 mb-4">
-                    <FontAwesomeIcon icon={faCircleNotch} className="animate-spin text-2xl text-[#0b6330]" />
-                    <span className="text-xs font-bold">Membuat QR Code...</span>
-                  </div>
-                )}
-
-                <p className="text-xs font-bold text-gray-700 mb-4">
-                  Arahkan kamera WhatsApp smartphone Anda ke QR Code di atas
-                </p>
-
-                <div className="w-full text-left bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs text-gray-600 space-y-2">
-                  <p className="font-bold text-[#0b6330]">📱 Langkah Menautkan Perangkat:</p>
-                  <ol className="list-decimal list-inside space-y-1 text-[11px] leading-relaxed">
-                    <li>Buka aplikasi <strong>WhatsApp</strong> di smartphone nomor resmi Rumah Amal.</li>
-                    <li>Buka menu <strong>Perangkat Tertaut (Linked Devices)</strong>.</li>
-                    <li>Ketuk <strong>Tautkan Perangkat (Link a Device)</strong>, lalu scan QR Code di atas.</li>
-                  </ol>
-                </div>
-              </div>
-            )}
-
-            {isConnected && (
-              <div className="py-6 flex flex-col items-center text-center space-y-4">
-                <div className="w-20 h-20 rounded-full bg-[#25D366]/15 text-[#25D366] flex items-center justify-center text-4xl shadow-inner border border-[#25D366]/30">
-                  <FontAwesomeIcon icon={faCheckCircle} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-extrabold text-gray-900">
-                    WhatsApp Berhasil Terhubung
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Nomor WhatsApp Resmi yang Aktif:
-                  </p>
-                  <p className="text-lg font-black font-mono text-[#0b6330] mt-1 bg-emerald-50 px-4 py-1.5 rounded-xl border border-emerald-200 inline-block">
-                    +{data.connectedUser || 'Terhubung'}
-                  </p>
-                </div>
-
-                <div className="w-full bg-emerald-50/60 p-3.5 rounded-xl border border-emerald-100 text-emerald-800 text-[11px] text-left">
-                  <FontAwesomeIcon icon={faInfoCircle} className="mr-1.5" />
-                  Bot WhatsApp siap mengirimkan kode OTP secara otomatis ke donatur yang meminta verifikasi di halaman publik riwayat.
-                </div>
-              </div>
-            )}
-          </div>
-
-          {isConnected && (
-            <div className="pt-4 border-t border-gray-100 flex justify-end">
-              <button
-                type="button"
-                disabled={loggingOut}
-                onClick={() => setIsLogoutConfirmOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold transition-all border border-red-200 flex items-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                <FontAwesomeIcon icon={loggingOut ? faCircleNotch : faRightFromBracket} className={loggingOut ? 'animate-spin' : ''} />
-                <span>{loggingOut ? 'Memutuskan...' : 'Putuskan Sesi WhatsApp (Logout)'}</span>
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Kolom Kanan: Uji Coba Kirim Pesan Langsung */}
-        {isConnected && (
-          <div className="lg:col-span-6 bg-white p-6 sm:p-8 rounded-2xl shadow-xs border border-gray-100 flex flex-col justify-between">
-            <div>
-              <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2 mb-1">
-                <FontAwesomeIcon icon={faPaperPlane} className="text-[#0b6330]" />
-                Uji Coba Pengiriman Pesan
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
+                <FontAwesomeIcon icon={faSignal} className="text-[#0b6330]" />
+                Status Perangkat WhatsApp di Fonnte
               </h2>
-              <p className="text-xs text-gray-500 mb-5">
-                Kirim pesan uji coba ke nomor tujuan untuk memastikan pesan terkirim dengan sempurna.
-              </p>
+              {formattedCheckedTime && (
+                <span className="text-[11px] text-gray-400 font-medium">
+                  Cek terakhir: {formattedCheckedTime} WIB
+                </span>
+              )}
+            </div>
 
-              <form onSubmit={handleTestSend} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Nomor WhatsApp Tujuan <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={testPhone}
-                    onChange={(e) => setTestPhone(e.target.value)}
-                    placeholder="Contoh: 081234567890 atau 6281234567890"
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-[#0b6330] bg-gray-50/50 focus:bg-white transition-all font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Isi Pesan Teks <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={testMessage}
-                    onChange={(e) => setTestMessage(e.target.value)}
-                    className="w-full border border-gray-300 rounded-xl p-3 text-xs focus:outline-none focus:border-[#0b6330] bg-gray-50/50 focus:bg-white transition-all font-medium leading-relaxed"
-                  />
-                </div>
-
-                {testSuccessMsg && (
-                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center gap-2">
+            {/* KONDISI 1: WA AKTIF & LOGIN (CONNECTED) */}
+            {isConnected && (
+              <div className="space-y-4">
+                {/* Banner Status Aktif */}
+                <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-2xl shrink-0 shadow-xs">
                     <FontAwesomeIcon icon={faCheckCircle} />
-                    <span>{testSuccessMsg}</span>
                   </div>
-                )}
-
-                {testErrorMsg && (
-                  <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-center gap-2">
-                    <FontAwesomeIcon icon={faExclamationTriangle} />
-                    <span>{testErrorMsg}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-700">
+                        Status WhatsApp di Fonnte
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200/80 text-emerald-900">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                        Online & Ready
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-black text-emerald-950 mt-0.5">
+                      WhatsApp Sudah Login & Aktif
+                    </h3>
+                    <p className="text-xs text-emerald-800 mt-1 leading-relaxed">
+                      Nomor resmi Rumah Amal USK <strong className="font-mono text-emerald-950 font-black">+{data.device || 'Terhubung'}</strong> siap mengirimkan kode OTP secara otomatis.
+                    </p>
                   </div>
-                )}
+                </div>
 
-                <div className="pt-2 flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={sendingTest || !testPhone.trim()}
-                    className="bg-[#0b6330] hover:bg-[#074722] text-white font-extrabold px-6 py-2.5 rounded-xl text-xs shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                {/* Grid Detail Akun & Kuota Fonnte */}
+                <div className="grid grid-cols-2 gap-3 text-left">
+                  <div className="bg-gray-50/80 p-3.5 rounded-xl border border-gray-100">
+                    <span className="text-[10px] font-bold uppercase text-gray-400 block mb-1 flex items-center gap-1.5">
+                      <FontAwesomeIcon icon={faCoins} className="text-amber-500" /> Sisa Kuota OTP
+                    </span>
+                    <span className="text-base font-black text-gray-800 font-mono">
+                      {data.quota !== null && data.quota !== undefined ? `${data.quota} pesan` : 'Tak Terbatas'}
+                    </span>
+                  </div>
+
+                  <div className="bg-gray-50/80 p-3.5 rounded-xl border border-gray-100">
+                    <span className="text-[10px] font-bold uppercase text-gray-400 block mb-1 flex items-center gap-1.5">
+                      <FontAwesomeIcon icon={faBoxArchive} className="text-blue-500" /> Paket Fonnte
+                    </span>
+                    <span className="text-sm font-black text-gray-800">
+                      {data.package || 'Reguler'}
+                    </span>
+                  </div>
+
+                  <div className="bg-gray-50/80 p-3.5 rounded-xl border border-gray-100">
+                    <span className="text-[10px] font-bold uppercase text-gray-400 block mb-1 flex items-center gap-1.5">
+                      <FontAwesomeIcon icon={faCalendarCheck} className="text-emerald-500" /> Masa Aktif
+                    </span>
+                    <span className="text-xs font-bold text-gray-800">
+                      {data.expired || 'Aktif'}
+                    </span>
+                  </div>
+
+                  <div className="bg-gray-50/80 p-3.5 rounded-xl border border-gray-100">
+                    <span className="text-[10px] font-bold uppercase text-gray-400 block mb-1 flex items-center gap-1.5">
+                      <FontAwesomeIcon icon={faComments} className="text-purple-500" /> Pesan Terkirim
+                    </span>
+                    <span className="text-sm font-black text-gray-800 font-mono">
+                      {data.messages !== null && data.messages !== undefined ? data.messages : '-'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 text-gray-600 text-[11px] flex items-center justify-between">
+                  <span>Nama Device: <strong>{data.name || 'Fonnte Device'}</strong></span>
+                  <a
+                    href="https://fonnte.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#0b6330] hover:text-[#074722] font-bold hover:underline inline-flex items-center gap-1"
                   >
-                    {sendingTest ? (
-                      <>
-                        <FontAwesomeIcon icon={faCircleNotch} className="animate-spin" />
-                        Mengirim Pesan...
-                      </>
-                    ) : (
-                      <>
-                        <FontAwesomeIcon icon={faPaperPlane} />
-                        Kirim Pesan Uji Coba
-                      </>
-                    )}
+                    Buka Fonnte <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-[10px]" />
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* KONDISI 2: TOKEN ADA, TAPI WA BELUM LOGIN / TERPUTUS DI FONNTE */}
+            {isDisconnected && (
+              <div className="space-y-4">
+                <div className="p-5 rounded-2xl bg-red-50 border border-red-200 text-red-900 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center text-xl shrink-0">
+                      <FontAwesomeIcon icon={faCircleXmark} />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-red-900">
+                        WhatsApp Belum Login / Terputus di Fonnte
+                      </h3>
+                      <p className="text-xs text-red-700 mt-1 leading-relaxed">
+                        API Token Fonnte terhubung, tetapi nomor WhatsApp <strong>belum login (status: Disconnect)</strong>. Kode OTP tidak akan bisa terkirim ke donatur sebelum nomor WhatsApp ditautkan.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/80 p-3.5 rounded-xl border border-red-200 text-xs text-gray-800 space-y-2">
+                    <p className="font-bold text-gray-900">👉 Cara Mengaktifkan / Menghubungkan:</p>
+                    <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-gray-700 leading-relaxed">
+                      <li>Buka website <strong><a href="https://fonnte.com" target="_blank" rel="noopener noreferrer" className="underline font-bold text-[#0b6330]">fonnte.com</a></strong> dan login.</li>
+                      <li>Masuk ke menu <strong>Device</strong> di dashboard Fonnte.</li>
+                      <li>Buka WhatsApp di HP resmi Rumah Amal ➔ <strong>Perangkat Tertaut</strong> ➔ <strong>Scan QR Code</strong> yang tampil di Fonnte.</li>
+                      <li>Setelah status di Fonnte berubah menjadi <strong>Connect</strong>, halaman ini akan otomatis berubah menjadi <span className="text-emerald-700 font-bold">Aktif & Terhubung</span>.</li>
+                    </ol>
+                  </div>
+
+                  <div className="pt-1 flex flex-wrap items-center gap-2">
+                    <a
+                      href="https://fonnte.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0b6330] hover:bg-[#074722] text-white text-xs font-bold transition-all shadow-xs"
+                    >
+                      <span>Buka Dashboard Fonnte untuk Scan QR</span>
+                      <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-[10px]" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => fetchStatus(true)}
+                      disabled={loadingStatus}
+                      className="px-3 py-2 rounded-xl bg-white border border-red-200 text-red-800 hover:bg-red-50 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                      <FontAwesomeIcon icon={faRotateRight} className={loadingStatus ? 'animate-spin' : ''} />
+                      Cek Lagi
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* KONDISI 3: TOKEN BELUM DIISI */}
+            {isNotConfigured && (
+              <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl shrink-0">
+                    <FontAwesomeIcon icon={faKey} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-amber-950">
+                      Token API Fonnte Belum Diatur di Server
+                    </h3>
+                    <p className="text-xs text-amber-800 mt-1 leading-relaxed">
+                      Sistem belum dapat memeriksa status WhatsApp karena variabel <code className="bg-amber-100 px-1 py-0.5 rounded font-mono font-bold">FONNTE_API_TOKEN</code> belum diisi di file <code className="bg-amber-100 px-1 py-0.5 rounded font-mono font-bold">.env</code>.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-white/80 p-3.5 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-2">
+                  <p className="font-bold text-gray-900">Langkah Pengaturan Token:</p>
+                  <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-gray-700">
+                    <li>Salin Token Device dari menu Device di <a href="https://fonnte.com" target="_blank" rel="noopener noreferrer" className="underline font-bold text-[#0b6330]">fonnte.com</a>.</li>
+                    <li>Buka file <strong>.env</strong> di proyek web Rumah Amal ini.</li>
+                    <li>Tambahkan baris berikut:</li>
+                  </ol>
+                  <div className="bg-gray-900 text-emerald-400 p-2.5 rounded-lg font-mono text-[11px] select-all">
+                    FONNTE_API_TOKEN=&quot;token_anda_disini&quot;
+                  </div>
+                </div>
+
+                <div className="pt-1 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => fetchStatus(true)}
+                    className="px-4 py-2 rounded-xl bg-[#0b6330] hover:bg-[#074722] text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+                  >
+                    <FontAwesomeIcon icon={faRotateRight} className={loadingStatus ? 'animate-spin' : ''} />
+                    Sudah Diisi? Cek Sekarang
                   </button>
                 </div>
-              </form>
-            </div>
+              </div>
+            )}
 
-            <div className="pt-6 mt-6 border-t border-gray-100 text-gray-400 text-[11px] flex items-center justify-between">
-              <span>Port: 3001 (Microservice)</span>
-              <span>Protokol: Baileys Multi-Device</span>
-            </div>
+            {/* KONDISI 4: TOKEN SALAH ATAU SERVER FONNTE OFFLINE */}
+            {isErrorOrOffline && (
+              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs space-y-2">
+                <p className="font-bold flex items-center gap-2 text-red-800 text-sm">
+                  <FontAwesomeIcon icon={faExclamationTriangle} /> Terjadi Masalah Saat Memeriksa Fonnte
+                </p>
+                <p className="text-[11px] text-red-700 leading-relaxed">
+                  {data.error || 'Token API Fonnte tidak valid atau server Fonnte tidak merespon.'}
+                </p>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => fetchStatus(true)}
+                    className="px-3 py-1.5 rounded-lg bg-red-700 hover:bg-red-800 text-white text-[11px] font-bold cursor-pointer"
+                  >
+                    Coba Lagi
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-      {/* Confirm Logout Modal */}
-      <ConfirmModal
-        isOpen={isLogoutConfirmOpen}
-        onClose={() => setIsLogoutConfirmOpen(false)}
-        onConfirm={handleConfirmLogout}
-        title="Putuskan Sesi WhatsApp?"
-        message="Apakah Anda yakin ingin memutuskan sesi WhatsApp ini? Anda perlu melakukan scan QR Code ulang untuk menghubungkan kembali."
-        confirmText="Ya, Putuskan Sesi"
-        loading={loggingOut}
-      />
 
-      {/* Toast Notification */}
-      <AdminToast toast={toast} onClose={() => setToast(null)} />
+          <div className="pt-4 mt-6 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">
+            <span>Status diperbarui otomatis setiap 10 detik</span>
+            <span className="font-mono">API: api.fonnte.com/device</span>
+          </div>
+        </div>
+
+        {/* Kolom Kanan: Uji Coba Pengiriman Pesan (OTP Simulation) */}
+        <div className="lg:col-span-6 bg-white p-6 sm:p-8 rounded-2xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div>
+            <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2 mb-1">
+              <FontAwesomeIcon icon={faPaperPlane} className="text-[#0b6330]" />
+              Uji Coba Pengiriman OTP
+            </h2>
+            <p className="text-xs text-gray-500 mb-5">
+              Kirim pesan uji coba untuk memastikan bahwa pesan WhatsApp berhasil sampai ke nomor penerima.
+            </p>
+
+            {isDisconnected && (
+              <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2 font-medium">
+                <FontAwesomeIcon icon={faExclamationTriangle} className="text-amber-600 shrink-0" />
+                <span>Peringatan: WhatsApp saat ini belum login di Fonnte. Pesan uji coba akan gagal sampai nomor WhatsApp dihubungkan.</span>
+              </div>
+            )}
+
+            <form onSubmit={handleTestSend} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  Nomor WhatsApp Penerima <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={testPhone}
+                  onChange={(e) => setTestPhone(e.target.value)}
+                  placeholder="Contoh: 081234567890 atau 6281234567890"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-[#0b6330] bg-gray-50/50 focus:bg-white transition-all font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  Isi Pesan Teks <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  rows={4}
+                  value={testMessage}
+                  onChange={(e) => setTestMessage(e.target.value)}
+                  className="w-full border border-gray-300 rounded-xl p-3 text-xs focus:outline-none focus:border-[#0b6330] bg-gray-50/50 focus:bg-white transition-all font-medium leading-relaxed"
+                />
+              </div>
+
+              {testSuccessMsg && (
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center gap-2">
+                  <FontAwesomeIcon icon={faCheckCircle} />
+                  <span>{testSuccessMsg}</span>
+                </div>
+              )}
+
+              {testErrorMsg && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-center gap-2">
+                  <FontAwesomeIcon icon={faExclamationTriangle} />
+                  <span>{testErrorMsg}</span>
+                </div>
+              )}
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={sendingTest || !testPhone.trim()}
+                  className="bg-[#0b6330] hover:bg-[#074722] text-white font-extrabold px-6 py-2.5 rounded-xl text-xs shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {sendingTest ? (
+                    <>
+                      <FontAwesomeIcon icon={faCircleNotch} className="animate-spin" />
+                      Mengirim via Fonnte...
+                    </>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faPaperPlane} />
+                      Kirim Pesan Uji Coba
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div className="pt-6 mt-6 border-t border-gray-100 text-gray-400 text-[11px] flex items-center justify-between">
+            <span>Provider: Fonnte WhatsApp Cloud API</span>
+            <span>Endpoint: api.fonnte.com/send</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
